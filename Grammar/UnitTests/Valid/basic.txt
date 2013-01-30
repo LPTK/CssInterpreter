@@ -1,0 +1,36 @@
+
+class MyClass @pure {
+	
+	ref a,b: SomeType;
+	
+	constructor(a,b: SomeType)
+	@acquires a into a
+	@acquires b into b
+	{
+		// a and b are automatically set
+		This.nb++;
+	}
+	
+	class constructor() {
+		nb = 0;
+	}
+	
+	class def count() @shows nb {
+		return nb;
+	}
+	
+private:
+	class val nb: int;
+}
+
+class Pute {
+	def () {
+		return;
+	}
+	static {
+		// this is done at compile-time
+		mc := MyClass();
+		fprintf(compiler_stdout, typeof(mc).count()); 
+	}
+}
+

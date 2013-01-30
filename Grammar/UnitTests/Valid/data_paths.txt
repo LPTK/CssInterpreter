@@ -1,0 +1,11 @@
+class MyClass {
+	def foo()
+	@invalidates this.my_object.field_1
+	@invalidates (any MyClass).some_object, some_object.parent.parent.some_other_object
+	@exposes a.(b or c or x).d or e
+	@mutates root(.branch)*.value // recursive data path matching root.branch.value, root.branch.branch.value etc.
+	@releases any MyClass
+	{
+		print("trololol");
+	}
+}

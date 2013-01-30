@@ -1,0 +1,18 @@
+
+interface Collection<T: Type> is Equatable<T>, Iterable<T>, Addable<T> {
+	alias size_data;
+	alias any;
+	alias iterators;
+	
+	def size(): int @shows size_data;
+	def begin(): Iterator<T> @exposes iterators;
+	def end(): Iterator<T> @exposes iterators;
+	
+	unit_test {
+		def equality(a,b: This) {
+			if ((a==b) != (([[a]] == [[b]])))
+				throw ExcSpecif();
+		}
+	}
+}
+

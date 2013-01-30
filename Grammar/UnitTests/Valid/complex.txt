@@ -1,0 +1,21 @@
+
+interface RandomAccessible<int,String> {
+	alias content;
+	
+	def access(i: int): String
+	@exposes content;
+	
+}
+
+class MyClass<n: int> implements RandomAccessible<int,String> {
+
+	val v: Vector<n,String> () @known_as content;
+
+	def access(i: int): String
+	@overrides
+	{
+		return v[i];
+	}
+	
+}
+

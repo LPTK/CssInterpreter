@@ -1,0 +1,45 @@
+
+class LolClass is Stackable { // An incomplete semi-bullshit class for fun and contracts
+
+	val alias data;
+	alias emptiness;
+	
+	val lolvar: Object @known_as data;
+
+	def empty() @shows emptiness {
+		return false;
+	}
+	
+	def peek(): Object
+	@	exposes data
+	@	requires (!empty()) or throw ExcNoSuchElement
+	{
+		return lolvar;
+	}
+	
+	def pop(): Object
+	@	requires (!empty()) or throw ExcNoSuchElement
+	@	ensures { elementsInQueue == old(elementsInQueue).remove(); result == old(peek()); }
+	{
+		2 + 2 == 4;
+		2 + 2 = 5; // lol; this should be syntactically valid
+	}
+
+	unit_tests {
+		def emptiness(added: Object) {
+			obj := This();
+			try { obj.pop(), assert(false) } catch(e: ExcNoSuchElement) { }
+			
+			obj.push(added);
+			assert(!obj.empty());
+			
+			obj.pop();
+			assert(obj.empty());
+		}
+		def lifo(obj: This, added: Object) {
+			obj.push(added);
+			assert (obj.pop() == added) "PUTAAAAAIIIN!!";
+		}
+	}
+
+}

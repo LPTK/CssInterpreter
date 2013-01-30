@@ -1,0 +1,38 @@
+
+class Something < V: Type< Addable<R,int> >; R: Type; qualified A: Type; A2: Type = Lol > implements Addable<V,R> {
+	val a: V;
+	ref b: V;
+	outref c: R;
+	d: A;
+	poly: intertypeof(V,R,A,A2);
+	add_res: typeof((:V)+(:R)); // We want the type of the addition of an instance of V and an instance of R
+	
+	def add (added: V): R { // when (:V) is added to me, I return (:R)
+		return c.copy();
+	}
+	
+	def (v: V).add (): int { // when I'm added to (:V), it does the same as when (:V) is added to me
+		return add(v);
+	}
+}
+
+
+class MyClass < qualified T: Type< Addable<MyClass,int> >; n: int > implements Addable<MyClass,int> {
+
+	base: T @propagates;
+	
+	universal constructor(b: T) {
+		base = b;
+		System.out.println(n);
+		s := Something<int, int, val int, A2 = int, A = String>();
+	}
+
+	def lol < S: Type<Addable<S,_>> > (a,b: S): typeof(a+b)
+	@creates;
+	{
+		return a + b;
+	}
+	
+}
+
+
