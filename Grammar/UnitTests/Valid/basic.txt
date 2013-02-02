@@ -3,19 +3,19 @@ class MyClass @pure {
 	
 	ref a,b: SomeType;
 	
-	constructor(a,b: SomeType)
-	@acquires a into a
-	@acquires b into b
+	construct(rval a,b: SomeType)
+	@takes a into a
+	@takes b into b
 	{
 		// a and b are automatically set
 		This.nb++;
 	}
 	
-	class constructor() {
+	class construct() {
 		nb = 0;
 	}
 	
-	class def count() @shows nb {
+	class def count(): int @shows nb {
 		return nb;
 	}
 	

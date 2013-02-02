@@ -1,8 +1,8 @@
 
 class Something < V: Type< Addable<R,int> >; R: Type; qualified A: Type; A2: Type = Lol > implements Addable<V,R> {
 	val a: V;
-	ref b: V;
-	outref c: R;
+	rval b: V;
+	ref c: R;
 	d: A;
 	poly: intertypeof(V,R,A,A2);
 	add_res: typeof((:V)+(:R)); // We want the type of the addition of an instance of V and an instance of R
@@ -21,7 +21,7 @@ class MyClass < qualified T: Type< Addable<MyClass,int> >; n: int > implements A
 
 	base: T @propagates;
 	
-	universal constructor(b: T) {
+	universal construct(b: T) {
 		base = b;
 		System.out.println(n);
 		s := Something<int, int, val int, A2 = int, A = String>();
