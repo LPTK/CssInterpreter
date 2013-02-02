@@ -1,0 +1,412 @@
+compilation_unit  = 
+ [ package_statement ] 
+ < import_statement > 
+ < type_declaration >  . 
+
+package_statement  = 
+ "package" package_name  ";"  . 
+
+import_statement  = 
+ "import"  (  ( package_name  "."  "*"  ";"  ) 
+ /  type_name  )  ";"  . 
+
+type_declaration  = 
+ ( class_declaration  / interface_declaration / typedef_declaration )  ";"  . 
+
+class_declaration  = 
+ "class" identifier 
+ [ "<" template_parameter_list ">" ]
+ [  "extends" visibility_modified_type ] 
+ [  "is" visibility_modified_type  <  "," visibility_modified_type >  ] 
+ [  < class_annotation >  ] 
+ field_block  . 
+
+interface_declaration  = 
+ "interface" identifier 
+ [ "<" template_parameter_list ">" ]
+ [  "extends" visibility_modified_type  <  "," visibility_modified_type >  ] 
+ [  < class_annotation >  ] 
+ field_block . 
+
+visibility_modified_type = [visibility_keyword] parametrized_type . 
+ 
+field_block = "{"  < field_declaration >  "}" . 
+ 
+typedef_declaration = 
+ "typedef" identifier "=" full_type . 
+
+field_declaration  = 
+ method_declaration 
+ / constructor_declaration 
+ / destructor_declaration 
+ / alias_declaration 
+ / visibility_declaration 
+ / attribute_declaration
+ / special_declaration
+ / unit_test_declaration 
+ / static_initializer 
+ /  ";"  . 
+ 
+attribute_declaration =
+ [ "class" ] [ attribute_type ] 
+ variable_declaration
+ [ < attribute_annotation > ] ";" .
+
+special_declaration =
+ ( "parent" / "base" )
+ [ identifier ] type_spec
+ [ < attribute_annotation > ] ";" .
+
+attribute_type = "val" / "rval" / "ref" . 
+
+method_declaration  = 
+ [ "class" ] "def" [ instanceof_expression "." ] [ identifier ] 
+ [ "<" template_parameter_list ">" ] 
+ [ "("  [ parameter_list ]  ")" ] [ ":" [ [ attribute_type ] full_type ] ] 
+ [  < method_annotation >  ] 
+ ( statement_block  /  ";"  )  . 
+
+constructor_declaration  = 
+ [ "class" ] [ "universal" ] "construct" [ identifier ]  "("  [ parameter_list ]  ")" 
+ [  < method_annotation >  ] 
+ ( statement_block  /  ";"  )  . 
+
+destructor_declaration  = 
+ [ "class" ] "destruct" "(" ")" 
+ [  < method_annotation >  ] 
+ ( statement_block  /  ";"  )  . 
+
+alias_declaration = [ "class" ] [ attribute_type ] "alias" identifier [ "(" full_type ")" ] ";" .
+
+unit_test_declaration = [ "class" ] "unit_tests" "{" [ < method_declaration > ] "}" . 
+
+statement_block  =  "{" [ < statement > ]  "}"  . 
+
+visibility_declaration = visibility_keyword ":" . 
+
+visibility_keyword = ( "public" / "private" / "protected" ) . 
+
+single_variable_declaration = 
+ identifier type_spec . 
+
+variable_declarations = 
+ [ attribute_type ] identifier <  "," identifier  > type_spec . 
+ 
+type_spec = ":"
+ ( ( full_type [ "=" expression ] )
+   / ( full_type "(" [ arg_list ] ")" )
+   / ( "=" expression ) ) . 
+
+static_initializer  = 
+ "static" statement_block  . 
+
+template_parameter_list = 
+ template_param_declaration  <  ";" template_param_declaration > . 
+
+template_param_declaration = [ "qualified" ] variable_declarations . 
+
+parameter_list  = 
+ variable_declarations  <  ";" variable_declarations > . 
+
+statement  = 
+ [ "static" ]
+ ( variable_declarations statement_separator )
+ /  ( expression        statement_separator  ) 
+ /  ( statement_block   statement_separator ) 
+ /  ( conditional_statement ) 
+ /  ( while_statement ) 
+ /  ( for_statement ) 
+ /  ( try_statement ) 
+ /  ( return_statement ";" ) 
+ /  ( throw_statement ";" ) 
+ /  (  "break" ";"  ) 
+ /  (  "continue" ";"  ) . 
+
+statement_separator = ";" / "," . 
+
+return_statement = "return"  [ expression ] .
+
+throw_statement = "throw" expression .
+
+conditional_statement = 
+ ( "if" / "suppose" / "ifever" )  "(" expression  ")" statement 
+ [  "else" statement ]  . 
+
+while_statement = 
+ "while"  "(" expression  ")" statement  . 
+
+for_statement = 
+ "for" "(" 
+   ( [ single_variable_declaration  /  expression ] ";" [ expression ]  ";" [ expression ] ) 
+   / ( identifier [ ":" full_type ] "in" expression ) 
+ ")" statement . 
+
+try_statement = 
+ "try" statement 
+ < "catch"  "(" variable_declaration  ")" statement > 
+ [ "finally" statement ]  . 
+
+expression  = 
+ numeric_expression 
+ / macro_expression
+ / testing_expression 
+ / logical_expression 
+ / string_expression 
+ / creating_expression 
+ / method_call_expression
+ / literal_expression 
+ / instanceof_expression
+ / closure_expression
+ / tuple_expression
+ / special_keyword_expression
+ / general_identifier
+ / (  "(" expression  ")"  ) 
+ / ( expression 
+     (  "[" expression  "]"  ) 
+     /  (  "." ( expression )  ) 
+     /  (  "=" ( expression )  ) 
+     /  (  "," expression  ) ) ) . 
+
+macro_expression = 
+ ( "sizeof" "(" full_type ")" ) 
+ / ( "alignof" "(" full_type ")" )
+ / ( "mangleof" "(" full_type ")" )
+ / ( "valid" "(" expression ")" )
+ / ( attribute_type "(" expression ")" )
+ / ( type_modifier "(" expression ")" )
+ / ( "old" "(" expression ")" ) 
+ / ( "assert" spec_expr [ string ] )
+ / ( "result" ) . 
+
+special_keyword_expression = 
+ ( "null" [ full_type ] )
+ / "super" 
+ / "result" 
+ / "param" . 
+
+closure_expression = "`" expression "`" .
+
+tuple_expression = "{{" arg_list "}}" . 
+
+instanceof_expression = 
+ "(" [ identifier ] ":" full_type ")" . 
+
+numeric_expression  = 
+ (  (  "-" 
+ /  "++" 
+ /  "--"  ) 
+expression ) 
+ /  ( expression 
+ (  "++" 
+ /  "--"  )  ) 
+ /  ( expression 
+ (  "+" 
+ /  "+=" 
+ /  "-" 
+ /  "-=" 
+ /  "*" 
+ /  "*=" 
+ /  "/" 
+ /  "/=" 
+ /  "%" 
+ /  "%="  ) 
+expression  )  . 
+
+testing_expression  = 
+ ( expression < testing_operator expression > )
+
+testing_operator  = 
+ (  ">" 
+ /  "<" 
+ /  ">=" 
+ /  "<=" 
+ /  "==" 
+ /  "!="  ) . 
+
+logical_expression  = 
+ (  "!" expression ) 
+ /  ( expression (  "&&" / "||" ) expression  ) 
+ /  ( expression  "?" expression  ":" expression ) 
+ /  "true" 
+ /  "false"  . 
+
+string_expression  =  ( expression 
+ (  "+" 
+ /  "+="  ) 
+expression  )  . 
+
+creating_expression  = 
+ full_type  "("  [ arg_list ]  ")"
+ [ field_block ] . 
+
+method_call_expression = 
+ ( expression / ( identifier [ "<" template_arg_list ">" ] ) )
+ "("  [ arg_list ]  ")" . 
+
+literal_expression  = 
+ integer_literal 
+ / float_literal 
+ / string 
+ / character_literal  . 
+
+template_arg_list = 
+ template_arg < "," template_arg > . 
+
+template_arg = 
+ [ identifier "=" ] 
+ ( ( [ attribute_type ] full_type ) / expression ) . 
+
+arg_list  = 
+ arg  <  "," arg  >  . 
+
+arg = [ identifier "=" ] expression . 
+
+full_type =
+ primitive_type
+ / type_expr 
+ / full_composed_type . 
+ 
+full_composed_type =
+ ( [ < type_modifier > ] parametrized_type ) . 
+
+parametrized_type = 
+ ( type_name [ "<" template_arg_list ">" ] ) . 
+
+type_expr = 
+ "This"
+ / ( "typeof" "(" expression ")" )
+ / ( "intertypeof" "(" expr_or_type < "," expr_or_type > ")" ) . 
+
+expr_or_type = expression / full_type . 
+
+primitive_type  = 
+ "bool" 
+ /  "byte" 
+ /  "char" 
+ /  "short" 
+ /  "int" 
+ /  "float" 
+ /  "long" 
+ /  "double" . 
+
+type_modifier = 
+ "virtual" 
+ /  "nullable" 
+ /  "shared" 
+ /  "virtually_shared" 
+ /  "constant" 
+ /  "threadsafe" . 
+
+field_modifier = 
+ "static" 
+ /  "final" 
+ /  "abstract" . 
+
+
+package_name = 
+identifier 
+ /  ( package_name  "." identifier )  . 
+
+type_name  = 
+identifier 
+ /  ( ( package_name / full_type)  "." identifier )  . 
+
+integer_literal = 
+ (  (  "1..9"  <  "0..9"  >  ) 
+ /  ( "o" <  "0..7"  > ) 
+ /  (  "0"  "x"  "0..9a..f"  <  "0..9a..f"  >  )  ) 
+ [  "l"  ]  . 
+
+float_literal  = 
+ ( decimal_digits  "."  [ decimal_digits ]  [ exponent_part ]  [ float_type_suffix ]  ) 
+ /  (  "." decimal_digits  [ exponent_part ]  [ float_type_suffix ]  ) 
+ /  ( decimal_digits  [ exponent_part ]  [ float_type_suffix ]  )  . 
+
+decimal_digits  = 
+ "0..9"  <  "0..9"  >  . 
+
+exponent_part  = 
+ "e"  [  "+"  /  "-"  ] decimal_digits  . 
+
+float_type_suffix  = 
+ "f"  /  "d"  . 
+
+character_literal = 
+ "'" character "'" . 
+
+character  =
+  "based on the unicode character set"  . 
+
+string  =  
+ "\""  < character  >  "\""  . 
+
+general_identifier  = 
+   "parent" 
+ / "this" 
+ / identifier . 
+
+identifier  = 
+  "a..z,$,_"  <  "a..z,$,_,0..9,unicode character over 00C0"  >  . 
+
+class_annotation = "@"
+ ( "movable"
+ / "pure"
+ / "threadsafe"
+ / "explicit_layout"
+ / "unsafe"
+ / "trusted" ) . 
+
+method_annotation = "@"
+ ( "unsafe"
+ / "trusted"
+ / "inline"
+ / "final"
+ / "overrides"
+ / ( "invalidates" data_path_list ) 
+ / ( "nullates" data_path_list ) 
+ / ( "takes" identifier "into" data_path ) 
+ / ( "moves" data_path "to" data_path ) 
+ / ( "shows" data_path )
+ / ( "exposes" data_path )
+ / ( "mutates" data_path_list )
+ / ( "retains" data_path_list )
+ / ( "releases" data_path_list )
+ / ( "with" identifier "as" data_path )
+ / "pure"
+ / "passive"
+ / "predictable"
+ / "unpredictable"
+ / "specializes"
+ / ( "requires" spec_expr  [ "else" ( return_statement / throw_statement ) ]  ) 
+ / ( "ensures" spec_expr )
+ / ( "reads" data_path_list )
+ / "atomic" ) . 
+
+attribute_annotation = "@"
+ ( "propagates" [ visibility_keyword ] [ < "@" "rename" identifier "as" identifier > ] )
+ / ( "verifies" spec_expr ) 
+ / ( "known_as" identifier [ < "," identifier > ] ) 
+ / "deepcopied"
+ / "unsafe" .
+
+spec_expr = ( "(" expression ")" ) / statement_block .
+
+data_path_list = data_path [ "," data_path ] . 
+
+data_path = 
+ generic_location
+ / ( "(" generic_location ")" / data_name ) < path_element > . 
+
+generic_location = "any" full_type
+
+path_element =
+ ( "." data_name )
+ / ( "(" "." data_name ")" "*" ) . 
+
+data_name =
+ general_identifier /
+ ( "(" data_name < "or" data_name > ")" ) . 
+
+
+
+
