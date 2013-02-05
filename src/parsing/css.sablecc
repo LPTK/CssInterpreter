@@ -1,0 +1,162 @@
+Package cssInterpreter;
+
+Helpers
+    letter      = [['A' .. 'Z'] + ['a' .. 'z']];
+    digit       = ['0' .. '9'];
+    alphanum    = letter | digit;
+    id_comp     = '_' | '$';
+    identifier  = (letter | id_comp) (alphanum | id_comp)*;
+
+    cr          = 13;
+    lf 	        = 10;
+
+
+States
+    normal;
+
+
+Tokens
+    l_paren     = '(';
+    r_paren     = ')';
+    l_brace     = '{';
+    r_brace     = '}';
+    l_brack     = '[';
+    r_brack     = ']';
+
+
+    semicolon   = ';';
+
+    comma	= ',';
+
+    dot 	= '.';
+
+    equal	= '=';
+    star	= '*';
+
+    blank       = (' ' | cr | lf)+;
+    
+    ident       = identifier;
+
+    key_class   = 'class';
+    key_def	= 'def';
+    key_import  = 'import';
+    key_package = 'package';
+    key_parent  = 'parent';
+    key_this    = 'this';
+
+
+Ignored Tokens
+    blank;
+
+
+
+
+Productions
+compilation_unit  = 
+    package_statement?   import_statement*   type_declaration*;
+
+package_statement  = 
+    key_package   package_name   semicolon;
+
+import_statement  =
+    key_import   imported   semicolon;
+
+imported =
+    {full_package} full_pkg_import
+  | {type_name} type_name
+  ;
+
+
+/* Ugly transform to support the 
+  import <qualified package name>.*;
+  syntax. */
+full_pkg_import =
+    {base} ident   dot   star
+  | {rec} ident   dot   full_pkg_import
+  ;
+
+package_name =
+    {base} ident
+  | {rec} ident   dot   package_name
+  ;
+
+
+type_name = ident;
+
+
+type_declaration = 
+    {class_decl} class_declaration
+/* TODO : others (interface / typedef) */
+  ;
+
+class_declaration =
+    key_class   ident
+    /* TODO : template inheritage visibility annotations */
+    field_block
+;
+
+
+field_block =
+    l_brace   field_declaration   r_brace;
+
+
+field_declaration =
+    {method_decl} method_declaration
+  | {empty} semicolon
+  ;
+/* TODO :
+ / constructor_declaration 
+ / destructor_declaration 
+ / alias_declaration 
+ / visibility_declaration 
+ / attribute_declaration
+ / special_declaration
+ / unit_test_declaration 
+ / static_initializer 
+ /  ";"  . 
+*/
+
+
+method_declaration =
+    key_class?   key_def   [name]:ident   [block]:statement_block;
+/* TODO : full syntax */
+
+
+statement_block =
+    l_brace   statement*   r_brace;
+
+
+statement =
+    {empty} semicolon
+  | {expr} expression
+  ;
+
+
+expression =
+    {identifier} general_identifier
+  | {method_call} method_call
+  /* Ident on the right, do we keep it ? */
+  | {reference} [prefix_expr]:expression   dot   [suffix]:ident
+  ;
+
+
+method_call =
+    expression   l_paren   arg_list?   r_paren;
+
+
+arg_list =
+    {base} arg
+  | {rec} arg   comma   arg_list
+  ;
+
+arg =
+    {assign} ident   equal   expression /* TODO : ident, sure ? */
+  | {expression} expression
+  ;
+
+
+general_identifier =
+    {parent} key_parent
+  | {this} key_this
+  | ident
+  ;

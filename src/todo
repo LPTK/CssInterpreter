@@ -1,0 +1,5 @@
+- Faire un script pour effacer tous les fichiers générés par sableCC
+  (apparemment, cela peut causer des soucis, parfois)
+  Attention aux approches trop simples : p.e., on ne peut supprimer
+  le dossier lexer en entier si on écrit un lexer personnalisé
+  (qui hérite du lexer généré)
