@@ -99,8 +99,21 @@ package_name =
   ;
 
 
-type_name = ident; /* TODO */
+type_name = 
+    {ident} ident
+  | {pkg_name} package_name   dot   ident
+/*  | {full_type} full_type   dot   ident  */ /* TODO */
+  ;
 
+
+/* TODO */
+/* 
+full_type =
+    {primitive} primitive_type
+  | {type_expr} type_expr
+  | {full_composed} full_composed_type 
+  ;
+*/
 
 type_declaration = 
     {class_decl} class_declaration

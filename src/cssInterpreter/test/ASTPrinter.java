@@ -1,6 +1,5 @@
 package cssInterpreter.test;
 
-import com.sun.corba.se.spi.ior.Identifiable;
 
 import cssInterpreter.analysis.DepthFirstAdapter;
 import cssInterpreter.node.ABaseFullPkgImport;
