@@ -1,52 +1,66 @@
 Package cssInterpreter;
 
 Helpers
-    letter      = [['A' .. 'Z'] + ['a' .. 'z']];
-    digit       = ['0' .. '9'];
-    alphanum    = letter | digit;
-    id_comp     = '_' | '$';
-    identifier  = (letter | id_comp) (alphanum | id_comp)*;
+    all		 = [0 .. 0xffff];
+    except_star  = [all - '*'];
+    except_slash = [all - '/'];
 
-    cr          = 13;
-    lf 	        = 10;
+    letter       = [['A' .. 'Z'] + ['a' .. 'z']];
+    digit  	 = ['0' .. '9'];
+    alphanum     = letter | digit;
+    id_comp      = '_' | '$';
+    identifier   = (letter | id_comp) (alphanum | id_comp)*;
+
+    cr           = 13;
+    lf 	         = 10;
 
 
 States
-    normal;
+    normal, comment;
 
 
 Tokens
-    l_paren     = '(';
-    r_paren     = ')';
-    l_brace     = '{';
-    r_brace     = '}';
-    l_brack     = '[';
-    r_brack     = ']';
+    {normal} l_paren     = '(';
+    {normal} r_paren     = ')';
+    {normal} l_brace     = '{';
+    {normal} r_brace     = '}';
+    {normal} l_brack     = '[';
+    {normal} r_brack     = ']';
 
 
-    semicolon   = ';';
+    {normal} semicolon   = ';';
 
-    comma	= ',';
+    {normal} comma	= ',';
 
-    dot 	= '.';
+    {normal} dot 	= '.';
 
-    equal	= '=';
-    star	= '*';
+    {normal} equal	= '=';
+    {normal} star	= '*';
 
-    blank       = (' ' | cr | lf)+;
+    {normal} blank       = (' ' | cr | lf)+;
     
-    ident       = identifier;
+    {normal} ident       = identifier;
 
-    key_class   = 'class';
-    key_def	= 'def';
-    key_import  = 'import';
-    key_package = 'package';
-    key_parent  = 'parent';
-    key_this    = 'this';
+    {normal} key_class   = 'class';
+    {normal} key_def	 = 'def';
+    {normal} key_import  = 'import';
+    {normal} key_package = 'package';
+    {normal} key_parent  = 'parent';
+    {normal} key_this    = 'this';
+
+
+    /* Nested comment management, as proposed in sablecc documentation */
+    {normal->comment, comment} 
+    comment_begin = '/*';
+
+    {comment} comment_end = '*/'; 
+    {comment} comment_body = 
+    (except_star*   '*'   except_slash)*   '*'?;
 
 
 Ignored Tokens
-    blank;
+    blank,
+    comment_begin, comment_body, comment_end;
 
 
 
