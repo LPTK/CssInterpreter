@@ -14,6 +14,8 @@ Helpers
     cr           = 13;
     lf 	         = 10;
 
+    star 	 = '*';
+
 
 States
     normal, comment;
@@ -39,8 +41,6 @@ Tokens
 
     {normal} blank       = (' ' | cr | lf)+;
     
-    {normal} ident       = identifier;
-
     {normal} key_class   = 'class';
     {normal} key_def	 = 'def';
     {normal} key_import  = 'import';
@@ -55,19 +55,23 @@ Tokens
 
     {comment} comment_end = '*/'; 
     {comment} comment_body = 
-    (except_star*   '*'   except_slash)*   '*'?;
+    (except_star*   star   except_slash)*   star?;
 
+
+    {normal} ident       = identifier;
 
 Ignored Tokens
     blank,
-    comment_begin, comment_body, comment_end;
+    comment_begin, comment_body, comment_end
+    ;
 
 
 
 
 Productions
 compilation_unit  = 
-    package_statement?   import_statement*   type_declaration*;
+    package_statement   import_statement*   type_declaration*;
+
 
 package_statement  = 
     key_package   package_name   semicolon;
@@ -95,7 +99,7 @@ package_name =
   ;
 
 
-type_name = ident;
+type_name = ident; /* TODO */
 
 
 type_declaration = 
