@@ -1,0 +1,5 @@
+____SableCC____
+- The toString method of sablecc tokens adds a trailing whitespace
+  (for backward compatibility - see 
+   http://lists.sablecc.org/pipermail/sablecc-discussion/msg00111.html ).
+  We should always use the getText method instead.

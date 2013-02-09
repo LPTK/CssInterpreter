@@ -69,39 +69,47 @@ Ignored Tokens
 
 
 Productions
-compilation_unit  = 
-    package_statement   import_statement*   type_declaration*;
+compilation_unit {-> compilation_unit} = 
+    package_statement   import_statement*   type_declaration*
+      {-> New compilation_unit 
+            (package_statement.package_statement, [import_statement.import_statement],
+             [type_declaration.type_declaration])};
 
 
-package_statement  = 
-    key_package   package_name   semicolon;
+package_statement {-> package_statement} = 
+    key_package   package_name   semicolon 
+      {-> New package_statement (package_name)};
 
-import_statement  =
-    key_import   imported   semicolon;
+import_statement {-> import_statement} =
+    key_import   package_import_path   semicolon
+      {-> New import_statement (package_import_path)};
 
-imported =
-    {full_package} full_pkg_import
-  | {type_name} type_name
+/* 
+ * Grammar transform to support the 
+ * import <qualified package name>.*;
+ * syntax. 
+ */
+package_import_path {-> package_import_path} =
+    [prefix]:package_import_prefix*   import_type;
+
+package_import_prefix =
+    ident   dot {-> New package_import_prefix (ident)};
+
+import_type {-> import_type} =
+    {full_package} star {-> New import_type.full_package ()}
+  | {single_type} ident {-> New import_type.single_type (ident)}
   ;
 
+package_name {-> package_name} =
+    ident   [tail]:pkg_name_tail* {-> New package_name ([ident, tail.ident])};
 
-/* Ugly transform to support the 
-  import <qualified package name>.*;
-  syntax. */
-full_pkg_import =
-    {base} ident   dot   star
-  | {rec} ident   dot   full_pkg_import
-  ;
-
-package_name =
-    {base} ident
-  | {rec} ident   dot   package_name
-  ;
+pkg_name_tail {-> ident } =
+    dot   ident  {-> ident};
 
 
 type_name = 
     {ident} ident
-  | {pkg_name} package_name   dot   ident
+/*  | {pkg_name} package_name   dot   ident */ /* FIXME */
 /*  | {full_type} full_type   dot   ident  */ /* TODO */
   ;
 
@@ -115,25 +123,29 @@ full_type =
   ;
 */
 
-type_declaration = 
-    {class_decl} class_declaration
+type_declaration {-> type_declaration} = 
+    {class_declaration} class_declaration 
+      {-> New type_declaration.class_declaration (class_declaration.class_declaration)}
 /* TODO : others (interface / typedef) */
   ;
 
-class_declaration =
-    key_class   ident
+class_declaration {-> class_declaration} =
+    key_class   [name]:ident
     /* TODO : template inheritage visibility annotations */
-    field_block
+    [block]:field_block
+      {-> New class_declaration (name, [block.field_declaration])}
 ;
 
 
-field_block =
-    l_brace   field_declaration   r_brace;
+field_block {-> field_declaration*} =
+    l_brace   field_declaration*   r_brace 
+      {-> [field_declaration.field_declaration]};
 
 
-field_declaration =
-    {method_decl} method_declaration
-  | {empty} semicolon
+field_declaration {-> field_declaration?} =
+    {method_declaration} method_declaration 
+      {-> New field_declaration.method_declaration (method_declaration.method_declaration)}
+  | {empty} semicolon {-> Null}
   ;
 /* TODO :
  / constructor_declaration 
@@ -148,46 +160,137 @@ field_declaration =
 */
 
 
-method_declaration =
-    key_class?   key_def   [name]:ident   [block]:statement_block;
+method_declaration {-> method_declaration} =
+    key_class?   key_def   [name]:ident   [block]:statement_block
+      {-> New method_declaration (name, [block.statement])}
+  ;
 /* TODO : full syntax */
 
 
-statement_block =
-    l_brace   statement*   r_brace;
+statement_block {-> statement*} =
+    l_brace   statement*   r_brace {-> [statement.statement]};
 
 
-statement =
-    {empty} semicolon
-  | {expr} expression
+statement {-> statement?} =
+    {empty} semicolon {-> Null}
+  | {expr} expression {-> New statement.expr (expression.expr)}
   ;
 
 
-expression =
-    {identifier} general_identifier
-  | {method_call} method_call
+expression {-> expr} =
+    {identifier} general_identifier 
+      {-> New expr.id (general_identifier.general_id)}
+  | {method_call} method_call {-> New expr.method_call (method_call)}
   /* Ident on the right, do we keep it ? */
   | {reference} [prefix_expr]:expression   dot   [suffix]:ident
+      {-> New expr.reference (prefix_expr.expr, suffix)}
+  ;
+
+
+
+/*        Method call and arguments        */
+method_call {-> method_call} =
+    expression   l_paren   arg_list   r_paren
+      {-> New method_call (expression.expr, arg_list.arg_list)}
+  ;
+
+arg_list {-> arg_list} =
+    {empty} {-> New arg_list ([])}
+  | {not_empty} arg   [tail]:arg_list_tail* 
+      {-> New arg_list ([arg, tail.arg])};
+
+arg_list_tail {-> arg } =
+    comma arg  {-> arg};
+
+arg =
+    /* TODO : ident, sure ? */
+    {assign} ident   equal   expression 
+      {-> New arg.assign (ident, expression.expr)}
+  | {expression} expression {-> New arg.expr (expression.expr)}
+  ;
+
+
+
+
+general_identifier {-> general_id} =
+    {parent} key_parent {-> New general_id.parent ()}
+  | {this} key_this {-> New general_id.this ()}
+  | ident {-> New general_id.ident (ident)}
+  ;
+
+
+
+/********   AST specification   ********/
+Abstract Syntax Tree
+compilation_unit  = 
+    package_statement   import_statement*   type_declaration*;
+
+
+package_statement  = 
+    package_name;
+
+package_name =
+    [components]:ident+;
+
+
+import_statement  =
+    package_import_path;
+
+package_import_path =
+    [prefix]:package_import_prefix*   import_type;
+
+package_import_prefix =
+    ident;
+
+import_type =
+    {full_package}
+  | {single_type} ident
+  ;
+
+
+type_declaration = 
+    {class_declaration} class_declaration;
+
+
+class_declaration =
+    [class_name]:ident   [block]:field_declaration*;
+
+
+field_declaration =
+    {method_declaration} method_declaration
+  ;
+
+method_declaration =
+    [name]:ident   [block]:statement*
+  ;
+
+
+statement = 
+    {expr} expr
+  ;
+
+expr =
+    {id} general_id
+  | {method_call} method_call
+  | {reference} [prefix_expr]:expr   [suffix]:ident
   ;
 
 
 method_call =
-    expression   l_paren   arg_list?   r_paren;
+    expr   arg_list;
 
 
 arg_list =
-    {base} arg
-  | {rec} arg   comma   arg_list
-  ;
+    arg*;
 
 arg =
-    {assign} ident   equal   expression /* TODO : ident, sure ? */
-  | {expression} expression
+    {assign} ident   expr /* TODO : ident, sure ? */
+  | {expr} expr
   ;
 
 
-general_identifier =
-    {parent} key_parent
-  | {this} key_this
-  | ident
+general_id =
+    {parent}
+  | {this} 
+  | {ident} ident
   ;

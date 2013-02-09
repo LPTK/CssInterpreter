@@ -1,74 +1,86 @@
 package cssInterpreter.test;
 
+import java.util.Iterator;
 
 import cssInterpreter.analysis.DepthFirstAdapter;
-import cssInterpreter.node.ABaseFullPkgImport;
-import cssInterpreter.node.ABasePackageName;
-import cssInterpreter.node.AFullPackageImported;
-import cssInterpreter.node.APackageStatement;
-import cssInterpreter.node.ARecFullPkgImport;
-import cssInterpreter.node.ARecPackageName;
-import cssInterpreter.node.ATypeName;
-import cssInterpreter.node.ATypeNameImported;
+import cssInterpreter.node.*;
 
 public class ASTPrinter extends DepthFirstAdapter {
 
+	/*
+	 * Package specification
+	 */
 	@Override
 	public void inAPackageStatement(APackageStatement node) {
 		System.out.print("Package: ");
 	}
 
 	@Override
-	public void inABasePackageName(ABasePackageName node) {
-		System.out.println(node.getIdent().getText());
-	}
+	public void caseAPackageName(APackageName node) {
+		Iterator<TIdent> it = node.getComponents().iterator();
 
-	@Override
-	public void inARecPackageName(ARecPackageName node) {
-		System.out.print(node.getIdent().getText() + ".");
-	}
+		while (it.hasNext()) {
+			System.out.print(it.next().getText());
 
-	
-	@Override
-	public void inAFullPackageImported(AFullPackageImported node) {
-		System.out.print("Importing all ");
-	}
-	
-	@Override
-	public void outAFullPackageImported(AFullPackageImported node) {
-		System.out.println(" package.");
-	}
-	
-	
+			if (it.hasNext())
+				System.out.print(".");
+		}
 
-	@Override
-	public void inABaseFullPkgImport(ABaseFullPkgImport node) {
-		System.out.print(node.getIdent().getText());
-	}
-
-	@Override
-	public void inARecFullPkgImport(ARecFullPkgImport node) {
-		System.out.print(node.getIdent().getText() + ".");
+		// FIXME : maybe remove that (if package_name is used in other
+		// productions than package_statement alone)
+		System.out.println();
 	}
 
 	
 	
+	
+	
+	
+	/*
+	 * Package import
+	 */
 	@Override
-	public void inATypeNameImported(ATypeNameImported node) {
+	public void inAImportStatement(AImportStatement node) {
 		System.out.print("Importing ");
 	}
 
 	@Override
-	public void outATypeNameImported(ATypeNameImported node) {
-		System.out.println(" type.");
+	public void inAPackageImportPath(APackageImportPath node) {
+		if (node.getImportType() instanceof AFullPackageImportType)
+			System.out.print("everything");
+		else if (node.getImportType() instanceof ASingleTypeImportType)
+			System.out.print(((ASingleTypeImportType) node.getImportType())
+					.getIdent().getText());
+
+		System.out.print(" from ");
+
+		Iterator<PPackageImportPrefix> it = node.getPrefix().iterator();
+
+		if (!it.hasNext())
+			System.out.print("<root>");
+
+		while (it.hasNext()) {
+			System.out.print(((APackageImportPrefix) it.next()).getIdent()
+					.getText());
+
+			if (it.hasNext())
+				System.out.print(".");
+		}
+
+		System.out.println();
 	}
 
+	
+	
+	
+	
+	/*
+	 * Class declaration
+	 */
 	@Override
-	public void inATypeName(ATypeName node) {
-		System.out.print(node.getIdent().getText());
+	public void inAClassDeclaration(AClassDeclaration node) {
+		System.out.println("Declaring class \"" + node.getClassName().getText()
+				+ "\"");
 	}
-	
-	
-	
 
 }
