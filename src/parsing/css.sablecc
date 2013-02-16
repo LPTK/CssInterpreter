@@ -11,6 +11,8 @@ Helpers
     id_comp      = '_' | '$';
     identifier   = (letter | id_comp) (alphanum | id_comp)*;
 
+    character	 = [[0x20 .. 0x7e] - '"']; /* FIXME */
+
     cr           = 13;
     lf 	         = 10;
 
@@ -18,51 +20,71 @@ Helpers
 
 
 States
-    normal, comment;
+    normal, comment, string;
 
 
 Tokens
-    {normal} l_paren     = '(';
-    {normal} r_paren     = ')';
-    {normal} l_brace     = '{';
-    {normal} r_brace     = '}';
-    {normal} l_brack     = '[';
-    {normal} r_brack     = ']';
+    {normal} l_paren      = '(';
+    {normal} r_paren      = ')';
+    {normal} l_brace      = '{';
+    {normal} r_brace      = '}';
+    {normal} l_brack      = '[';
+    {normal} r_brack      = ']';
 
 
-    {normal} semicolon   = ';';
+    {normal} semicolon    = ';';
 
-    {normal} comma	= ',';
+    {normal} comma	  = ',';
 
-    {normal} dot 	= '.';
+    {normal} dot 	  = '.';
 
-    {normal} equal	= '=';
-    {normal} star	= '*';
+    {normal} equal	  = '=';
+    {normal} star	  = '*';
 
-    {normal} blank       = (' ' | cr | lf)+;
+    {normal} colon	  = ':';
+
+    {normal} blank        = (' ' | cr | lf)+;
     
-    {normal} key_class   = 'class';
-    {normal} key_def	 = 'def';
-    {normal} key_import  = 'import';
-    {normal} key_package = 'package';
-    {normal} key_parent  = 'parent';
-    {normal} key_this    = 'this';
+    {normal} key_class    = 'class';
+    {normal} key_def	  = 'def';
+    {normal} key_import   = 'import';
+    {normal} key_package  = 'package';
+    {normal} key_parent   = 'parent';
+    {normal} key_this     = 'this';
 
+    /* Type keywords */
+    {normal} key_bool	  = 'bool';
+    {normal} key_char	  = 'char';
+    {normal} key_int	  = 'int';
+
+    /* Type annotation keywords */
+    {normal} key_val	  = 'val';
+    {normal} key_rval	  = 'rval';
+    {normal} key_ref	  = 'ref';
+
+/*
+    {normal} key_	  = '';
+*/
 
     /* Nested comment management, as proposed in sablecc documentation */
     {normal->comment, comment} 
-    comment_begin = '/*';
+    comment_begin          = '/*';
 
-    {comment} comment_end = '*/'; 
+    {comment} comment_end  = '*/'; 
     {comment} comment_body = 
     (except_star*   star   except_slash)*   star?;
 
 
-    {normal} ident       = identifier;
+    {normal->string, string->normal} 
+    double_quote = '"';
+    {string} string_content = character*; 
+
+    {normal} ident          = identifier;
 
 Ignored Tokens
     blank,
-    comment_begin, comment_body, comment_end
+    comment_begin, comment_body, comment_end,
+    double_quote
     ;
 
 
@@ -96,8 +118,8 @@ package_import_prefix =
     ident   dot {-> New package_import_prefix (ident)};
 
 import_type {-> import_type} =
-    {full_package} star {-> New import_type.full_package ()}
-  | {single_type} ident {-> New import_type.single_type (ident)}
+    {full_package} star {-> New import_type.full_package ()	}
+  | {single_type} ident {-> New import_type.single_type  (ident)}
   ;
 
 package_name {-> package_name} =
@@ -109,19 +131,35 @@ pkg_name_tail {-> ident } =
 
 type_name = 
     {ident} ident
-/*  | {pkg_name} package_name   dot   ident */ /* FIXME */
+/*  | {pkg_name} package_name   dot   ident */ /* TODO */
 /*  | {full_type} full_type   dot   ident  */ /* TODO */
   ;
 
 
 /* TODO */
-/* 
-full_type =
-    {primitive} primitive_type
+full_type {-> full_type} =
+    {primitive} [type]:primitive_type 
+      {-> New full_type.primitive (type.primitive_type)}
+/*
   | {type_expr} type_expr
-  | {full_composed} full_composed_type 
-  ;
+  | {full_composed} full_composed_type
 */
+  ;
+
+
+primitive_type =
+    {bool} key_bool {-> New primitive_type.bool ()}
+  | {char} key_char {-> New primitive_type.char ()}
+  | {int}  key_int  {-> New primitive_type.int 	()}
+  ;
+
+
+type_attribute {-> type_attribute} =
+    {val}  key_val  {-> New type_attribute.val	()}
+  | {rval} key_rval {-> New type_attribute.rval ()}
+  | {ref}  key_ref  {-> New type_attribute.ref 	()}
+  ;
+
 
 type_declaration {-> type_declaration} = 
     {class_declaration} class_declaration 
@@ -161,11 +199,23 @@ field_declaration {-> field_declaration?} =
 
 
 method_declaration {-> method_declaration} =
-    key_class?   key_def   [name]:ident   [block]:statement_block
-      {-> New method_declaration (name, [block.statement])}
+    key_class?   key_def   [name]:ident
+    [type]:type_annotation?
+    [body]:block_or_empty
+      {-> New method_declaration (name, type, [body.statement])}
   ;
 /* TODO : full syntax */
 
+
+/* FIXME : method_type_annotation rather ? */
+type_annotation {-> type_annotation} =
+    colon   [attribute]:type_attribute   [type]:full_type
+      {-> New type_annotation (attribute, type.full_type)};
+
+block_or_empty {-> statement*} =
+    {empty} semicolon {-> []}
+  | {block} statement_block {-> [statement_block.statement]}
+  ;
 
 statement_block {-> statement*} =
     l_brace   statement*   r_brace {-> [statement.statement]};
@@ -184,6 +234,8 @@ expression {-> expr} =
   /* Ident on the right, do we keep it ? */
   | {reference} [prefix_expr]:expression   dot   [suffix]:ident
       {-> New expr.reference (prefix_expr.expr, suffix)}
+  | {string_expr} string_content 
+      {-> New expr.string (string_content)}
   ;
 
 
@@ -248,6 +300,25 @@ import_type =
   ;
 
 
+full_type =
+    {primitive} primitive_type
+/* TODO */
+  ; 
+
+primitive_type =
+    {bool}
+  | {char}
+  | {int}
+  ;
+
+
+type_attribute = 
+    {val}
+  | {rval}
+  | {ref}
+  ;
+
+
 type_declaration = 
     {class_declaration} class_declaration;
 
@@ -261,9 +332,13 @@ field_declaration =
   ;
 
 method_declaration =
-    [name]:ident   [block]:statement*
+    [name]:ident   [type]:type_annotation?   [block]:statement*
   ;
 
+
+type_annotation =
+    type_attribute?   full_type
+  ;
 
 statement = 
     {expr} expr
@@ -273,9 +348,12 @@ expr =
     {id} general_id
   | {method_call} method_call
   | {reference} [prefix_expr]:expr   [suffix]:ident
+  | {string} string_content
   ;
 
 
+/* FIXME : maybe having a rule here is useless
+   (can be directly in the expr "method_call" rule...) */
 method_call =
     expr   arg_list;
 

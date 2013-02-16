@@ -26,7 +26,7 @@ public class ASTPrinter extends DepthFirstAdapter {
 				System.out.print(".");
 		}
 
-		// FIXME : maybe remove that (if package_name is used in other
+		// FIXME : maybe remove this (if package_name is used in other
 		// productions than package_statement alone)
 		System.out.println();
 	}
@@ -80,7 +80,61 @@ public class ASTPrinter extends DepthFirstAdapter {
 	@Override
 	public void inAClassDeclaration(AClassDeclaration node) {
 		System.out.println("Declaring class \"" + node.getClassName().getText()
-				+ "\"");
+				+ "\" (with " + node.getBlock().size() + " member(s)):");
 	}
+	@Override
+	public void outAClassDeclaration(AClassDeclaration node) {
+		System.out.println("End of " + node.getClassName().getText() 
+				+ " class declaration.");
+	}
+	
+	
+
+	
+	
+	/*
+	 * Method declaration
+	 */
+	@Override
+	public void inAMethodDeclaration(AMethodDeclaration node) {
+		System.out.println("Declaring method " + node.getName().getText()
+				+ " with " + node.getBlock().size() + " statement(s).");
+	}
+
+	
+	
+	
+	
+	/*
+	 * Statements
+	 */
+	@Override
+	public void inAExprStatement(AExprStatement node) {
+		System.out.print("  statement: expression: ");
+	}
+
+	
+	
+	/*
+	 * Expressions	
+	 */
+	@Override
+	public void inAMethodCall(AMethodCall node) {
+		// FIXME : this will explode if the method is not referenced via its name
+		String name = ((AIdentGeneralId) ((AIdExpr) node.getExpr()).getGeneralId())
+				.getIdent().getText();
+		System.out.print("calling method " + name + " with parameters:");
+	}
+	@Override
+	public void outAMethodCall(AMethodCall node) {
+		System.out.println();
+	}
+
+	@Override
+	public void inAStringExpr(AStringExpr node) {
+		System.out.print("\"" + node.getStringContent().getText() + "\"");
+	}
+	
+	
 
 }
