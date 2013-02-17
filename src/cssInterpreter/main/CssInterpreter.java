@@ -7,6 +7,7 @@ import java.io.StringReader;
 
 import cssInterpreter.lexer.CssLexer;
 import cssInterpreter.node.Start;
+import cssInterpreter.node.Switch;
 import cssInterpreter.parser.Parser;
 import cssInterpreter.test.ASTPrinter;
 
@@ -46,12 +47,16 @@ public class CssInterpreter {
 			
 
 			ast = parser.parse();
+			
+			//ast.getPCompilationUnit().apply(new Switch(){});
+			//ast.getPCompilationUnit().apply(new Switch(){});
 
 			// Print the ast. Should be removed later
 			ast.apply(new ASTPrinter());
 
 		} catch (Exception e) {
 			System.out.println(e);
+			e.printStackTrace();
 		}
 
 	}

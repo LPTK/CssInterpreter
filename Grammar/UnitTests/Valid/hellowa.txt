@@ -1,0 +1,15 @@
+
+class MyClass {
+  
+  alias dataname;
+  val i: int = 42 @knownas dataname;
+  
+  def niceMethod : int
+  @mutates stdout
+  @shows dataname
+  {
+    print ("Hello world!");
+	return i;
+  }
+  
+}

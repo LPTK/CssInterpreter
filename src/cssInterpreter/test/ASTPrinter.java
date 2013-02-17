@@ -123,7 +123,7 @@ public class ASTPrinter extends DepthFirstAdapter {
 		// FIXME : this will explode if the method is not referenced via its name
 		String name = ((AIdentGeneralId) ((AIdExpr) node.getExpr()).getGeneralId())
 				.getIdent().getText();
-		System.out.print("calling method " + name + " with parameters:");
+		System.out.print("calling method " + name + " with parameters: ");
 	}
 	@Override
 	public void outAMethodCall(AMethodCall node) {

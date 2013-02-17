@@ -32,6 +32,16 @@ public class AutoChecker {
       this.inputString = inputString;
       this.expectedResult = expectedResult;
    }
+   
+   static List<String> filesInDir(String dirname) {
+	   List<String> ret = new ArrayList<String>();
+	   File folder = new File(dirname);
+	   File[] listOfFiles = folder.listFiles();
+	   for (int i = 0; i < listOfFiles.length; i++)
+		   if (listOfFiles[i].isFile())
+			   ret.add(dirname+"/"+listOfFiles[i].getName());
+	   return ret;
+   }
 
    @Parameterized.Parameters
    public static Collection primeNumbers() {
@@ -39,18 +49,11 @@ public class AutoChecker {
 		         { "lol", true },
 		         { "test", false }
 		      });*/
-      /*return Arrays.asList(new Object[][] {
-         { "lol", true },
-         { "test", false }
-      });*/
-	  //System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-	   
+	   /*
 	  List<Object[]> ret = new ArrayList<Object[]>();
-	  
 	  String foldername = "Grammar/UnitTests/Valid";
 	  File folder = new File(foldername);
 	  File[] listOfFiles = folder.listFiles();
-	  
 	  //System.out.println(folder.list());
 	  for (int i = 0; i < listOfFiles.length; i++) {
 		  if (listOfFiles[i].isFile()) {
@@ -59,18 +62,39 @@ public class AutoChecker {
 			  ret.add(new Object[] {foldername+"/"+filename, true});
 		  }
 	  }
-	  
-	  return ret;
+	  return ret;*/
+	   
+	   List<Object[]> ret = new ArrayList<Object[]>();
+	   for (String f : filesInDir("Grammar/UnitTests/Valid"))
+		   ret.add(new Object[] {f, true});
+	   for (String f : filesInDir("Grammar/UnitTests/Invalid"))
+		   ret.add(new Object[] {f, false});
+	   return ret;
    }
 
    // This test will run 4 times since we have 5 parameters defined
    @Test
-   public void testPrimeNumberChecker() {
-      System.out.println("Parameterized String is : " + inputString);
-      assertEquals(expectedResult, 
-    		  cssChecker.validate(inputString));
+   public void testCssChecker() {
+      //System.out.println("Parameterized String is : " + inputString);
+	  System.out.println((expectedResult?"Valid":"Invalid")+" unit test file: " + inputString);
+	  Boolean result = cssChecker.validate(inputString);
+	  if (expectedResult == result)
+		   System.out.println("Unit test succeeded.\n");
+	  else System.out.println("Unit test failed.\n");
+      assertEquals(expectedResult, result);
    }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
