@@ -1,0 +1,18 @@
+
+package lol.test;
+
+import lol.*;
+import com.bullshit.*;
+
+import AVeryNiceType;
+
+
+class MyClass {
+  def niceMethod : val int
+  {
+    print ("Hello world!");
+    do ("a","b");
+  }
+
+  def niceMethod : val int {}
+}
