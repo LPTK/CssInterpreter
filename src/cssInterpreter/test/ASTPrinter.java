@@ -1,9 +1,11 @@
 package cssInterpreter.test;
 
 import cssInterpreter.analysis.DepthFirstAdapter;
+import cssInterpreter.node.AAttrDeclStatement;
 import cssInterpreter.node.AClosure;
 import cssInterpreter.node.AExprStatement;
 import cssInterpreter.node.ANumberRestrExpr;
+
 
 public class ASTPrinter extends DepthFirstAdapter {
 	
@@ -16,15 +18,22 @@ public class ASTPrinter extends DepthFirstAdapter {
 	@Override
     public void inAExprStatement(AExprStatement node)
     {
-        System.out.println("In statement: "+node.getExpr().toString());
+        System.out.println("Expr statement: "+node.getExpr().toString());
     }
 	
 	@Override
+
 	public void inANumberRestrExpr(ANumberRestrExpr node)
     {
         System.out.println("In a number: "+node.getIntegerNumber().toString());
     }
  
+
+    public void inAAttrDeclStatement(AAttrDeclStatement node)
+    {
+		System.out.println("Decl statement: "+node.toString());
+    }
+
 }
 
 //public class ASTPrinter extends DepthFirstAdapter {

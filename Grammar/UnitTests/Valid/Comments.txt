@@ -1,0 +1,9 @@
+
+a := "ok";
+/* comment test */
+
+/* comment
+  /* nested comment */
+*/
+b := "test";
+
