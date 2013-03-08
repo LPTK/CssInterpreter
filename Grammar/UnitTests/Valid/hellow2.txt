@@ -1,9 +1,0 @@
-
-class MyClass {
-  def niceMethod : val int
-  {
-    print ("Hello world!");
-    do ("a","b");
-  }
-
-}

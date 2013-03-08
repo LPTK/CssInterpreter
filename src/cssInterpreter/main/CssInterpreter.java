@@ -7,7 +7,6 @@ import java.io.StringReader;
 
 import cssInterpreter.lexer.CssLexer;
 import cssInterpreter.node.Start;
-import cssInterpreter.node.Switch;
 import cssInterpreter.parser.Parser;
 import cssInterpreter.test.ASTPrinter;
 
@@ -23,18 +22,18 @@ public class CssInterpreter {
 		
 		String text = new String();
 		String filename = "/tmp/test.css"; // TODO
-
+		
 		try {
 			FileReader sourceReader = new FileReader(filename);
 			//InputStreamReader sourceReader = new InputStreamReader(System.in);
 			BufferedReader bufferedReader = new BufferedReader(sourceReader);
-
+			
 			StringBuilder stringBuilder = new StringBuilder();
 			int c;
 			while ((c = bufferedReader.read()) != -1) {
 				stringBuilder.append((char) c);
 			}
-
+			
 			bufferedReader.close();
 			sourceReader.close();
 			

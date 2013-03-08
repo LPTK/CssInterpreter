@@ -1,17 +1,16 @@
 package cssInterpreter.unittests;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
- 
-import org.junit.Test;
+
 import org.junit.Before;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.Test;
 import org.junit.runner.RunWith;
-import static org.junit.Assert.assertEquals;
+import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class AutoChecker {
@@ -37,6 +36,7 @@ public class AutoChecker {
 	   List<String> ret = new ArrayList<String>();
 	   File folder = new File(dirname);
 	   File[] listOfFiles = folder.listFiles();
+	   //System.out.println(dirname);
 	   for (int i = 0; i < listOfFiles.length; i++)
 		   if (listOfFiles[i].isFile())
 			   ret.add(dirname+"/"+listOfFiles[i].getName());
