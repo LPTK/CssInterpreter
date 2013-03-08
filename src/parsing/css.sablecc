@@ -328,8 +328,8 @@ naked_type_expr {-> naked_type} =
       //{-> New naked_type.access (expr.prefix_expr, expr.ident)}
       {-> New naked_type.access (expr.field_access)}
   ;
-  
-  
+
+
 /*
 template_arg_list {-> arg_list} =
     lt arg_list gt
@@ -369,13 +369,21 @@ template_arg_list {-> expr} =
 
 
 
-
+/*
 expression {-> expr} = 
     {single} [argxpr]:arg_expression
       {-> New expr.single (argxpr.arg_expr)}
   | {invocation} [restxpr]:restricted_expression [xpr]:expression //arg_list
   //| {invocation} [restxpr]:restricted_expression [a]:star [b]:star [xpr]:expression //arg_list
       {-> New expr.invocation (restxpr.restr_expr, xpr.expr)}
+  ;
+*/
+expression {-> expr} = 
+    {single} [argxpr]:arg_expression
+      {-> New expr.single (argxpr.arg_expr)}
+  | {invocation} [argxpr]:arg_expression [xpr]:expression //arg_list
+  //| {invocation} [restxpr]:restricted_expression [a]:star [b]:star [xpr]:expression //arg_list
+      {-> New expr.invocation (argxpr.arg_expr, xpr.expr)}
   ;
 
 
@@ -384,6 +392,8 @@ arg_expression {-> arg_expr} =
       {-> New arg_expr.single (restxpr.restr_expr)}
   | {list} [restxpr]:restricted_expression comma [argxpr]:arg_expression
       {-> New arg_expr.list (restxpr.restr_expr, argxpr.arg_expr)}
+  | {assign} [restxpr]:restricted_expression equal [argxpr]:arg_expression
+      {-> New arg_expr.assign (restxpr.restr_expr, argxpr.arg_expr)}
   ;
 
 restricted_expression {-> restr_expr} =
@@ -408,6 +418,11 @@ restricted_expression {-> restr_expr} =
   
   | {closure} [closure]:closure
       {-> New restr_expr.closure (closure)}
+  
+  /*
+  | {closure} [ident]:ident equal
+      {-> New restr_expr.assign (closure)}
+  */
   
   /*
   | {list} [arg_list]:arg_list
@@ -600,12 +615,13 @@ statement =
 
 expr =
     {single} arg_expr
-  | {invocation} restr_expr expr
+  | {invocation} arg_expr expr
   ;
 
 arg_expr =
     {single} restr_expr
   | {list} restr_expr arg_expr
+  | {assign} restr_expr arg_expr
   ;
 
 restr_expr =
