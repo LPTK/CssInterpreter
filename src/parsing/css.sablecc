@@ -30,6 +30,8 @@ Tokens
     {normal} r_brace      = '}';
     {normal} l_brack      = '[';
     {normal} r_brack      = ']';
+    {normal} lt           = '<';
+    {normal} gt           = '>';
 
 
     {normal} semicolon    = ';';
@@ -46,21 +48,21 @@ Tokens
     {normal} blank        = (' ' | cr | lf)+;
     
     {normal} key_class    = 'class';
-    {normal} key_def	  = 'def';
     {normal} key_import   = 'import';
     {normal} key_package  = 'package';
     {normal} key_parent   = 'parent';
     {normal} key_this     = 'this';
 
-    /* Type keywords */
+    /* Type keywords 
     {normal} key_bool	  = 'bool';
     {normal} key_char	  = 'char';
-    {normal} key_int	  = 'int';
+    {normal} key_int	  = 'int';*/
 
     /* Type annotation keywords */
     {normal} key_val	  = 'val';
     {normal} key_rval	  = 'rval';
-    {normal} key_ref	  = 'ref';
+    {normal} key_ref    = 'ref';
+    {normal} key_def    = 'def';
 
 /*
     {normal} key_	  = '';
@@ -90,101 +92,75 @@ Ignored Tokens
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Productions
-compilation_unit {-> compilation_unit} = 
-    package_statement   import_statement*   type_declaration*
-      {-> New compilation_unit 
-            (package_statement.package_statement, [import_statement.import_statement],
-             [type_declaration.type_declaration])};
 
 
-package_statement {-> package_statement} = 
-    key_package   package_name   semicolon 
-      {-> New package_statement (package_name)};
 
-import_statement {-> import_statement} =
-    key_import   package_import_path   semicolon
-      {-> New import_statement (package_import_path)};
+/*
+compilation_unit {-> compilation_unit} =
+    statement*
+      {-> New compilation_unit ([statement.statement])};
+*/
 
-/* 
- * Grammar transform to support the 
- * import <qualified package name>.*;
- * syntax. 
- */
-package_import_path {-> package_import_path} =
-    [prefix]:package_import_prefix*   import_type;
-
-package_import_prefix =
-    ident   dot {-> New package_import_prefix (ident)};
-
-import_type {-> import_type} =
-    {full_package} star {-> New import_type.full_package ()	}
-  | {single_type} ident {-> New import_type.single_type  (ident)}
+compilation_unit {-> closure} =
+    statement*
+      {-> New closure ([statement.statement])}
   ;
 
-package_name {-> package_name} =
-    ident   [tail]:pkg_name_tail* {-> New package_name ([ident, tail.ident])};
-
-pkg_name_tail {-> ident } =
-    dot   ident  {-> ident};
-
-
-type_name = 
-    {ident} ident
-/*  | {pkg_name} package_name   dot   ident */ /* TODO */
-/*  | {full_type} full_type   dot   ident  */ /* TODO */
-  ;
-
-
-/* TODO */
+/*
 full_type {-> full_type} =
-    {primitive} [type]:primitive_type 
-      {-> New full_type.primitive (type.primitive_type)}
+    {type_name} [type]:type_name 
+      {-> New full_type.type_name (type.ident)}
+*/
+/*    {primitive} [type]:primitive_type 
+      {-> New full_type.primitive (type.primitive_type)}*/
 /*
   | {type_expr} type_expr
   | {full_composed} full_composed_type
 */
-  ;
 
-
+/*
 primitive_type =
     {bool} key_bool {-> New primitive_type.bool ()}
   | {char} key_char {-> New primitive_type.char ()}
   | {int}  key_int  {-> New primitive_type.int 	()}
   ;
+*/
 
-
-type_attribute {-> type_attribute} =
-    {val}  key_val  {-> New type_attribute.val	()}
-  | {rval} key_rval {-> New type_attribute.rval ()}
-  | {ref}  key_ref  {-> New type_attribute.ref 	()}
+attr_type {-> attr_type} =
+    {val}  key_val  {-> New attr_type.val	()}
+  | {rval} key_rval {-> New attr_type.rval ()}
+  | {ref}  key_ref  {-> New attr_type.ref  ()}
+//  | {def}  key_def  {-> New field_type.def  ()}
   ;
 
 
-type_declaration {-> type_declaration} = 
-    {class_declaration} class_declaration 
-      {-> New type_declaration.class_declaration (class_declaration.class_declaration)}
-/* TODO : others (interface / typedef) */
-  ;
+closure {-> closure} =
+    l_brace   statement*   r_brace 
+      {-> New closure([statement.statement])};
 
-class_declaration {-> class_declaration} =
-    key_class   [name]:ident
-    /* TODO : template inheritage visibility annotations */
-    [block]:field_block
-      {-> New class_declaration (name, [block.field_declaration])}
-;
-
-
-field_block {-> field_declaration*} =
-    l_brace   field_declaration*   r_brace 
-      {-> [field_declaration.field_declaration]};
-
-
-field_declaration {-> field_declaration?} =
+/*
+field_declaration {-> field?} =
     {method_declaration} method_declaration 
       {-> New field_declaration.method_declaration (method_declaration.method_declaration)}
   | {empty} semicolon {-> Null}
-  ;
+  ;*/
 /* TODO :
  / constructor_declaration 
  / destructor_declaration 
@@ -197,21 +173,23 @@ field_declaration {-> field_declaration?} =
  /  ";"  . 
 */
 
-
+/*
 method_declaration {-> method_declaration} =
     key_class?   key_def   [name]:ident
     [type]:type_annotation?
     [body]:block_or_empty
       {-> New method_declaration (name, type, [body.statement])}
-  ;
+  ;*/
 /* TODO : full syntax */
 
 
-/* FIXME : method_type_annotation rather ? */
+/* FIXME : method_type_annotation rather ? 
 type_annotation {-> type_annotation} =
-    colon   [attribute]:type_attribute   [type]:full_type
+    colon   [attribute]:attribute_type   [type]:full_type
       {-> New type_annotation (attribute, type.full_type)};
+*/
 
+/*
 block_or_empty {-> statement*} =
     {empty} semicolon {-> []}
   | {block} statement_block {-> [statement_block.statement]}
@@ -219,47 +197,302 @@ block_or_empty {-> statement*} =
 
 statement_block {-> statement*} =
     l_brace   statement*   r_brace {-> [statement.statement]};
+*/
+
 
 
 statement {-> statement?} =
     {empty} semicolon {-> Null}
-  | {expr} expression {-> New statement.expr (expression.expr)}
+  | {expr} expression semicolon {-> New statement.expr (expression.expr)}
+  | {attribute_decl} attribute_decl {-> New statement.attr_decl (attribute_decl.attr_decl)}
+  | {function_decl} function_decl {-> New statement.def_decl (function_decl.def_decl)}
   ;
 
 
-expression {-> expr} =
+/*
+attribute_decl {-> decl} =
+    
+    // {named_decl} [decl_type]:field_type? [name]:ident [params]:param_list? [type_init]:type_init? [clos]:decl_end
+    // //  {-> New decl (decl_type, name, params.closure, type_init.type, type_init.value)}
+    //   {-> New decl (decl_type, name, params.closure, type_init.typed_value, clos.closure)}
+    
+    
+    {named_decl} [decl_type]:field_type? [name]:ident [type_init]:type_init [clos]:decl_end
+    //  {-> New decl (decl_type, name, params.closure, type_init.type, type_init.value)}
+      {-> New decl (decl_type, name, Null, type_init.typed_value, clos.closure)}
+    
+  | {typed_decl} [decl_type]:field_type [params]:param_list? [type_init]:type_init [clos]:decl_end
+      {-> New decl (decl_type, Null, params.closure, type_init.typed_value, clos.closure)}
+    
+  ;
+*/
+  
+// declaration {-> decl} =
+    
+//     {named_decl} [decl_type]:field_type [name]:ident [type_init]:type_init [clos]:decl_end
+//       {-> New decl (decl_type, name, Null, type_init.typed_value, clos.closure)}
+    
+//   ;
+
+function_decl {-> def_decl} =
+    
+    key_def [name]:ident? [params]:param_list? [type_init]:type_init semicolon
+      {-> New def_decl (name, params.closure, type_init.typed_value)}
+    
+  ;
+
+
+attribute_decl {-> attr_decl} =
+    
+    [attr_type]:attr_type? [name]:ident [type_init]:type_init semicolon
+    //  {-> New decl (decl_type, name, params.closure, type_init.type, type_init.value)}
+      {-> New attr_decl (attr_type, name, type_init.typed_value)}
+    
+  ;
+
+
+
+
+type_init {-> typed_value} =
+    {explicit} colon [type]:type [assign]:assignment?
+      {-> New typed_value (type, assign.expr)}
+  | {inferred} colon [assign]:assignment
+      {-> New typed_value (Null, assign.expr)}
+  ;
+/*
+type_init {-> type, expr} =
+    {explicit} colon [type]:type [assign]:assignment?
+      {-> type, assign.expr}
+  | {inferred} colon [assign]:assignment
+      {-> Null, assign.expr}
+  ;
+*/
+
+
+
+
+
+
+
+
+
+
+/*
+decl_end {-> closure} =
+    semicolon
+    {-> Null}
+  | [closure]:closure
+    {-> New closure(closure.closure)}
+  ;
+*/
+decl_end {-> closure?} =
+    //l_brack /////// semicolon
+    semicolon
+    {-> Null}
+  ;
+
+
+
+
+
+
+
+
+assignment {-> expr} =
+    equal expression
+      {-> expression.expr}
+  ;
+
+param_list {-> closure} =
+    l_paren [statements]:statement* r_paren
+      {-> New closure([statements.statement])}
+  ;
+
+
+/*
+type_spec {-> type} =
+    colon [type]:type
+      {-> type.type}
+   ;
+*/
+
+type {-> type} =
+    [base]:naked_type_expr [args]:template_arg_list?
+      {-> New type (base.naked_type, args.expr)}
+  ;
+
+naked_type_expr {-> naked_type} =
+    {ident} [name]:ident
+      {-> New naked_type.ident (name)}
+  | {access} [expr]:field_access
+      //{-> New naked_type.access (expr.prefix_expr, expr.ident)}
+      {-> New naked_type.access (expr.field_access)}
+  ;
+  
+  
+/*
+template_arg_list {-> arg_list} =
+    lt arg_list gt
+    {-> arg_list.arg_list}
+  ;
+*/
+template_arg_list {-> expr} =
+    lt expression gt
+    {-> expression.expr}
+  ;
+
+
+
+
+
+
+
+// expression {-> expr} =
+//     {identifier} general_identifier 
+//       {-> New expr.id (general_identifier.general_id)}
+//   | {invocation} invocation
+//       {-> New expr.invocation (invocation)}
+//   /* Ident on the right, do we keep it ? */
+//   /*| {field_access} [prefix_expr]:expression   dot   [suffix]:ident
+//       {-> New expr.field_access (prefix_expr.expr, suffix)}*/
+//   | {field_access} field_access
+//       {-> New expr.field_access (field_access.field_access)}
+//   | {string_expr} string_content 
+//       {-> New expr.string (string_content)}
+//   /*| {paren_expr} l_paren   [embedded_expr]:expression   r_paren 
+//       {-> New expr (embedded_expr.expr)}*/
+//     | {paren_expr} l_paren   [embedded_expr]:expression   r_paren 
+//       {-> embedded_expr.expr}
+//   | {closure} [closure]:closure
+//       {-> New expr.closure (closure)}
+//   ;
+
+
+
+
+expression {-> expr} = 
+    {single} [argxpr]:arg_expression
+      {-> New expr.single (argxpr.arg_expr)}
+  | {invocation} [restxpr]:restricted_expression [xpr]:expression //arg_list
+  //| {invocation} [restxpr]:restricted_expression [a]:star [b]:star [xpr]:expression //arg_list
+      {-> New expr.invocation (restxpr.restr_expr, xpr.expr)}
+  ;
+
+
+arg_expression {-> arg_expr} =
+    {single} [restxpr]:restricted_expression
+      {-> New arg_expr.single (restxpr.restr_expr)}
+  | {list} [restxpr]:restricted_expression comma [argxpr]:arg_expression
+      {-> New arg_expr.list (restxpr.restr_expr, argxpr.arg_expr)}
+  ;
+
+restricted_expression {-> restr_expr} =
+
     {identifier} general_identifier 
-      {-> New expr.id (general_identifier.general_id)}
-  | {method_call} method_call {-> New expr.method_call (method_call)}
-  /* Ident on the right, do we keep it ? */
-  | {reference} [prefix_expr]:expression   dot   [suffix]:ident
-      {-> New expr.reference (prefix_expr.expr, suffix)}
+      {-> New restr_expr.id (general_identifier.general_id)}
+      
+  | {field_access} field_access
+      {-> New restr_expr.field_access (field_access.field_access)}
+      
   | {string_expr} string_content 
-      {-> New expr.string (string_content)}
+      {-> New restr_expr.string (string_content)}
+      
+      
+  /*| {invocation} invocation
+      {-> New expr.invocation (invocation)} */
+  /*| {paren_expr} l_paren   [embedded_expr]:expression   r_paren
+      {-> embedded_expr.restr_expr}*/
+      
+  | {paren_expr} l_paren   [embedded_expr]:expression   r_paren
+      {-> New restr_expr.embedded(embedded_expr.expr)}
+  
+  | {closure} [closure]:closure
+      {-> New restr_expr.closure (closure)}
+  
+  /*
+  | {list} [arg_list]:arg_list
+      {-> New restr_expr.arg_list (arg_list)}
+      */
+  
   ;
 
+
+
+
+
+
+
+
+
+/*
+field_access {-> field_access} =
+    [prefix_expr]:expression   dot   [suffix]:ident
+      {-> New field_access (prefix_expr.expr, suffix)}
+  ;
+*/
+field_access {-> field_access} =
+    [prefix_expr]:restricted_expression   dot   [suffix]:ident
+      {-> New field_access (prefix_expr.restr_expr, suffix)}
+  ;
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+/*
+invocation {-> invocation} =
+    expression   l_brack  arg_list  r_brack
+      {-> New invocation (expression.expr, arg_list.arg_list)}
+  ;
+*/
 
 
 /*        Method call and arguments        */
-method_call {-> method_call} =
-    expression   l_paren   arg_list   r_paren
-      {-> New method_call (expression.expr, arg_list.arg_list)}
-  ;
+// arg_list {-> arg_list} =
+//     arg   [tail]:arg_list_tail* 
+//       {-> New arg_list ([arg, tail.arg])};
+// /*    {empty} {-> New arg_list ([])}
+//   | {not_empty} arg   [tail]:arg_list_tail* 
+//       {-> New arg_list ([arg, tail.arg])};*/
 
-arg_list {-> arg_list} =
-    {empty} {-> New arg_list ([])}
-  | {not_empty} arg   [tail]:arg_list_tail* 
-      {-> New arg_list ([arg, tail.arg])};
+// arg_list_tail {-> arg } =
+//     comma arg  {-> arg};
 
-arg_list_tail {-> arg } =
-    comma arg  {-> arg};
+// arg =
+//     /* TODO : ident, sure ? */
+//     {assign} ident   equal   expression 
+//       {-> New arg.assign (ident, expression.expr)}
+//   | {expression} expression {-> New arg.expr (expression.expr)}
+//   ;
 
-arg =
-    /* TODO : ident, sure ? */
-    {assign} ident   equal   expression 
-      {-> New arg.assign (ident, expression.expr)}
-  | {expression} expression {-> New arg.expr (expression.expr)}
-  ;
+
+// arg_list {-> arg_list} =
+//     arg   [tail]:arg_list_tail+ ////////////////// gère pas le sinlge arg 
+//       {-> New arg_list ([arg, tail.arg])};
+// /*    {empty} {-> New arg_list ([])}
+//   | {not_empty} arg   [tail]:arg_list_tail* 
+//       {-> New arg_list ([arg, tail.arg])};*/
+
+// arg_list_tail {-> arg } =
+//     comma arg  {-> arg};
+
+// arg =
+//     /* TODO : ident, sure ? */
+//     {assign} ident   equal   arg_list_expression 
+//       {-> New arg.assign (ident, arg_list_expression.restr_expr)}
+//   | {expression} restricted_expression {-> New arg.expr (restricted_expression.restr_expr)}
+//   ;
+
+
+
+
+
+
 
 
 
@@ -272,53 +505,71 @@ general_identifier {-> general_id} =
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /********   AST specification   ********/
 Abstract Syntax Tree
-compilation_unit  = 
-    package_statement   import_statement*   type_declaration*;
 
+/*
+compilation_unit =
+    [statements]:statement*;
+*/
 
-package_statement  = 
-    package_name;
+closure =
+    [statements]:statement*;
 
-package_name =
-    [components]:ident+;
+/*
+field =
+    {instruction} instruction
+  | {declaration}
+;
 
+instruction =
+    {call_statement} [called_expr]:ident
 
-import_statement  =
-    package_import_path;
+expression =
 
-package_import_path =
-    [prefix]:package_import_prefix*   import_type;
-
-package_import_prefix =
-    ident;
-
-import_type =
-    {full_package}
-  | {single_type} ident
-  ;
 
 
 full_type =
-    {primitive} primitive_type
-/* TODO */
-  ; 
+    {type_name} ident
+//    {primitive} primitive_type
+// TODO 
+  ;
+*/
 
+/*
 primitive_type =
     {bool}
   | {char}
   | {int}
   ;
+*/
 
-
-type_attribute = 
+attr_type = 
     {val}
   | {rval}
   | {ref}
+ // | {def}
   ;
 
-
+/*
 type_declaration = 
     {class_declaration} class_declaration;
 
@@ -334,37 +585,110 @@ field_declaration =
 method_declaration =
     [name]:ident   [type]:type_annotation?   [block]:statement*
   ;
-
-
+*/
+/*
 type_annotation =
-    type_attribute?   full_type
+    attribute_type?   full_type
   ;
-
+*/
+  
 statement = 
     {expr} expr
+  | {attr_decl} attr_decl
+  | {def_decl} def_decl
   ;
 
 expr =
-    {id} general_id
-  | {method_call} method_call
-  | {reference} [prefix_expr]:expr   [suffix]:ident
-  | {string} string_content
+    {single} arg_expr
+  | {invocation} restr_expr expr
   ;
+
+arg_expr =
+    {single} restr_expr
+  | {list} restr_expr arg_expr
+  ;
+
+restr_expr =
+    {id} general_id
+  //| {invocation} invocation
+  //| {field_access} [prefix_expr]:expr   [suffix]:ident
+  | {field_access} field_access
+  | {string} string_content
+  | {closure} closure
+  | {arg_list} arg_list
+  | {embedded} expr
+  ;
+/*
+decl =
+    [field_type]:field_type? [name]:ident? [params]:closure? type? [value]:expr?
+  ;
+*/
+attr_decl =
+    [attr_type]:attr_type? [name]:ident? typed_value?
+  ;
+  
+def_decl =
+    [name]:ident? [params]:closure? typed_value?
+  ;
+
+
+typed_value =
+    type? [value]:expr?
+  ;
+
+/*
+type =
+    [base]:naked_type [args]:arg_list?
+  ;*/
+type =
+    [base]:naked_type [args]:expr?
+  ;
+
+naked_type =
+    {ident} [name]:ident
+  //| {access} [expr]:expr [name]:ident
+    | {access} field_access
+  ;
+
+
+
+
+/*
+field_access =
+    [prefix_expr]:expr ident
+  ;
+*/
+field_access =
+    [prefix_expr]:restr_expr ident
+  ;
+
+
+
 
 
 /* FIXME : maybe having a rule here is useless
-   (can be directly in the expr "method_call" rule...) */
-method_call =
-    expr   arg_list;
-
+   (can be directly in the expr "invocation" rule...) */
+invocation =
+    expr   arg_list
+  ;
 
 arg_list =
-    arg*;
+    arg*
+  ;
 
+/*
 arg =
-    {assign} ident   expr /* TODO : ident, sure ? */
+    {assign} ident   expr ///// TODO : ident, sure ?
   | {expr} expr
   ;
+*/
+arg =
+    {assign} ident   restr_expr /* TODO : ident, sure ? */
+  | {expr} restr_expr
+  ;
+
+
+
 
 
 general_id =
