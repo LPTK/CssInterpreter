@@ -1,0 +1,10 @@
+
+val a:= Int = "a";
+a := "a";
+ref a: MyClass;
+
+def foo(a: Int = "a";) := {
+  print "ok";
+};
+
+

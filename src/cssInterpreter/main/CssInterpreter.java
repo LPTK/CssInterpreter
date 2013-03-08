@@ -21,7 +21,8 @@ public class CssInterpreter {
 		Start ast;
 		
 		String text = new String();
-		String filename = "/tmp/test.css"; // TODO
+		//String filename = "/tmp/test.css"; // TODO
+		String filename = "/tmp/FunctionCalls.txt"; // TODO
 		
 		try {
 			FileReader sourceReader = new FileReader(filename);
