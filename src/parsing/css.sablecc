@@ -257,7 +257,7 @@ template_arg_list {-> expr} =
     {-> expression.expr}
   ;
 
-
+/*
 expression {-> expr} = 
     {single} [argxpr]:arg_expression
       {-> New expr.single (argxpr.arg_expr)}
@@ -266,7 +266,6 @@ expression {-> expr} =
   | {empty_invocation} [argxpr]:arg_expression [targs]:template_arg_list
       {-> New expr.invocation (argxpr.arg_expr, targs.expr, Null)}
   ;
-
 
 arg_expression {-> arg_expr} =
     {single} [restxpr]:restricted_expression
@@ -298,11 +297,85 @@ restricted_expression {-> restr_expr} =
       {-> New restr_expr.closure (closure)}
   
   ;
+*/
+
+
+
+expression {-> expr} = 
+    expression_list
+      {-> New expr.list ([expression_list.expr])}
+  ;
+
+
+expression_list {-> expr*} = 
+    {single} [argxpr]:arg_expression
+      {-> [argxpr.expr]}
+  | {invocation} [argxpr]:arg_expression [targs]:template_arg_list? [xpr]:expression
+      {-> [New expr.invocation ([argxpr.expr], targs.expr, xpr.expr)]}
+  | {empty_invocation} [argxpr]:arg_expression [targs]:template_arg_list
+      {-> [New expr.invocation ([argxpr.expr], targs.expr, Null)]}
+  ;
+/*
+arg_expression {-> expr} =
+    {single} [restxpr]:restricted_expression
+      {-> restxpr.expr}
+  | {list} [restxpr]:restricted_expression comma [argxpr]:arg_expression
+      {-> New arg_expr.list ([restxpr.restr_expr, argxpr.arg_expr])}
+  | {assign} [restxpr]:restricted_expression equal [argxpr]:arg_expression
+      {-> New arg_expr.assign (restxpr.restr_expr, argxpr.arg_expr)}
+  ;
+
+expr_list {-> expr*} =
+    [restxpr]:restricted_expression comma [argxpr]:arg_expression
+      {-> [restxpr.expr, argxpr.expr]}
+;
+*/
+
+arg_expression {-> expr*} =
+    {single} [restxpr]:restricted_expression
+      {-> [restxpr.expr]}
+  | {list} [restxpr]:restricted_expression comma [argxpr]:arg_expression
+      {-> [restxpr.expr, argxpr.expr]}
+  | {assign} [restxpr]:restricted_expression equal [argxpr]:arg_expression
+      {-> [New expr.assign (restxpr.expr, [argxpr.expr])]}
+  ;
+
+
+
+restricted_expression {-> expr} =
+
+    {identifier} general_identifier 
+      {-> New expr.id (general_identifier.general_id)}
+      
+  | {number} integer_number
+      {-> New expr.number (integer_number)}
+
+  | {field_access} field_access
+      {-> New expr.field_access (field_access.field_access)}
+      
+  | {string_expr} string_content 
+      {-> New expr.string (string_content)}
+
+  | {paren_expr} l_paren   [embedded_expr]:expression   r_paren
+      {-> New expr.list([embedded_expr.expr])}
+  
+  | {closure} [closure]:closure
+      {-> New expr.closure (closure)}
+  
+  ;
+
+
+
+
+
+
+
+
 
 
 field_access {-> field_access} =
     [prefix_expr]:restricted_expression   dot   [suffix]:ident
-      {-> New field_access (prefix_expr.restr_expr, suffix)}
+      {-> New field_access (prefix_expr.expr, suffix)}
   ;
 
 
@@ -339,6 +412,7 @@ statement =
   | {def_decl} def_decl
   ;
 
+/*
 expr =
     {single} arg_expr
   | {invocation} [callee]:arg_expr [targs]:expr? [args]:expr?
@@ -358,6 +432,31 @@ restr_expr =
   | {closure} closure
   | {embedded} expr
   ;
+*/
+
+/*
+exprs =
+    expr*
+  ;
+*/
+expr =
+  | {number} integer_number
+  | {string} string_content
+  | {id} general_id
+  | {closure} closure
+  | {list} expr*
+  | {assign} [assigned]:expr [value]:expr*
+  | {invocation} [callee]:expr* [targs]:expr? [args]:expr?
+  | {field_access} field_access
+  ;
+
+
+
+
+field_access =
+    [prefix_expr]:expr ident
+  ;
+
 
 attr_decl =
     [attr_type]:attr_type? [name]:ident? typed_value?
@@ -379,10 +478,6 @@ type =
 naked_type =
     {ident} [name]:ident
     | {access} field_access
-  ;
-
-field_access =
-    [prefix_expr]:restr_expr ident
   ;
 
 
