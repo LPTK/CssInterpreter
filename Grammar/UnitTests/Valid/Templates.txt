@@ -1,0 +1,8 @@
+
+mc := MyClass<Int,Bool>;
+mc := MyClass<Int> 1, 2, 3;
+
+
+mc := MyClass<a=32>;
+
+
