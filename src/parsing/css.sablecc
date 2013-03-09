@@ -76,6 +76,14 @@ Tokens
     {comment} comment_end  = '*/'; 
     {comment} comment_body = 
     (except_star*   star   except_slash)*   star?;
+    
+    // // ??
+    // {comment->normal} comment_end  = '*/';
+    // (except_star*   star   except_slash)*   ;//star?;
+    
+    
+    
+    
 
 
     {normal->string, string->normal} 
@@ -113,10 +121,17 @@ Ignored Tokens
 
 Productions
 
+/*
 compilation_unit {-> closure} =
     statement*
       {-> New closure ([statement.statement])}
   ;
+*/
+compilation_unit {-> closure} =
+    statement_list
+      {-> New closure ([statement_list.statement])}
+  ;
+
 
 attr_type {-> attr_type} =
     {val}  key_val  {-> New attr_type.val	()}
@@ -124,9 +139,15 @@ attr_type {-> attr_type} =
   | {ref}  key_ref  {-> New attr_type.ref  ()}
   ;
 
+/*
 closure {-> closure} =
     l_brace   statement*   r_brace 
       {-> New closure([statement.statement])};
+*/
+closure {-> closure} =
+    l_brace   statement_list   r_brace 
+      {-> New closure([statement_list.statement])};
+
 
 /* TODO :
  / constructor_declaration 
@@ -140,9 +161,39 @@ closure {-> closure} =
  /  ";"  . 
 */
 
+statement_list {-> statement*} =
+    first_statement?
+    following_statement*
+      {-> [first_statement.statement, following_statement.statement]}
+    //  {-> [first_statement.statement]}
+  ;
+
+first_statement {-> statement} =
+    statement {-> statement.statement}
+  ;
+
+following_statement {-> statement?} =
+    semicolon statement? {-> statement.statement}
+  ;
+
+/*
+    statement_list_elt*
+      {-> [statement_list_elt.statement]};
+statement_list_elt {-> statement} =
+  | {single}
+    statement {-> statement?}
+  ;
+*/
+/*
 statement {-> statement?} =
     {empty} semicolon {-> Null}
   | {expr} expression semicolon {-> New statement.expr (expression.expr)}
+  | {attribute_decl} attribute_decl {-> New statement.attr_decl (attribute_decl.attr_decl)}
+  | {function_decl} function_decl {-> New statement.def_decl (function_decl.def_decl)}
+  ;
+*/
+statement {-> statement} =
+    {expr} expression {-> New statement.expr (expression.expr)}
   | {attribute_decl} attribute_decl {-> New statement.attr_decl (attribute_decl.attr_decl)}
   | {function_decl} function_decl {-> New statement.def_decl (function_decl.def_decl)}
   ;
@@ -150,7 +201,7 @@ statement {-> statement?} =
 
 function_decl {-> def_decl} =
     
-    key_def [name]:ident? [params]:param_list? [type_init]:type_init semicolon
+    key_def [name]:ident? [params]:param_list? [type_init]:type_init //semicolon
       {-> New def_decl (name, params.closure, type_init.typed_value)}
     
   ;
@@ -158,7 +209,7 @@ function_decl {-> def_decl} =
 
 attribute_decl {-> attr_decl} =
     
-    [attr_type]:attr_type? [name]:ident [type_init]:type_init semicolon
+    [attr_type]:attr_type? [name]:ident [type_init]:type_init //semicolon
       {-> New attr_decl (attr_type, name, type_init.typed_value)}
     
   ;
@@ -177,8 +228,13 @@ assignment {-> expr} =
       {-> expression.expr}
   ;
 
+/*
 param_list {-> closure} =
     l_paren [statements]:statement* r_paren
+      {-> New closure([statements.statement])}
+  ;*/
+param_list {-> closure} =
+    l_paren [statements]:statement_list r_paren
       {-> New closure([statements.statement])}
   ;
 
@@ -205,8 +261,10 @@ template_arg_list {-> expr} =
 expression {-> expr} = 
     {single} [argxpr]:arg_expression
       {-> New expr.single (argxpr.arg_expr)}
-  | {invocation} [argxpr]:arg_expression [xpr]:expression
-      {-> New expr.invocation (argxpr.arg_expr, xpr.expr)}
+  | {invocation} [argxpr]:arg_expression [targs]:template_arg_list? [xpr]:expression
+      {-> New expr.invocation (argxpr.arg_expr, targs.expr, xpr.expr)}
+  | {empty_invocation} [argxpr]:arg_expression [targs]:template_arg_list
+      {-> New expr.invocation (argxpr.arg_expr, targs.expr, Null)}
   ;
 
 
@@ -283,7 +341,7 @@ statement =
 
 expr =
     {single} arg_expr
-  | {invocation} arg_expr expr
+  | {invocation} [callee]:arg_expr [targs]:expr? [args]:expr?
   ;
 
 arg_expr =
