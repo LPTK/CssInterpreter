@@ -8,7 +8,7 @@ import java.io.StringReader;
 import cssInterpreter.lexer.CssLexer;
 import cssInterpreter.node.Start;
 import cssInterpreter.parser.Parser;
-import cssInterpreter.test.ASTPrinter;
+import cssInterpreter.test.DumbInterpreter;
 
 public class CssInterpreter {
 
@@ -18,7 +18,7 @@ public class CssInterpreter {
 	public static void main(String[] args) {
 		CssLexer lexer;
 		Parser parser;
-		Start ast;
+		Start ast = null;
 		
 		String text = new String();
 		String filename = "/tmp/test.css"; // TODO
@@ -51,13 +51,25 @@ public class CssInterpreter {
 			//ast.getPCompilationUnit().apply(new Switch(){});
 
 			// Print the ast. Should be removed later
-			ast.apply(new ASTPrinter());
+			//ast.apply(new ASTPrinter());
+			
 
 		} catch (Exception e) {
 			System.out.println(e);
 			e.printStackTrace();
 		}
+	
+		ast.apply(new DumbInterpreter());
+		
 
 	}
 
 }
+
+
+
+
+
+
+
+

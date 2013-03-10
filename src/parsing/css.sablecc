@@ -194,23 +194,23 @@ statement {-> statement?} =
 */
 statement {-> statement} =
     {expr} expression {-> New statement.expr (expression.expr)}
-  | {attribute_decl} attribute_decl {-> New statement.attr_decl (attribute_decl.attr_decl)}
-  | {function_decl} function_decl {-> New statement.def_decl (function_decl.def_decl)}
+  | {attribute_decl} attribute_decl {-> attribute_decl.statement}
+  | {function_decl} function_decl {-> function_decl.statement}
   ;
 
 
-function_decl {-> def_decl} =
+function_decl {-> statement} =
     
     key_def [name]:ident? [params]:param_list? [type_init]:type_init //semicolon
-      {-> New def_decl (name, params.closure, type_init.typed_value)}
+      {-> New statement.def_decl (name, params.closure, type_init.typed_value)}
     
   ;
 
 
-attribute_decl {-> attr_decl} =
+attribute_decl {-> statement} =
     
     [attr_type]:attr_type? [name]:ident [type_init]:type_init //semicolon
-      {-> New attr_decl (attr_type, name, type_init.typed_value)}
+      {-> New statement.attr_decl (attr_type, name, type_init.typed_value)}
     
   ;
 
@@ -240,8 +240,8 @@ param_list {-> closure} =
 
 
 type {-> type} =
-    [base]:naked_type_expr [args]:template_arg_list?
-      {-> New type (base.naked_type, args.expr)}
+    [base]:naked_type_expr [targs]:template_arg_list?
+      {-> New type (base.naked_type, targs.expr)}
   ;
 
 naked_type_expr {-> naked_type} =
@@ -406,10 +406,19 @@ attr_type =
   | {ref}
   ;
 
+/*
+attr_decl =
+    [attr_type]:attr_type? [name]:ident? typed_value?
+  ;
+  
+def_decl =
+    [name]:ident? [params]:closure? typed_value?
+  ;
+*/
 statement = 
     {expr} expr
-  | {attr_decl} attr_decl
-  | {def_decl} def_decl
+  | {attr_decl} [attr_type]:attr_type? [name]:ident? typed_value?
+  | {def_decl} [name]:ident? [params]:closure? typed_value?
   ;
 
 /*
@@ -451,19 +460,8 @@ expr =
   ;
 
 
-
-
 field_access =
     [prefix_expr]:expr ident
-  ;
-
-
-attr_decl =
-    [attr_type]:attr_type? [name]:ident? typed_value?
-  ;
-  
-def_decl =
-    [name]:ident? [params]:closure? typed_value?
   ;
 
 
@@ -472,12 +470,12 @@ typed_value =
   ;
 
 type =
-    [base]:naked_type [args]:expr?
+    [base]:naked_type [targs]:expr?
   ;
 
 naked_type =
     {ident} [name]:ident
-    | {access} field_access
+  | {access} field_access
   ;
 
 
