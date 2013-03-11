@@ -55,7 +55,79 @@ foo a = 1;
 foo a, b= 1;
 
 
+// Understandable error for:
+
+def foo := {
+  ...
+} // MISSING SEMI
+foo 42;
+
+
+
+
+
 */
+
+
+
+class Pair<A, B> {
+    private A first;
+    private B second;
+
+    public Pair(A first, B second) {
+    	super();
+    	this.first = first;
+    	this.second = second;
+    }
+
+    public int hashCode() {
+    	int hashFirst = first != null ? first.hashCode() : 0;
+    	int hashSecond = second != null ? second.hashCode() : 0;
+
+    	return (hashFirst + hashSecond) * hashSecond + hashFirst;
+    }
+
+    public boolean equals(Object other) {
+    	if (other instanceof Pair) {
+    		Pair otherPair = (Pair) other;
+    		return 
+    		((  this.first == otherPair.first ||
+    			( this.first != null && otherPair.first != null &&
+    			  this.first.equals(otherPair.first))) &&
+    		 (	this.second == otherPair.second ||
+    			( this.second != null && otherPair.second != null &&
+    			  this.second.equals(otherPair.second))) );
+    	}
+
+    	return false;
+    }
+
+    public String toString()
+    { 
+           return "(" + first + ", " + second + ")"; 
+    }
+
+    public A getFirst() {
+    	return first;
+    }
+
+    public void setFirst(A first) {
+    	this.first = first;
+    }
+
+    public B getSecond() {
+    	return second;
+    }
+
+    public void setSecond(B second) {
+    	this.second = second;
+    }
+}
+
+
+
+
+
 
 class Field { // FIXME not used
 	Node node;
@@ -222,24 +294,54 @@ class TupleExpression extends Expression {
 		
 	}
 	
-	public TupleExpression(Expression[] exs) throws CompilerException {
+	public TupleExpression(Expression[] exs, Type parentType, String name) throws CompilerException {
 		//this.exprs = exs;
+
+		//TupleType tt = new TupleType(new TypeIdentifier("[AnonTuple]", DumbInterpreter.standardScope.type)); //FIXME?
+		TupleType tt = new TupleType(new TypeIdentifier((name==null?"[AnonTuple]":name), parentType)); //FIXME?
+
+		System.out.println(">>>>>>>>>>>");
 		
 		boolean namedParamsBegan = false;
+		
 		for (int i = 0; i < exs.length; i++) {
+			
 			Expression e = exs[i];
+			assert e != null;
+			
+			System.out.println(":t:"+e.getClass());
+			
 			if (e instanceof AssignExpression) {
 				AssignExpression ae = ((AssignExpression) e);
 				namedParamsBegan = true;
-				assert ae.assigned instanceof Ide
-				namedParams.put(key, value)
+				FieldAccessExpression fa = (FieldAccessExpression) ae.assigned;
+				assert ((TypeBase)((TupleExpression)fa.thisExpression).getType()).isEmpty(); // laid comme ta mère
+				//assert ae.assigned instanceof 
+				
+				System.out.println(":n:"+fa.fieldName);
+				
+				namedParams.put(fa.fieldName, fa.args);
+				tt.addAttribute(null, fa.fieldName, new TypeOf(fa.args));
+				
 			} else {
+				
 				if (namedParamsBegan)
-					throw new CompilerException("Ivalid sequence of arguments: named arguments must follow ordinal arguments");
+					throw new CompilerException("Invalid sequence of arguments: named arguments must follow ordinal arguments");
+				ordinalParams.add(e);
+				tt.addAttribute(null, (String) null, new TypeOf(e));
+
+				System.out.println(":o:"+e);
+				
 			}
 		}
 		
+		System.out.println("<<<<<<<<<");
 		
+		tt.done();
+		type = tt;
+		
+		
+		//this.type = type;
 		
 		
 		
@@ -247,7 +349,11 @@ class TupleExpression extends Expression {
 		
 		
 	}
-	
+	/*
+	public TupleExpression(Expression args) {
+		
+	}*/
+
 	@Override
 	public Type getType() throws CompilerException {
 		// TODO
@@ -261,21 +367,42 @@ class TupleExpression extends Expression {
 		//throw new NotSupportedCompExc();
 		//if (type.isEmpty())
 		//return Execution.voidObj;
-		if (exprs.length == 0)
-			 return Execution.voidObj;
+		/*if (exprs.length == 0)
+			 return Execution.voidObj;*/
+		if (type == DumbInterpreter.VoidType) // WARNING: object address equality here
+			return Execution.voidObj;
 		else {
-			RuntimeObjectBase ret = new RuntimeObjectBase(type, null, false);
+			RuntimeObjectBase ret = new RuntimeObjectBase(type, Execution.getThis()/*FIXME?*/, false);
 			//evals = new RUnt;
-			for (int i = 0; i < exprs.length; i++) {
+			/*for (int i = 0; i < exprs.length; i++) {
 				ret.write(i, exprs[i].evaluate());
-			}
+			}*/
+			int i;
+			for (i = 0; i < ordinalParams.size(); i++)
+				ret.write(i, ordinalParams.get(i).evaluate());
+			Iterator<Expression> ite = namedParams.values().iterator(); // FIXME: in right order?
+			while(ite.hasNext())
+				ret.write(i++, ite.next().evaluate());
 			return ret;
 		}
 	}
 	public String toString() {
-		if (exprs.length == 0)
+		//if (exprs.length == 0)
+		if (type == DumbInterpreter.VoidType) // WARNING: object address equality here
 			 return "";
-		else return "(,)"; // TODO
+		else {
+			StringBuffer sb = new StringBuffer();
+			sb.append("(");
+			for (Expression e : ordinalParams)
+				sb.append(e+", ");
+			//for (Expression e : namedParams.values())
+			for (Map.Entry<String,Expression> e : namedParams.entrySet())
+				sb.append(e.getKey()+"="+e.getValue()+", ");
+			if (ordinalParams.size() != 0 || namedParams.size() != 0)
+				sb.delete(sb.length()-2, sb.length());
+			sb.append(")");
+			return sb.toString(); // TODONE
+		}
 	}
 }
 
@@ -331,15 +458,17 @@ class FieldAccessExpression extends Expression {
 	}
 	
 	Function getFunction() throws CompilerException {
+		CandidateList candidates = new CandidateList();
 		if (thisExpression == null) {
 			//Expression expr = 
 			//RuntimeObject
 			thisObj = Execution.getThis();
 			while (thisObj != null) {
 				try {
-					return thisObj.getRuntimeType().getFunction(new CallSignature(fieldName, args));
+					return thisObj.getRuntimeType().getFunction(new CallSignature(fieldName, args), candidates);
 				} catch(UnknownFunctionCompExc e) {
 					thisObj = thisObj.getParent();
+					//System.out.println(thisObj);
 					if (thisObj == null)
 						throw e; // TODO: keep the most appropriate message (which parameters are missing?)
 								 // TODO: aggregate all possible functions with this name?
@@ -349,7 +478,7 @@ class FieldAccessExpression extends Expression {
 			//throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this);
 			throw new AssertionError("Never gets there");
 		} else
-			return thisExpression.getType().getFunction(new CallSignature(fieldName, args));
+			return thisExpression.getType().getFunction(new CallSignature(fieldName, args), candidates);
 	}
 	
 	private RuntimeObject evalThis() {
@@ -403,7 +532,8 @@ class FieldAccessExpression extends Expression {
 		//String ret = (thisExpression == null ? "[CurrentScope]." : "("+ thisExpression) + ").";
 		String ret = (thisExpression == null ? "." : "("+ thisExpression + ").");
 		ret += fieldName;
-		ret += "("+args+")";
+		//ret += "("+args+")";
+		ret += args;
 		return ret;
 	}
 }
@@ -509,7 +639,9 @@ class NamedType {
 class CallSignature {
 	String name;
 	//List<Expression> exprs;
-	Expression args;
+	//Expression args;
+	TupleExpression args;
+	
 	/*
 	private boolean conformsTo(Expression e, NamedType nt) {
 		return e.getType().conformsTo(nt.type);
@@ -529,13 +661,23 @@ class CallSignature {
 		//System.out.println(args);
 		return args.getType().conformsTo(sign);
 	}
+	String notConformingToBecause(Signature sign) throws CompilerException {
+		return args.getType().notConformingToBecause(sign);
+	}
+	
 	//public CallSignature(String name, List<Expression> exprs) {
-	public CallSignature(String name, Expression args) {
+	public CallSignature(String name, TupleExpression args) {
 		this.name = name;
 		//this.exprs = exprs;
 		if (args == null)
 			throw new IllegalArgumentException();
 		this.args = args;
+	}
+	
+	@Override
+	public String toString() {
+		//return "CallSignature: " + name + args;
+		return name + args;
 	}
 }
 
@@ -561,9 +703,10 @@ class FormalParameters {
 		StringBuffer sb = new StringBuffer();
 		sb.append("{");
 		for (NamedType nt : namedTypes)
-			sb.append((nt.name==null?"":nt.name)+":"+nt.type+";");
+			sb.append((nt.name==null?"":nt.name)+":"+nt.type+"; ");
 		if (namedTypes.length != 0)
-			sb.deleteCharAt(sb.length()-1);
+			//sb.deleteCharAt(sb.length()-1);
+			sb.delete(sb.length()-2,sb.length());
 		sb.append("}");
 		return sb.toString();
 	}
@@ -609,7 +752,7 @@ class Signature {
 	@Override
 	public String toString() {
 		//return name+": {"+params+"}";
-		return name+": "+params;
+		return (name==null?"":name)+": "+params;
 	}
 }
 /*
@@ -719,6 +862,7 @@ class RuntimeField extends Function { // TODO: add checks for the return value i
 class TypeIdentifier {
 	String name;
 	Type parent;
+	TypeBase type;
 	
 	public TypeIdentifier(String name, Type parent) {
 		this.name = name;
@@ -728,8 +872,48 @@ class TypeIdentifier {
 	public String toString() {
 		return (parent == null ? "" : parent.toString()+".")+name;
 	}
+	public String detailedString() {
+		//return toString()+"  ("+type.attributeTypes+")";
+		StringBuffer sb = new StringBuffer();
+		sb.append("{");
+		/*
+		Iterator<RuntimeObject> ite = values();
+		while(ite.hasNext())
+			sb.append(ite.next());*/
+		for (int i = 0; i < type.attributeTypes.size(); i++) {
+			String fname = type.getAttributeNames()[i];
+			sb.append((fname==null?"":fname)+":"+type.getAttributeTypes()[i]+"; ");
+		}
+		if (type.attributeTypes.size() > 0)
+			sb.delete(sb.length()-2, sb.length());
+		sb.append("}");
+		return toString()+"  "+sb.toString();
+	}
 }
 
+class CandidateList {
+	private List<Pair<Type,Pair<Function, String>>> list = new ArrayList<>();
+	
+	public void add(Type t, Function f, String s) {
+		list.add(new Pair<Type, Pair<Function,String>>(t, new Pair<Function,String>(f, s)));
+	}
+	
+	@Override
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		if (list.size() == 0)
+			sb.append("No candidates found.");
+		else {
+			sb.append("Candidates are:");
+			/*for (Pair<Type,Function> p : list) {
+				sb.append("\n\t\t"+p.getFirst()+"::"+p.getSecond());
+			}*/
+			for (Pair<Type,Pair<Function, String>> p : list)
+				sb.append("\n\t\t"+p.getFirst()+"::"+p.getSecond().getFirst()+" ("+p.getSecond().getSecond()+")");
+		}
+		return sb.toString();
+	}
+}
 
 /*
 class Type {
@@ -740,7 +924,8 @@ interface Type {
 	boolean isTuple();
 	String notConformingToBecause(Signature sign);
 	boolean conformsTo(Signature sign);
-	Function getFunction(CallSignature sign) throws CompilerException;
+	//Function getFunction(CallSignature sign) throws CompilerException;
+	Function getFunction(CallSignature sign, CandidateList candidates) throws CompilerException;
 	Type[] getAttributeTypes();
 	String[] getAttributeNames();
 	List<Function> getConstructors(); // TODO: cannot overload type name with def
@@ -771,8 +956,8 @@ class TypeOf implements Type {
 	@Override public boolean conformsTo(Signature sign) {
 		return getType().conformsTo(sign);
 	}
-	@Override public Function getFunction(CallSignature sign) throws CompilerException {
-		return getType().getFunction(sign);
+	@Override public Function getFunction(CallSignature sign, CandidateList candidates) throws CompilerException {
+		return getType().getFunction(sign, candidates);
 	}
 	@Override public Type[] getAttributeTypes() {
 		return getType().getAttributeTypes();
@@ -787,6 +972,7 @@ class TypeOf implements Type {
 		if (Execution.hasStarted())
 			 return getType().toString();
 		else return "TypeOf("+expr+")";
+		//else return "TypeOf"+expr+"";
 	}
 }
 
@@ -794,16 +980,18 @@ abstract class TypeBase implements Type {
 	HashMap<String, List<Function>> fcts = new HashMap<>();
 	//Type[] attributes;
 	TypeIdentifier id;
-	boolean tuple;
+	//boolean tuple;
 	
-	public TypeBase(TypeIdentifier id, boolean tuple) {
+	public TypeBase(TypeIdentifier id) {//, boolean tuple) {
 		this.id = id;
-		this.tuple = tuple;
+		//this.tuple = tuple;
+		id.type = this; // sale
 	}
 	
 	public void addFct(Function fct) { // TODO: detect ambiguities
 		//System.out.println("Adding "+fct.signature);
-		System.out.println("Adding "+fct);
+		System.out.println("Adding "+fct+"  in type  "+this);
+		
 		List<Function> ls = fcts.get(fct.signature.name);
 		if (ls == null) {
 			ls = new ArrayList<Function>();
@@ -823,29 +1011,43 @@ abstract class TypeBase implements Type {
 		return true;
 	}
 	@Override
-	public Function getFunction(CallSignature callSign) throws CompilerException {
+	public Function getFunction(CallSignature callSign, CandidateList candidates) throws CompilerException {
 		///
-		System.out.println("Searching for function "+callSign.name+" in "+this);
+		//System.out.println("Searching for function "+callSign.name+" in "+id.detailedString());
+		//System.out.println("\t"+callSign);
+		System.out.println("Searching for function "+callSign+" in "+id.detailedString());
 		
 		Function ret = null;
 		List<Function> ls = fcts.get(callSign.name);
 		if (ls == null)
 			//throw new CompilerException("Name '"+callSign.name+"' is unknown in type "+this);
-			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this);
+			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this+"\n\t"+candidates.toString());
 		for (Function f : ls) {
 			/*
 			System.out.println(f);
 			System.out.println(callSign.conformsTo(f.signature));
 			*/
+			//candidates.list.add(new Pair<Type,Function>(this,f));
 			
+			/*
 			if (callSign.conformsTo(f.signature)) {
 				if (ret != null)
 					throw new CompilerException("Ambiguous call signature");
 				ret = f;
-			}
+			}*/
+			
+			String reason = callSign.notConformingToBecause(f.signature);
+			if (reason == null) {
+				candidates.add(this,f,"Conforming");
+				if (ret != null)
+					throw new CompilerException("Ambiguous call signature\n\t"+candidates);
+				ret = f;
+			} else
+				candidates.add(this,f,reason);
+			
 		}
 		if (ret == null)
-			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this+" with parameters "+callSign.args);
+			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this+" with parameters "+callSign.args+"\n\t"+candidates.toString());
 		return ret;
 	}
 	/*
@@ -857,11 +1059,14 @@ abstract class TypeBase implements Type {
 	
 	List<String> attributeNames = new ArrayList<>();
 	List<Type> attributeTypes = new ArrayList<>();
-	
+
 	public void addAttribute(PAttrType attrType, TIdent name, Type type) {
+		addAttribute(attrType, name.getText(), type);
+	}
+	public void addAttribute(PAttrType attrType, String name, Type type) {
 		// TODO: use attrType to generate a Function.FieldType
-		addFct(new RuntimeField(name.getText(), type, attributeTypes.size()));
-		attributeNames.add(name.getText());
+		addFct(new RuntimeField(name, type, attributeTypes.size()));
+		attributeNames.add(name);
 		attributeTypes.add(type);
 	}
 
@@ -882,26 +1087,42 @@ abstract class TypeBase implements Type {
 
 	@Override
 	public boolean isTuple() {
-		return tuple;
+		//return tuple;
+		return false;
 	}
 	
 	@Override
 	// returns null if it conforms
 	public String notConformingToBecause(Signature sign) {
 		
-		if (isTuple()) {
-			throw new NotSupportedCompExc();
-		} else {
-			if (sign.params.withoutValueNb() > 1)
-				return "More than one argument is needed";
-			
-			return null;
-		}
+		assert isTuple(); // even single params are converted to a tuple with an only unnamed value, when passed to a function
+//		if (isTuple()) {
+//			throw new NotSupportedCompExc();
+//		} else {
+//			if (sign.params.withoutValueNb() > 1)
+//				return "More than one argument is needed";
+//			return null;
+//		}
+		
+		
+		
+		
+		
+		// handle default values
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		return null;
 		/*
 		if (sign.params.namedTypes.length == 1) {
 			
 		}*/
-		//return null;
 	}
 	
 	@Override
@@ -932,9 +1153,17 @@ abstract class TypeBase implements Type {
 class TupleType extends TypeBase {
 	Function constructor;
 	
+	/*
+	 * Invariant:
+	 * 0..p unnamed attributes, THEN 0..q named attributes
+	 */
+	
 	public TupleType(TypeIdentifier id) {
-		super(id, false);
+		//super(id, false);
+		super(id);
 	}
+	
+	@Override public boolean isTuple() { return true; }
 	
 	public void done() {
 		
@@ -966,7 +1195,8 @@ class PrimitiveType<T> extends TypeBase {
 	Function constructor;
 	
 	public PrimitiveType(TypeIdentifier id) {
-		super(id, false);
+		//super(id, false);
+		super(id);
 		final PrimitiveType<T> that = this;
 		constructor = new Function(new Signature(id.name, new FormalParameters(new NamedType[]{new NamedType(this,null,true)}))) {
 			@Override public Type getOutputType() {
@@ -1298,7 +1528,7 @@ public class DumbInterpreter extends DepthFirstAdapter {
 	public final static PrimitiveType<Void> VoidType = new PrimitiveType<Void>(new TypeIdentifier("Void", null));
 	public final static PrimitiveType<Integer> IntType = new PrimitiveType<Integer>(new TypeIdentifier("Int", null));
 	public final static PrimitiveType<Long> LongType = new PrimitiveType<Long>(new TypeIdentifier("Long", null));
-	public final static PrimitiveType<String> StringType = new PrimitiveType<String>(new TypeIdentifier("String", null));
+	public final static PrimitiveType<String> StringType = new PrimitiveType<String>(new TypeIdentifier("Str", null));
 	
 	public final static Scope standardScope = new Scope("[StdScope]");
 	//public final static RuntimeObject standardScopeRO = new RuntimeObjectBase(new TypeBase(new TypeIdentifier("StdType", null), false) {}, null, true) {};
@@ -1533,10 +1763,22 @@ public class DumbInterpreter extends DepthFirstAdapter {
 		List<PExpr> ls = node.getExpr();
 		assert ls.size() > 0;
 		//exprs.put(node, exprs.get(ls.get(0)));
-		Expression[] exs = new Expression[ls.size()];
-		for (int i = 0; i < ls.size(); i++)
-			exs[i] = exprs.get(ls.get(i));
-		exprs.put(node, new TupleExpression(exs));
+		
+		Expression firstExpr = exprs.get(ls.get(0));
+		if (ls.size() == 1 && !(firstExpr instanceof AssignExpression)) {
+			//System.out.println("OK");
+			exprs.put(node, firstExpr);
+		} else {
+			Expression[] exs = new Expression[ls.size()];
+			for (int i = 0; i < ls.size(); i++)
+				exs[i] = exprs.get(ls.get(i));
+			try {
+				exprs.put(node, new TupleExpression(exs, currentScope.type, null/*TODO*/));
+			} catch (CompilerException e) {
+				throw new ExecutionException(e);
+			}
+		}
+		
     }
     
 
@@ -1577,12 +1819,13 @@ public class DumbInterpreter extends DepthFirstAdapter {
 	
     public void outAAssignExpr(AAssignExpr node)
     {
-    	out("Assigning "+node.getAssigned()+" to "+node.getValue());
+    	out("Assignation of "+node.getAssigned()+" to "+node.getValue());
     	
     	/*AExpr assigned = (AExpr) node.getAssigned();
     	exprs.get(assigned)*/
     	Expression assigned = exprs.get(node.getAssigned());
-    	
+    	Expression value = exprs.get(node.getValue());
+    	/*
     	exprs.put(node, new Expression() {
 			@Override public Type getType() {
 				// TODO Auto-generated method stub
@@ -1593,6 +1836,9 @@ public class DumbInterpreter extends DepthFirstAdapter {
 				return null;
 			}
     	});
+    	*/
+    	
+    	exprs.put(node, new AssignExpression(assigned, value));
     	
     	
     	
@@ -1634,11 +1880,21 @@ public class DumbInterpreter extends DepthFirstAdapter {
         	);*/
 		
 		LinkedList<PExpr> callees = node.getCallee();
+
+		
+//		System.out.println(callees);
+//		System.out.println(callees.size());
+//		System.out.println(callees.get(callees.size()-1).getClass());
 		
 		Expression callee = exprs.get(callees.get(callees.size()-1)); // The last expression 'c' is actually the callee in  a syntax like "a,b,c params"
 		
+		assert callee != null;
+		//System.out.println(callee.getClass());
+		
 		if (callee instanceof FieldAccessExpression) {
 			
+			
+			/*
 			//System.out.println("!!! "+node.getArgs()+" "+exprs.get(node.getArgs()));
 			assert node.getArgs() == null || (node.getArgs() != null && exprs.get(node.getArgs()) != null);
 			assert exprs.get(node.getArgs()) instanceof TupleExpression;
@@ -1646,55 +1902,68 @@ public class DumbInterpreter extends DepthFirstAdapter {
 			TupleExpression args = (TupleExpression) exprs.get(node.getArgs());
 			if (args == null) args = getEmptyExpr();
 			((FieldAccessExpression) callee).setArgs(args);
+			
 			if (callees.size() == 1) {
+				
 				exprs.put(node, callee);
+				
 			} else {
-				// TODO
-				//exprs.put(node, new ListExpression(callees));
+			*/
+			
+			
+			//System.out.println("!!! "+node.getArgs()+" "+exprs.get(node.getArgs()));
+			assert node.getArgs() == null || (node.getArgs() != null && exprs.get(node.getArgs()) != null);
+			//assert exprs.get(node.getArgs()) instanceof TupleExpression;
+			
+			//if (args == null) {
+			if (node.getArgs() == null)
+				((FieldAccessExpression) callee).setArgs(getEmptyExpr());
+			
+			else {
 				
+				Expression args = exprs.get(node.getArgs());
+				assert args != null;
 				
+				TupleExpression tupleArgs;
 				
+				try {
+					
+					if ((args instanceof TupleExpression))
+						tupleArgs = (TupleExpression) args;
+					else
+							tupleArgs = new TupleExpression(new Expression[]{args},currentScope.type,"[SingleArg]");
+						
+					
+					//TupleExpression tupleArgs = (TupleExpression) exprs.get(node.getArgs());
+					
+					//if (tupleArgs == null) tupleArgs = getEmptyExpr();
+					((FieldAccessExpression) callee).setArgs(tupleArgs);
+					
+					
+					if (callees.size() == 1) {
+						
+						exprs.put(node, callee);
+						
+					} else {
+						
+						// TODO
+						//exprs.put(node, new ListExpression(callees));
+						
+						
+					}
+						
+						
+						
+						
+						
+						
+					
+				} catch (CompilerException e) {
+					throw new ExecutionException(e);
+				}
 				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-			}
+			} 
+			
 		} else {
 			throw new NotSupportedCompExc();
 		}
