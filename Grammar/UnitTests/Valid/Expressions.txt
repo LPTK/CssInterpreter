@@ -5,4 +5,12 @@ foo (a,b,c), d;
 
 a, (b);
 
+x = 11;
+
+u = a, b, c;
+
+w = foo bar;
+
+(foo bar) = 42;
+
 
