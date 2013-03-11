@@ -337,7 +337,8 @@ arg_expression {-> expr*} =
   | {list} [restxpr]:restricted_expression comma [argxpr]:arg_expression
       {-> [restxpr.expr, argxpr.expr]}
   | {assign} [restxpr]:restricted_expression equal [argxpr]:arg_expression
-      {-> [New expr.assign (restxpr.expr, [argxpr.expr])]}
+  //    {-> [New expr.assign (restxpr.expr, [argxpr.expr])]}
+      { -> [New expr.assign (restxpr.expr, New expr.list([argxpr.expr]) )] }
   ;
 
 
@@ -454,7 +455,8 @@ expr =
   | {id} general_id
   | {closure} closure
   | {list} expr*
-  | {assign} [assigned]:expr [value]:expr*
+//  | {assign} [assigned]:expr [value]:expr*
+  | {assign} [assigned]:expr [value]:expr
   | {invocation} [callee]:expr* [targs]:expr? [args]:expr?
   | {field_access} field_access
   ;
