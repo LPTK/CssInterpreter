@@ -1,4 +1,8 @@
 
+foo 42;
+
+
+
 foo bar "ok";
 
 a := "lol";
