@@ -332,13 +332,28 @@ expr_list {-> expr*} =
 */
 
 arg_expression {-> expr*} =
-    {single} [restxpr]:restricted_expression
+    {single} [restxpr]:assign_expression
       {-> [restxpr.expr]}
-  | {list} [restxpr]:restricted_expression comma [argxpr]:arg_expression
+  | {list} [restxpr]:assign_expression comma [argxpr]:arg_expression
       {-> [restxpr.expr, argxpr.expr]}
+      
+  /*
   | {assign} [restxpr]:restricted_expression equal [argxpr]:arg_expression
   //    {-> [New expr.assign (restxpr.expr, [argxpr.expr])]}
       { -> [New expr.assign (restxpr.expr, New expr.list([argxpr.expr]) )] }
+  *//*
+  | {assign} [restxpr]:restricted_expression equal [restxpr2]:restricted_expression
+      { -> [New expr.assign (restxpr.expr, restxpr2.expr)] }
+  */
+      
+  ;
+
+
+assign_expression {-> expr} =
+    {single} [restxpr]:restricted_expression
+      {-> restxpr.expr}
+  | {assign} [restxpr]:restricted_expression equal [restxpr2]:restricted_expression
+      { -> New expr.assign (restxpr.expr, restxpr2.expr) }
   ;
 
 
@@ -362,6 +377,11 @@ restricted_expression {-> expr} =
   
   | {closure} [closure]:closure
       {-> New expr.closure (closure)}
+  
+  /*
+  | {assign} [restxpr]:restricted_expression equal [restxpr2]:restricted_expression
+      { -> New expr.assign (restxpr.expr, restxpr2.expr) }
+  */
   
   ;
 

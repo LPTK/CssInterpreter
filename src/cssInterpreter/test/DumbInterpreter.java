@@ -287,13 +287,16 @@ class TupleExpression extends Expression {
 	Type type;
 	//Expression[] exprs;
 	List<Expression> ordinalParams = new ArrayList<>();
-	Map<String,Expression> namedParams = new HashMap<>();
+	//Map<String,Expression> namedParams = new HashMap<>();
+	Map<String,Pair<Integer,Expression>> namedParams = new HashMap<>();
 	/*
 	 * Invariant: p ordinals followed by k named, NOT MIXED
 	 */
-	public TupleExpression() {
-		type = DumbInterpreter.VoidType;
+	public TupleExpression(Type parentType) throws CompilerException {
+		////type = DumbInterpreter.VoidType;
 		//exprs = new Expression[0];
+		
+		this(new Expression[0], parentType, null);
 		
 	}
 	
@@ -329,7 +332,9 @@ class TupleExpression extends Expression {
 				System.out.println(":n: "+fa.fieldName+" = "+ae.value);
 				//System.out.println(":n:"+fa.fieldName+" - "+fa.args);
 				
-				namedParams.put(fa.fieldName, fa.args);
+				//namedParams.put(fa.fieldName, fa.args);
+				//namedParams.put(fa.fieldName, ae.value);
+				namedParams.put(fa.fieldName, new Pair<>(i, ae.value));
 				tt.addAttribute(null, fa.fieldName, new TypeOf(ae.value));
 				
 			} else {
@@ -378,9 +383,13 @@ class TupleExpression extends Expression {
 		//return Execution.voidObj;
 		/*if (exprs.length == 0)
 			 return Execution.voidObj;*/
-		if (type == DumbInterpreter.VoidType) // WARNING: object address equality here
-			return Execution.voidObj;
-		else {
+		
+		
+//		if (type == DumbInterpreter.VoidType) // WARNING: object address equality here
+//			return Execution.voidObj;
+//		else {
+			
+			
 			RuntimeObjectBase ret = new RuntimeObjectBase(type, Execution.getThis()/*FIXME?*/, false);
 			//evals = new RUnt;
 			/*for (int i = 0; i < exprs.length; i++) {
@@ -389,20 +398,33 @@ class TupleExpression extends Expression {
 			int i;
 			for (i = 0; i < ordinalParams.size(); i++)
 				ret.write(i, ordinalParams.get(i).evaluate());
+			/*
 			Iterator<Expression> ite = namedParams.values().iterator(); // FIXME: in right order?
 			while(ite.hasNext())
 				ret.write(i++, ite.next().evaluate());
+			*/
+			Iterator<Pair<Integer,Expression>> ite = namedParams.values().iterator(); // FIXEDME: in right order?
+			while(ite.hasNext()) {
+				Pair<Integer,Expression> p = ite.next();
+				ret.write(p.getFirst(), p.getSecond().evaluate());
+				i++;
+			}
+			
 			return ret;
-		}
+			
+			
+//		}
 	}
 	public String toString() {
 		//if (exprs.length == 0)
 		try {
 		if (type == DumbInterpreter.VoidType) // WARNING: object address equality here
-			 return "[Tpl]()";
+			 //return "[Tpl]()";
+			return "()";
 		else {
 			StringBuffer sb = new StringBuffer();
-			sb.append("[Tpl](");
+			//sb.append("[Tpl](");
+			sb.append("(");
 			for (Expression e : ordinalParams)
 				//sb.append(e+", ");
 				sb.append(e+":"+e.getType()+", ");
@@ -410,8 +432,11 @@ class TupleExpression extends Expression {
 			
 			//for (Map.Entry<String,Expression> e : namedParams.entrySet()) System.out.println(e+" "+e.getValue().getClass());
 			
-			for (Map.Entry<String,Expression> e : namedParams.entrySet())
-				sb.append(e.getKey()+":"+e.getValue().getType()+"="+e.getValue()+", ");
+//			for (Map.Entry<String,Expression> e : namedParams.entrySet())
+//				sb.append(e.getKey()+":"+e.getValue().getType()+"="+e.getValue()+", ");
+			for (Map.Entry<String,Pair<Integer,Expression>> e : namedParams.entrySet())
+				sb.append(e.getKey()+":"+e.getValue().getSecond().getType()+"="+e.getValue().getSecond()+", ");
+			
 			if (ordinalParams.size() != 0 || namedParams.size() != 0)
 				sb.delete(sb.length()-2, sb.length());
 			sb.append(")");
@@ -495,7 +520,13 @@ class FieldAccessExpression extends Expression {
 			while (thisObj != null) {
 				try {
 					//System.out.println("+++"+args);
-					return thisObj.getRuntimeType().getFunction(new CallSignature(fieldName, args), candidates);
+					//return thisObj.getRuntimeType().getFunction(new CallSignature(fieldName, args), candidates);
+					
+					Function fct = thisObj.getRuntimeType().getFunction(new CallSignature(fieldName, args), candidates);
+					//System.out.println("\tFound "+fct.signature);
+					//System.out.println(candidates);
+					return fct;
+					
 				} catch(UnknownFunctionCompExc e) {
 					thisObj = thisObj.getParent();
 					//System.out.println(thisObj);
@@ -871,7 +902,8 @@ class RuntimeField extends Function { // TODO: add checks for the return value i
 	public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject params) {
 		//assert params.length == 0;
 		//assert params == null;
-		assert params.getRuntimeType() == DumbInterpreter.VoidType;
+		//assert params.getRuntimeType() == DumbInterpreter.VoidType;
+		assert params.getRuntimeType().isTuple() && ((TupleType)params.getRuntimeType()).isEmpty();
 		
 		///System.out.println("--->"+index+" "+thisReference.read(index));
 		
@@ -1046,7 +1078,10 @@ abstract class TypeBase implements Type {
 		///
 		//System.out.println("Searching for function "+callSign.name+" in "+id.detailedString());
 		//System.out.println("\t"+callSign);
-		System.out.println("Searching for function "+callSign+" in "+id.detailedString());
+
+		// HEAVY //System.out.println("Searching for function "+callSign+" in "+id.detailedString());
+		// LIGHT //
+			System.out.println("Searching "+callSign.name+" in "+id);
 		
 		Function ret = null;
 		List<Function> ls = fcts.get(callSign.name);
@@ -1128,7 +1163,7 @@ abstract class TypeBase implements Type {
 		
 		//System.out.println(this);
 		
-		assert isTuple(); // even single params are converted to a tuple with an only unnamed value, when passed to a function
+		assert isTuple(); // even single and void params are converted to a tuple with one or zero unnamed value, when passed to a function
 //		if (isTuple()) {
 //			throw new NotSupportedCompExc();
 //		} else {
@@ -1141,8 +1176,12 @@ abstract class TypeBase implements Type {
 		
 		
 		
+		
+		
 		// handle default values
 		
+		
+		// bind ordinals to names...?
 		
 		
 		
@@ -1568,8 +1607,13 @@ public class DumbInterpreter extends DepthFirstAdapter {
 	public final static RuntimeObject standardScopeRO = new RuntimeObjectBase(standardScope.type, null, false) {};
 	//public final static TupleExpression emptyExpr = new TupleExpression();
 	
-	public static TupleExpression getEmptyExpr() {
-		return new TupleExpression();
+	//public static TupleExpression getEmptyExpr() {
+	public static TupleExpression getEmptyExpr(Type parentType) {
+		try {
+			return new TupleExpression(parentType);
+		} catch (CompilerException e) {
+			throw new ExecutionException(e);
+		}
 	}
 	
 	int indentation = 0;
@@ -1664,7 +1708,7 @@ public class DumbInterpreter extends DepthFirstAdapter {
 		//AFieldAccess fa = ((AFieldAccess)((AAccessNakedType) t).getFieldAccess());
 		Expression expr = exprs.get(fa.getPrefixExpr());
 		//otherExprs.put(fa, new FieldAccessExpression(expr, fa.getIdent().getText(), new EmptyExpr()));
-		otherExprs.put(fa, new FieldAccessExpression(expr, fa.getIdent().getText(), getEmptyExpr()));
+		otherExprs.put(fa, new FieldAccessExpression(expr, fa.getIdent().getText(), getEmptyExpr(currentScope.type)));
     }
 	
 	Type determineType(ATypedValue tval) throws CompilerException {
@@ -1708,7 +1752,7 @@ public class DumbInterpreter extends DepthFirstAdapter {
 			//System.out.println("det type "+((AIdentNakedType) t).getName().getText());
 			
 			//return new TypeOf(new FieldAccessExpression(null, ((AIdentNakedType) t).getName().getText(), new EmptyExpr()));
-			return new TypeOf(new FieldAccessExpression(null, ((AIdentNakedType) t).getName().getText(), getEmptyExpr()));
+			return new TypeOf(new FieldAccessExpression(null, ((AIdentNakedType) t).getName().getText(), getEmptyExpr(currentScope.type)));
 			
 		} else if (t instanceof AAccessNakedType) {
 			/*
@@ -1764,7 +1808,7 @@ public class DumbInterpreter extends DepthFirstAdapter {
 			if (tv.getValue() != null) {
 				Expression val = exprs.get(tv.getValue());
 				
-				currentScope.exprs.add(new AssignExpression(new FieldAccessExpression(null, node.getName().getText(), getEmptyExpr()), val));
+				currentScope.exprs.add(new AssignExpression(new FieldAccessExpression(null, node.getName().getText(), getEmptyExpr(currentScope.type)), val));
 				
 			}
 					
@@ -1856,14 +1900,14 @@ public class DumbInterpreter extends DepthFirstAdapter {
 		//Name n = 
 		///currentScope.getOrCreate(str, null);
 		
-		exprs.put(node, new FieldAccessExpression(null, str, getEmptyExpr()));
+		exprs.put(node, new FieldAccessExpression(null, str, getEmptyExpr(currentScope.type)));
 		
 	}
 	
 	
     public void outAAssignExpr(AAssignExpr node)
     {
-    	out("Assignation of "+node.getAssigned()+" to "+node.getValue());
+    	out("Assignation of "+node.getAssigned()+" to  "+node.getValue());
     	
     	/*AExpr assigned = (AExpr) node.getAssigned();
     	exprs.get(assigned)*/
@@ -1973,7 +2017,7 @@ public class DumbInterpreter extends DepthFirstAdapter {
 
 				//System.out.println("*********"+((AssignExpression)args).value);
 				//System.out.println("*********"+((FieldAccessExpression)args).args);
-				if (args instanceof TupleExpression) System.out.println("*********"+((TupleExpression)args));
+				//if (args instanceof TupleExpression) System.out.println("*********"+((TupleExpression)args));
 				
 				TupleExpression tupleArgs;
 				
