@@ -79,12 +79,12 @@ class Scope {
 	//HashMap<String, List<Function>> fcts = new HashMap<>();
 	//Type type;
 	//InConstructionType type = new InConstructionType(new TypeIdentifier());
-	InConstructionType type;
+	TupleType type;
 	
 	List<Expression> exprs = new ArrayList<>();
 	
 	public Scope(String name) { // TODO: replace with a StandardLibraryScope class
-		type = new InConstructionType(new TypeIdentifier(name, null));
+		type = new TupleType(new TypeIdentifier(name, null));
 		
 		type.addFct(new VoidFunction("print") {
 			@Override public void execute(RuntimeObject thisReference, RuntimeObject params) {
@@ -105,7 +105,7 @@ class Scope {
 	
 	public Scope(String name, Scope parent) {
 		this.parent = parent;
-		type = new InConstructionType(new TypeIdentifier(name, (parent==null?null:parent.type)));
+		type = new TupleType(new TypeIdentifier(name, (parent==null?null:parent.type)));
 	}
 	
 	/*
@@ -179,6 +179,7 @@ class FieldAccessExpression implements Expression {
 	
 }*/
 
+/*****
 class EmptyExpr extends Expression {
 	@Override
 	public Type getType() throws CompilerException {
@@ -190,7 +191,9 @@ class EmptyExpr extends Expression {
 	}
 	public String toString() { return ""; }
 }
+*/
 
+/*
 class ListExpression extends Expression {
 	@Override
 	public Type getType() throws CompilerException {
@@ -203,6 +206,76 @@ class ListExpression extends Expression {
 	}
 	public String toString() {
 		return "(,)"; // TODO
+	}
+}*/
+class TupleExpression extends Expression {
+	Type type;
+	//Expression[] exprs;
+	List<Expression> ordinalParams = new ArrayList<>();
+	Map<String,Expression> namedParams = new HashMap<>();
+	/*
+	 * Invariant: p ordinals followed by k named, NOT MIXED
+	 */
+	public TupleExpression() {
+		type = DumbInterpreter.VoidType;
+		//exprs = new Expression[0];
+		
+	}
+	
+	public TupleExpression(Expression[] exs) throws CompilerException {
+		//this.exprs = exs;
+		
+		boolean namedParamsBegan = false;
+		for (int i = 0; i < exs.length; i++) {
+			Expression e = exs[i];
+			if (e instanceof AssignExpression) {
+				AssignExpression ae = ((AssignExpression) e);
+				namedParamsBegan = true;
+				assert ae.assigned instanceof Ide
+				namedParams.put(key, value)
+			} else {
+				if (namedParamsBegan)
+					throw new CompilerException("Ivalid sequence of arguments: named arguments must follow ordinal arguments");
+			}
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+	}
+	
+	@Override
+	public Type getType() throws CompilerException {
+		// TODO
+		//throw new NotSupportedCompExc();
+		//if (type.isEmpty())
+		//return DumbInterpreter.VoidType;
+		return type;
+	}
+	@Override
+	public RuntimeObject evaluate() {
+		//throw new NotSupportedCompExc();
+		//if (type.isEmpty())
+		//return Execution.voidObj;
+		if (exprs.length == 0)
+			 return Execution.voidObj;
+		else {
+			RuntimeObjectBase ret = new RuntimeObjectBase(type, null, false);
+			//evals = new RUnt;
+			for (int i = 0; i < exprs.length; i++) {
+				ret.write(i, exprs[i].evaluate());
+			}
+			return ret;
+		}
+	}
+	public String toString() {
+		if (exprs.length == 0)
+			 return "";
+		else return "(,)"; // TODO
 	}
 }
 
@@ -239,10 +312,10 @@ class AssignExpression extends Expression {
 class FieldAccessExpression extends Expression {
 	Expression thisExpression;
 	String fieldName;
-	Expression args;
+	TupleExpression args;
 	RuntimeObject thisObj;
 	
-	public FieldAccessExpression(Expression thisExpression, String fieldName, Expression args) {
+	public FieldAccessExpression(Expression thisExpression, String fieldName, TupleExpression args) {
 		this.thisExpression = thisExpression;
 		this.fieldName = fieldName;
 		if (args == null)
@@ -251,7 +324,7 @@ class FieldAccessExpression extends Expression {
 		thisObj = null;
 	}
 	
-	public void setArgs(Expression args) {
+	public void setArgs(TupleExpression args) {
 		if (args == null)
 			throw new IllegalArgumentException();
 		this.args = args;
@@ -272,6 +345,7 @@ class FieldAccessExpression extends Expression {
 								 // TODO: aggregate all possible functions with this name?
 				}
 			}
+			//System.out.println(thisObj);
 			//throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this);
 			throw new AssertionError("Never gets there");
 		} else
@@ -575,7 +649,7 @@ abstract class Function {
 	
 	@Override
 	public String toString() {
-		return "Function signed "+signature+" -> "+getOutputType(); //+" on type "+type; //+" with "+args;
+		return "Function  "+signature+" -> "+getOutputType(); //+" on type "+type; //+" with "+args;
 	}
 }
 
@@ -710,7 +784,9 @@ class TypeOf implements Type {
 		return getType().getConstructors();
 	}
 	@Override public String toString() {
-		return getType().toString();
+		if (Execution.hasStarted())
+			 return getType().toString();
+		else return "TypeOf("+expr+")";
 	}
 }
 
@@ -726,7 +802,8 @@ abstract class TypeBase implements Type {
 	}
 	
 	public void addFct(Function fct) { // TODO: detect ambiguities
-		System.out.println("Adding "+fct.signature);
+		//System.out.println("Adding "+fct.signature);
+		System.out.println("Adding "+fct);
 		List<Function> ls = fcts.get(fct.signature.name);
 		if (ls == null) {
 			ls = new ArrayList<Function>();
@@ -747,7 +824,8 @@ abstract class TypeBase implements Type {
 	}
 	@Override
 	public Function getFunction(CallSignature callSign) throws CompilerException {
-		///System.out.println("Searching for function "+callSign.name+" in "+this);
+		///
+		System.out.println("Searching for function "+callSign.name+" in "+this);
 		
 		Function ret = null;
 		List<Function> ls = fcts.get(callSign.name);
@@ -833,16 +911,28 @@ abstract class TypeBase implements Type {
 		return notConformingToBecause(sign) == null;
 	}
 	
+	public boolean hasAttributes() {
+		assert attributeNames.size() == attributeTypes.size();
+		return attributeNames.size() != 0;
+	}
+	public boolean hasFunctions() {
+		return fcts.size() != 0;
+	}
+	public boolean isEmpty() {
+		return !hasAttributes() && !hasFunctions();
+	}
+	
+	
 	@Override
 	public String toString() {
 		return id.toString();
 	}
 }
 
-class InConstructionType extends TypeBase {
+class TupleType extends TypeBase {
 	Function constructor;
 	
-	public InConstructionType(TypeIdentifier id) {
+	public TupleType(TypeIdentifier id) {
 		super(id, false);
 	}
 	
@@ -1143,9 +1233,11 @@ class Execution {
 	static int indentation = -1;
 	static List<String> output = new ArrayList<>();
 	public static PrintStream out = System.out;
+	static boolean started;
 	
 	static RuntimeObject execute(RuntimeObject params, Scope scope)
 	{
+		started = true;
 		indentation++;
 		//System.out.println(scope);
 		out("Executing scope with "+scope.exprs.size()+" expression statements");
@@ -1164,6 +1256,10 @@ class Execution {
 		return voidObj; // FIXME
 	}
 	
+	public static boolean hasStarted() {
+		return started;
+	}
+
 	static RuntimeObject getThis() {
 		return thisObject;
 	}
@@ -1207,6 +1303,11 @@ public class DumbInterpreter extends DepthFirstAdapter {
 	public final static Scope standardScope = new Scope("[StdScope]");
 	//public final static RuntimeObject standardScopeRO = new RuntimeObjectBase(new TypeBase(new TypeIdentifier("StdType", null), false) {}, null, true) {};
 	public final static RuntimeObject standardScopeRO = new RuntimeObjectBase(standardScope.type, null, false) {};
+	//public final static TupleExpression emptyExpr = new TupleExpression();
+	
+	public static TupleExpression getEmptyExpr() {
+		return new TupleExpression();
+	}
 	
 	int indentation = 0;
 	Scope currentScope;
@@ -1221,6 +1322,7 @@ public class DumbInterpreter extends DepthFirstAdapter {
 	
 	public DumbInterpreter(String source, PrintStream out) {
 		Execution.out = out;
+		Execution.started = false;
 		out("############# SOURCE CODE #############");
 		out(source);
 	}
@@ -1298,7 +1400,8 @@ public class DumbInterpreter extends DepthFirstAdapter {
 		System.out.println("Field Access "+fa);
 		//AFieldAccess fa = ((AFieldAccess)((AAccessNakedType) t).getFieldAccess());
 		Expression expr = exprs.get(fa.getPrefixExpr());
-		otherExprs.put(fa, new FieldAccessExpression(expr, fa.getIdent().getText(), new EmptyExpr()));
+		//otherExprs.put(fa, new FieldAccessExpression(expr, fa.getIdent().getText(), new EmptyExpr()));
+		otherExprs.put(fa, new FieldAccessExpression(expr, fa.getIdent().getText(), getEmptyExpr()));
     }
 	
 	Type determineType(ATypedValue tval) throws CompilerException {
@@ -1327,13 +1430,18 @@ public class DumbInterpreter extends DepthFirstAdapter {
 	private Type determineType(AType type) throws CompilerException {
 		PNakedType t = type.getBase();
 		if (t instanceof AIdentNakedType) {
+			/*
 			return currentScope.type.getFunction(
 					new CallSignature(
 							((AIdentNakedType) t).getName().getText(),
 							//new ArrayList<Expression>()
 							new EmptyExpr()
 						)
-				).getOutputType();
+				).getOutputType();*/
+			
+			//return new TypeOf(new FieldAccessExpression(null, ((AIdentNakedType) t).getName().getText(), new EmptyExpr()));
+			return new TypeOf(new FieldAccessExpression(null, ((AIdentNakedType) t).getName().getText(), getEmptyExpr()));
+			
 		} else if (t instanceof AAccessNakedType) {
 			/*
 			AFieldAccess fa = ((AFieldAccess)((AAccessNakedType) t).getFieldAccess());
@@ -1341,7 +1449,8 @@ public class DumbInterpreter extends DepthFirstAdapter {
 			//new InvokeExpression(expr,fa.getIdent().getText());
 			return new FieldAccessExpression(expr, fa.getIdent().getText()).getType();
 			*/
-			return otherExprs.get(((AAccessNakedType) t).getFieldAccess()).getType();
+			//return otherExprs.get(((AAccessNakedType) t).getFieldAccess()).getType();
+			return new TypeOf(otherExprs.get(((AAccessNakedType) t).getFieldAccess()));
 		} else
 			throw new CompilerError("PNakedType is neither a AIdentNakedType or a AAccessNakedType");
 	}
@@ -1384,7 +1493,7 @@ public class DumbInterpreter extends DepthFirstAdapter {
 			
 			Expression val = exprs.get(tv.getValue());
 			
-			currentScope.exprs.add(new AssignExpression(new FieldAccessExpression(null, node.getName().getText(), new EmptyExpr()), val));
+			currentScope.exprs.add(new AssignExpression(new FieldAccessExpression(null, node.getName().getText(), getEmptyExpr()), val));
 			
 		} catch (CompilerException e) {
 			throw new RuntimeException(e);
@@ -1413,14 +1522,21 @@ public class DumbInterpreter extends DepthFirstAdapter {
 	@Override
     public void outAListExpr(AListExpr node) {
 		//indentation--;
+		/*
 		List<PExpr> ls = node.getExpr();
 		assert ls.size() > 0;
 		if (ls.size() == 1) {
 			exprs.put(node, exprs.get(ls.get(0)));
 		} else {
 			// TODO
-		}
-		
+		}*/
+		List<PExpr> ls = node.getExpr();
+		assert ls.size() > 0;
+		//exprs.put(node, exprs.get(ls.get(0)));
+		Expression[] exs = new Expression[ls.size()];
+		for (int i = 0; i < ls.size(); i++)
+			exs[i] = exprs.get(ls.get(i));
+		exprs.put(node, new TupleExpression(exs));
     }
     
 
@@ -1454,7 +1570,7 @@ public class DumbInterpreter extends DepthFirstAdapter {
 		//Name n = 
 		///currentScope.getOrCreate(str, null);
 		
-		exprs.put(node, new FieldAccessExpression(null, str, new EmptyExpr()));
+		exprs.put(node, new FieldAccessExpression(null, str, getEmptyExpr()));
 		
 	}
 	
@@ -1525,9 +1641,10 @@ public class DumbInterpreter extends DepthFirstAdapter {
 			
 			//System.out.println("!!! "+node.getArgs()+" "+exprs.get(node.getArgs()));
 			assert node.getArgs() == null || (node.getArgs() != null && exprs.get(node.getArgs()) != null);
+			assert exprs.get(node.getArgs()) instanceof TupleExpression;
 			
-			Expression args = exprs.get(node.getArgs());
-			if (args == null) args = new EmptyExpr();
+			TupleExpression args = (TupleExpression) exprs.get(node.getArgs());
+			if (args == null) args = getEmptyExpr();
 			((FieldAccessExpression) callee).setArgs(args);
 			if (callees.size() == 1) {
 				exprs.put(node, callee);
@@ -1632,7 +1749,7 @@ public class DumbInterpreter extends DepthFirstAdapter {
 				
 				@Override
 				public Type getOutputType() {
-					return VoidType;
+					return VoidType; // FIXME
 				}
 				
 				@Override
