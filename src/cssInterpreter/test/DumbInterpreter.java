@@ -511,7 +511,7 @@ class FieldAccessExpression extends Expression {
 		this.args = args;
 	}
 	
-	Function getFunction() throws CompilerException {
+	ParamBinding getFunction() throws CompilerException {
 		CandidateList candidates = new CandidateList();
 		if (thisExpression == null) {
 			//Expression expr = 
@@ -522,10 +522,13 @@ class FieldAccessExpression extends Expression {
 					//System.out.println("+++"+args);
 					//return thisObj.getRuntimeType().getFunction(new CallSignature(fieldName, args), candidates);
 					
-					Function fct = thisObj.getRuntimeType().getFunction(new CallSignature(fieldName, args), candidates);
+					///Function fct = thisObj.getRuntimeType().getFunction(new CallSignature(fieldName, args), candidates);
+					ParamBinding pb = thisObj.getRuntimeType().getFunction(new CallSignature(fieldName, args), candidates);
+					
 					//System.out.println("\tFound "+fct.signature);
 					//System.out.println(candidates);
-					return fct;
+					//return fct;
+					return pb;
 					
 				} catch(UnknownFunctionCompExc e) {
 					thisObj = thisObj.getParent();
@@ -553,7 +556,10 @@ class FieldAccessExpression extends Expression {
 		
 		//return thisExpression.getType().getFunction(new CallSignature(fieldName, new ArrayList<Expression>())).getOutputType();
 		//return thisExpression.getType().getFunction(new CallSignature(fieldName, args)).getOutputType();
-		return getFunction().getOutputType();
+		
+		//return getFunction().getOutputType();
+		return getFunction().fct.getOutputType();
+		
 	}
 	@Override
 	public RuntimeObject evaluate() {
@@ -726,8 +732,8 @@ class CallSignature {
 	String notConformingToBecause(Signature sign) throws CompilerException { // TODO rm
 		return args.getType().notConformingToBecause(sign);
 	}
-	ParamBinding getBinding(Signature sign) throws CompilerException {
-		return args.getType().getBinding(sign);
+	ParamBinding getBinding(Function f) throws CompilerException {
+		return args.getType().getBinding(f);
 	}
 	
 	//public CallSignature(String name, List<Expression> exprs) {
@@ -958,10 +964,14 @@ class TypeIdentifier {
 }
 
 class CandidateList {
-	private List<Pair<Type,Pair<Function, String>>> list = new ArrayList<>();
+	//private List<Pair<Type,Pair<Function, String>>> list = new ArrayList<>();
+	private List<Pair<Type,ParamBinding>> list = new ArrayList<>();
 	
-	public void add(Type t, Function f, String s) {
+	/*public void add(Type t, Function f, String s) {
 		list.add(new Pair<Type, Pair<Function,String>>(t, new Pair<Function,String>(f, s)));
+	}*/
+	public void add(Type t, ParamBinding pb) {
+		list.add(new Pair<>(t, pb));
 	}
 	
 	@Override
@@ -974,8 +984,10 @@ class CandidateList {
 			/*for (Pair<Type,Function> p : list) {
 				sb.append("\n\t\t"+p.getFirst()+"::"+p.getSecond());
 			}*/
-			for (Pair<Type,Pair<Function, String>> p : list)
-				sb.append("\n\t\t"+p.getFirst()+"::"+p.getSecond().getFirst()+" ("+p.getSecond().getSecond()+")");
+			//for (Pair<Type,Pair<Function, String>> p : list)
+			//	sb.append("\n\t\t"+p.getFirst()+"::"+p.getSecond().getFirst()+" ("+p.getSecond().getSecond()+")");
+			for (Pair<Type,ParamBinding> p : list)
+				sb.append("\n\t\t"+p.getFirst()+"::"+p.getSecond().fct+" ("+p.getSecond().getMessage()+")");
 		}
 		return sb.toString();
 	}
@@ -986,16 +998,41 @@ class ParamBinding {
 	//public final String bindingError;
 	String bindingError = "Unknown";
 	List<Pair<Integer,String>> names = new ArrayList<>();
+	//private Function fct;
+	public final Function fct;
 	
 	/*public ParamBinding(String bindingError) {
 		this.bindingError = bindingError;
 	}*/
-	//public ParamBinding() { }
+	public ParamBinding(Function fct) {
+		this.fct = fct;
+	}
 	
+	private void mutate(RuntimeObject args) { // FIXME: duplicate type before?? this code adds reeaaally nasty states
+		for (Pair<Integer,String> p : names)
+			args.renameAttribute(p.getFirst(), p.getSecond());
+	}
+	
+	public void set(RuntimeObject thisReference, RuntimeObject args, RuntimeObject value) {
+		mutate(args);
+		fct.set(thisReference, args, value);
+	}
+	
+	public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject args) {
+		mutate(args);
+		return fct.evaluate(thisReference, args);
+	}
+
+	/*public Function getFunction() {
+		return fct;
+	}*/
 	public void addBinding(Integer index, String name) {
 		names.add(new Pair<>(index,name));
 	}
-	public void setSuccessful(String bindingError) {
+	public void setSuccessful() {
+		this.bindingError = null;
+	}
+	public void setUnsuccessful(String bindingError) {
 		this.bindingError = bindingError;
 	}
 	public boolean isSuccessful() {
@@ -1005,6 +1042,11 @@ class ParamBinding {
 	public String getError() {
 		return bindingError;
 	}
+	public String getMessage() {
+		if (bindingError == null)
+			 return "Conforming";
+		else return bindingError;
+	}
 }
 
 /*
@@ -1013,15 +1055,16 @@ class Type {
 }*/
 interface Type {
 	boolean isDetermined();
-	ParamBinding getBinding(Signature sign);
+	ParamBinding getBinding(Function f);
 	boolean isTuple();
 	String notConformingToBecause(Signature sign);
 	boolean conformsTo(Signature sign);
 	//Function getFunction(CallSignature sign) throws CompilerException;
-	Function getFunction(CallSignature sign, CandidateList candidates) throws CompilerException;
+	ParamBinding getFunction(CallSignature sign, CandidateList candidates) throws CompilerException;
 	Type[] getAttributeTypes();
 	String[] getAttributeNames();
 	List<Function> getConstructors(); // TODO: cannot overload type name with def
+	void setAttributeName(int index, String name);
 }
 
 class TypeOf implements Type {
@@ -1049,10 +1092,10 @@ class TypeOf implements Type {
 	@Override public boolean conformsTo(Signature sign) {
 		return getType().conformsTo(sign);
 	}
-	@Override public ParamBinding getBinding(Signature sign) {
-		return getType().getBinding(sign);
+	@Override public ParamBinding getBinding(Function f) {
+		return getType().getBinding(f);
 	}
-	@Override public Function getFunction(CallSignature sign, CandidateList candidates) throws CompilerException {
+	@Override public ParamBinding getFunction(CallSignature sign, CandidateList candidates) throws CompilerException {
 		return getType().getFunction(sign, candidates);
 	}
 	@Override public Type[] getAttributeTypes() {
@@ -1069,6 +1112,9 @@ class TypeOf implements Type {
 			 return getType().toString();
 		else return "TypeOf("+expr+")";
 		//else return "TypeOf"+expr+"";
+	}
+	@Override public void setAttributeName(int index, String name) {
+		getType().setAttributeName(index, name);
 	}
 }
 
@@ -1107,16 +1153,16 @@ abstract class TypeBase implements Type {
 		return true;
 	}
 	@Override
-	public Function getFunction(CallSignature callSign, CandidateList candidates) throws CompilerException {
+	public ParamBinding getFunction(CallSignature callSign, CandidateList candidates) throws CompilerException {
 		///
 		//System.out.println("Searching for function "+callSign.name+" in "+id.detailedString());
 		//System.out.println("\t"+callSign);
-
+		
 		// HEAVY //System.out.println("Searching for function "+callSign+" in "+id.detailedString());
 		// LIGHT //
 			System.out.println("Searching "+callSign.name+" in "+id);
 		
-		Function ret = null;
+		ParamBinding ret = null;
 		List<Function> ls = fcts.get(callSign.name);
 		if (ls == null)
 			//throw new CompilerException("Name '"+callSign.name+"' is unknown in type "+this);
@@ -1136,32 +1182,18 @@ abstract class TypeBase implements Type {
 			}*/
 			
 			//String reason = callSign.notConformingToBecause(f.signature);
-			ParamBinding pb = callSign.getBinding(f.signature);
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+			//ParamBinding pb = callSign.getBinding(f.signature);
+			ParamBinding pb = callSign.getBinding(f);
+					
+					
+					
+					
 			// make the fct return Pair<Function, ParamBinding>
 			
 			
 			
 			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+			/*
 			if (reason == null) {
 				candidates.add(this,f,"Conforming");
 				if (ret != null)
@@ -1169,6 +1201,26 @@ abstract class TypeBase implements Type {
 				ret = f;
 			} else
 				candidates.add(this,f,reason);
+			*/
+			
+			
+			
+			
+			
+			
+			//if (pb.isSuccessful())
+			candidates.add(this,pb);
+			
+			if (!pb.isSuccessful()) {
+				candidates.add(this,pb);
+				if (ret != null)
+					throw new CompilerException("Ambiguous call signature\n\t"+candidates);
+				ret = pb;
+			}
+			
+			
+			
+			
 			
 		}
 		if (ret == null)
@@ -1219,11 +1271,24 @@ abstract class TypeBase implements Type {
 	
 	
 	@Override
-	public ParamBinding getBinding(Signature sign) {
+	public ParamBinding getBinding(Function f) {
 		//String error = null;
 		assert isTuple(); // even single and void params are converted to a tuple with one or zero unnamed value, when passed to a function
-		ParamBinding pb = new ParamBinding();
+		ParamBinding pb = new ParamBinding(f);
 		
+		System.out.println("Getting binding for "+this+" with "+f);
+		
+		int i = 0;
+		for (String n : attributeNames) {
+			if (n != null)
+				break;
+			if (i >= f.signature.params.namedTypes.length) {
+				pb.setUnsuccessful("Not enough parameters. Parameter "+i+" expected, not found.");
+				break;
+			}
+			pb.addBinding(i, f.signature.params.namedTypes[i].name);
+			i++;
+		}
 		
 		
 		
@@ -1272,6 +1337,13 @@ abstract class TypeBase implements Type {
 			
 		}*/
 	}
+	
+
+	@Override
+	public void setAttributeName(int index, String name) {
+		attributeNames.set(index, name);
+	}
+	
 	
 	@Override
 	public boolean conformsTo(Signature sign) {
@@ -1337,6 +1409,7 @@ class TupleType extends TypeBase {
 		//return new ArrayList<Function>();
 		return Arrays.asList(new Function[]{constructor});
 	}
+	
 }
 
 class PrimitiveType<T> extends TypeBase {
@@ -1406,6 +1479,7 @@ class TypeOfExpr implements Type {
 
 interface RuntimeObject { // TODO: accessors for reading/modifying fields; check initialized etc.
 	Type getRuntimeType();
+	void renameAttribute(int first, String name);
 	boolean isValue();
 	Object getValue() throws ExecutionException;
 	Iterator<RuntimeObject> values();
@@ -1437,7 +1511,7 @@ class RuntimeObjectBase implements RuntimeObject {
 		
 		
 		
-		
+		// TODO use params !?
 		
 		
 		
@@ -1528,6 +1602,13 @@ class RuntimeObjectBase implements RuntimeObject {
 	public String toOutput() {
 		return toString();
 	}
+
+	@Override
+	public void renameAttribute(int index, String name) {
+		// TODO: check access
+		type.setAttributeName(index, name);
+	}
+	
 }
 
 //class PrimitiveRuntimeObject<T, PT extends PrimitiveType<T>> extends RuntimeObjectBase {
