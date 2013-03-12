@@ -723,8 +723,11 @@ class CallSignature {
 		//System.out.println(args);
 		return args.getType().conformsTo(sign);
 	}
-	String notConformingToBecause(Signature sign) throws CompilerException {
+	String notConformingToBecause(Signature sign) throws CompilerException { // TODO rm
 		return args.getType().notConformingToBecause(sign);
+	}
+	ParamBinding getBinding(Signature sign) throws CompilerException {
+		return args.getType().getBinding(sign);
 	}
 	
 	//public CallSignature(String name, List<Expression> exprs) {
@@ -978,12 +981,39 @@ class CandidateList {
 	}
 }
 
+class ParamBinding {
+	//final boolean successful;
+	//public final String bindingError;
+	String bindingError = "Unknown";
+	List<Pair<Integer,String>> names = new ArrayList<>();
+	
+	/*public ParamBinding(String bindingError) {
+		this.bindingError = bindingError;
+	}*/
+	//public ParamBinding() { }
+	
+	public void addBinding(Integer index, String name) {
+		names.add(new Pair<>(index,name));
+	}
+	public void setSuccessful(String bindingError) {
+		this.bindingError = bindingError;
+	}
+	public boolean isSuccessful() {
+		//return successful;
+		return bindingError == null;
+	}
+	public String getError() {
+		return bindingError;
+	}
+}
+
 /*
 class Type {
 	Map<Signature, Function> fields;
 }*/
 interface Type {
 	boolean isDetermined();
+	ParamBinding getBinding(Signature sign);
 	boolean isTuple();
 	String notConformingToBecause(Signature sign);
 	boolean conformsTo(Signature sign);
@@ -1018,6 +1048,9 @@ class TypeOf implements Type {
 	}
 	@Override public boolean conformsTo(Signature sign) {
 		return getType().conformsTo(sign);
+	}
+	@Override public ParamBinding getBinding(Signature sign) {
+		return getType().getBinding(sign);
 	}
 	@Override public Function getFunction(CallSignature sign, CandidateList candidates) throws CompilerException {
 		return getType().getFunction(sign, candidates);
@@ -1102,7 +1135,33 @@ abstract class TypeBase implements Type {
 				ret = f;
 			}*/
 			
-			String reason = callSign.notConformingToBecause(f.signature);
+			//String reason = callSign.notConformingToBecause(f.signature);
+			ParamBinding pb = callSign.getBinding(f.signature);
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			// make the fct return Pair<Function, ParamBinding>
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
 			if (reason == null) {
 				candidates.add(this,f,"Conforming");
 				if (ret != null)
@@ -1157,9 +1216,26 @@ abstract class TypeBase implements Type {
 		return false;
 	}
 	
+	
+	
+	@Override
+	public ParamBinding getBinding(Signature sign) {
+		//String error = null;
+		assert isTuple(); // even single and void params are converted to a tuple with one or zero unnamed value, when passed to a function
+		ParamBinding pb = new ParamBinding();
+		
+		
+		
+		
+		
+		
+		return pb;
+	}
+	
+	
 	@Override
 	// returns null if it conforms
-	public String notConformingToBecause(Signature sign) {
+	public String notConformingToBecause(Signature sign) { // TODO rm
 		
 		//System.out.println(this);
 		
