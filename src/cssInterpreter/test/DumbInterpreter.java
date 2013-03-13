@@ -541,6 +541,7 @@ class FieldAccessExpression extends Expression {
 			//System.out.println(thisObj);
 			//throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this);
 			throw new AssertionError("Never gets there");
+			//assert false: "Never gets there";
 		} else
 			return thisExpression.getType().getFunction(new CallSignature(fieldName, args), candidates);
 	}
@@ -1160,7 +1161,7 @@ abstract class TypeBase implements Type {
 		
 		// HEAVY //System.out.println("Searching for function "+callSign+" in "+id.detailedString());
 		// LIGHT //
-			System.out.println("Searching "+callSign.name+" in "+id);
+			System.out.println("Searching for "+callSign.name+" in "+id);
 		
 		ParamBinding ret = null;
 		List<Function> ls = fcts.get(callSign.name);
@@ -1242,9 +1243,11 @@ abstract class TypeBase implements Type {
 	}
 	public void addAttribute(PAttrType attrType, String name, Type type) {
 		// TODO: use attrType to generate a Function.FieldType
-		addFct(new RuntimeField(name, type, attributeTypes.size()));
+		//addFct(new RuntimeField(name, type, attributeTypes.size()));
 		attributeNames.add(name);
+		//setAttributeName(attributeNames.size()-1, name);
 		attributeTypes.add(type);
+		setAttributeFunction(attributeNames.size()-1);
 	}
 
 	@Override
@@ -1338,11 +1341,30 @@ abstract class TypeBase implements Type {
 		}*/
 	}
 	
-
+/*
 	@Override
 	public void setAttributeName(int index, String name) {
-		attributeNames.set(index, name);
+		setAttributeName(index, name, null);
 	}
+	public void setAttributeName(int index, String name, Type type) {
+		assert attributeNames.get(index) == null;
+		attributeNames.set(index, name);
+		if (type == null)
+			type = attributeTypes.get(index);
+		addFct(new RuntimeField(name, type, index));
+	}*/
+	
+	public void setAttributeFunction(int index) {
+		addFct(new RuntimeField(attributeNames.get(index), attributeTypes.get(index), index));
+	}
+	
+	@Override
+	public void setAttributeName(int index, String name) {
+		assert attributeNames.get(index) == null;
+		attributeNames.set(index, name);
+		setAttributeFunction(index);
+	}
+	
 	
 	
 	@Override
@@ -1513,7 +1535,7 @@ class RuntimeObjectBase implements RuntimeObject {
 		
 		// TODO use params !?
 		
-		
+		assert false;
 		
 		
 		
@@ -1696,12 +1718,16 @@ class Execution {
 	
 	static RuntimeObject execute(RuntimeObject params, Scope scope)
 	{
+		System.out.println(">> Executing:  "+scope.type+"  with params  "+params);
 		started = true;
 		indentation++;
 		//System.out.println(scope);
 		out("Executing scope with "+scope.exprs.size()+" expression statements");
 		thisStack.push(thisObject);
 		//thisObject = new RuntimeObjectBase(scope.type, thisObject, false) {};
+		
+		System.out.println(">> Adding:  "+params+": "+params.getRuntimeType()+" as parent to "+scope.type);
+		
 		thisObject = new RuntimeObjectBase(scope.type, params, false);
 		for (Expression expr : scope.exprs) {
 			//out("Expression "+expr+" produced: "+expr.evaluate());
@@ -2279,7 +2305,14 @@ public class DumbInterpreter extends DepthFirstAdapter {
 					
 					//Execution.execute(subScope);
 					Execution.execute(params, scopes.get(myClosure));
-					return Execution.voidObj;//new PrimitiveRuntimeObject<Void>(VoidType, new Void(), true);
+					return Execution.voidObj;//new PrimitiveRuntimeObject<Void>(VoidType, new Void(), true); // TODO
+					
+					
+					
+					
+					
+					
+					
 				}
 				
 			});
