@@ -306,7 +306,7 @@ class TupleExpression extends Expression {
 		//TupleType tt = new TupleType(new TypeIdentifier("[AnonTuple]", DumbInterpreter.standardScope.type)); //FIXME?
 		TupleType tt = new TupleType(new TypeIdentifier((name==null?"[AnonTuple]":name), parentType)); //FIXME?
 
-		System.out.println(">>>>>>>>>>>");
+		///System.out.println(">>>>>>>>>>>");
 		
 		boolean namedParamsBegan = false;
 		
@@ -315,7 +315,7 @@ class TupleExpression extends Expression {
 			Expression e = exs[i];
 			assert e != null;
 			
-			System.out.println(":t:"+e.getClass());
+			///System.out.println(":t:"+e.getClass());
 			
 			if (e instanceof AssignExpression) {
 				AssignExpression ae = ((AssignExpression) e);
@@ -329,7 +329,7 @@ class TupleExpression extends Expression {
 				//assert ae.assigned instanceof 
 				
 				//System.out.println(":n:"+fa.fieldName);
-				System.out.println(":n: "+fa.fieldName+" = "+ae.value);
+				///System.out.println(":n: "+fa.fieldName+" = "+ae.value);
 				//System.out.println(":n:"+fa.fieldName+" - "+fa.args);
 				
 				//namedParams.put(fa.fieldName, fa.args);
@@ -344,12 +344,12 @@ class TupleExpression extends Expression {
 				ordinalParams.add(e);
 				tt.addAttribute(null, (String) null, new TypeOf(e));
 
-				System.out.println(":o:"+e+" "+new TypeOf(e));
+				///System.out.println(":o:"+e+" "+new TypeOf(e));
 				
 			}
 		}
 		
-		System.out.println("<<<<<<<<<");
+		///System.out.println("<<<<<<<<<");
 		
 		tt.done();
 		type = tt;
@@ -1212,13 +1212,14 @@ abstract class TypeBase implements Type {
 			//if (pb.isSuccessful())
 			candidates.add(this,pb);
 			
-			if (!pb.isSuccessful()) {
-				candidates.add(this,pb);
+			if (pb.isSuccessful()) {
+				System.out.println("SUCCESS "+pb.fct);
+				//candidates.add(this,pb);
 				if (ret != null)
 					throw new CompilerException("Ambiguous call signature\n\t"+candidates);
 				ret = pb;
 			}
-			
+			else System.out.println("FAIL "+pb.fct);
 			
 			
 			
@@ -1281,6 +1282,7 @@ abstract class TypeBase implements Type {
 		
 		System.out.println("Getting binding for "+this+" with "+f);
 		
+		/*
 		int i = 0;
 		for (String n : attributeNames) {
 			if (n != null)
@@ -1292,10 +1294,32 @@ abstract class TypeBase implements Type {
 			pb.addBinding(i, f.signature.params.namedTypes[i].name);
 			i++;
 		}
+		*/
 		
+		// TODO handle unnamed function parameters (name them _n?)
 		
-		
-		
+		int i = 0;
+		for (NamedType nt : f.signature.params.namedTypes) {
+			System.out.println(">> "+i+" / "+attributeNames.size());
+			
+			if (i >= attributeNames.size()) {
+				System.out.println(">> unsucc");
+				
+				pb.setUnsuccessful("Not enough parameters. Parameter "
+						+i+(f.signature.params.namedTypes[i]==null?"":" named "+f.signature.params.namedTypes[i])
+						+" expected, not found.");
+				
+				//System.out.println(pb.isSuccessful());
+				
+				break;
+			} else if(attributeNames.get(i) != null) {
+				break;
+			}
+			System.out.println(">> Binding #"+i+" to "+f.signature.params.namedTypes[i].name);
+			pb.addBinding(i, f.signature.params.namedTypes[i].name);
+			i++;
+		}
+		pb.setSuccessful();
 		
 		return pb;
 	}
