@@ -23,4 +23,9 @@ public class CallSignature {
 		//return "CallSignature: " + name + args;
 		return name + params;
 	}
+
+	public Integer getLine() {
+		return params.getLine();
+	}
+	
 }

@@ -1167,7 +1167,7 @@ abstract class TypeBase implements Type {
 		List<Function> ls = fcts.get(callSign.name);
 		if (ls == null)
 			//throw new CompilerException("Name '"+callSign.name+"' is unknown in type "+this);
-			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this+"\n\t"+candidates.toString());
+			throw new UnknownFunctionCompExc(null, "Name '"+callSign.name+"' is unknown in type "+this+"\n\t"+candidates.toString());
 		for (Function f : ls) {
 			/*
 			System.out.println(f);
@@ -1226,7 +1226,7 @@ abstract class TypeBase implements Type {
 			
 		}
 		if (ret == null)
-			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this+" with parameters "+callSign.args+"\n\t"+candidates.toString());
+			throw new UnknownFunctionCompExc(null, "Name '"+callSign.name+"' is unknown in type "+this+" with parameters "+callSign.args+"\n\t"+candidates.toString());
 		return ret;
 	}
 	/*

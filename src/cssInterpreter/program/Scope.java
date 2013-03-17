@@ -17,7 +17,8 @@ public class Scope {
 	public Scope(String name, final Execution exec) { // TODO: replace with a StandardLibraryScope class
 		type = new TupleType(new TypeIdentifier(name, null), null);
 		
-		type.addFct(new VoidFunction("print", exec) {
+		type.addFct(new VoidFunction("print", exec, new FormalParameters(new NamedType[]{new NamedType(exec.VoidType,null,false)})) {
+			
 			@Override public void execute(RuntimeObject thisReference, RuntimeObject params) {
 				/*if (params.isValue())
 					output = params.toString();*/
@@ -25,6 +26,7 @@ public class Scope {
 				//Execution.message(params.toString());
 				exec.message(params);
 			}
+			
 		});
 		/*
 		type.addType(Interpreter.VoidType);

@@ -9,7 +9,10 @@ import cssInterpreter.runtime.RuntimeObject;
 public class ParamBinding {
 	//final boolean successful;
 	//public final String bindingError;
-	String bindingError = "Unknown";
+	
+	//String bindingError = "Unknown";
+	String bindingError = null;
+	
 	List<Pair<Integer,String>> names = new ArrayList<>();
 	//private Function fct;
 	public final Function fct;
@@ -50,6 +53,15 @@ public class ParamBinding {
 		mutate(args);
 		return fct.evaluate(thisReference, args);
 	}
+	
+
+	public boolean hasName(String name) {
+		for (Pair<Integer,String> p : names)
+			if (p.getSecond().equals(name))
+				return true;
+		return false;
+	}
+	
 
 	/*public Function getFunction() {
 		return fct;
@@ -75,5 +87,8 @@ public class ParamBinding {
 			 return "Conforming";
 		else return bindingError;
 	}
+	
 }
+
+
 

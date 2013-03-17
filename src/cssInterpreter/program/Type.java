@@ -37,7 +37,11 @@ public class Type implements TypeReference {
 	
 	public void addFct(Function fct) { // TODO: detect ambiguities
 		//System.out.println("Adding "+fct.signature);
-		System.out.println("Adding "+fct+"  in type  "+this);
+		
+		
+		////System.out.println("Adding "+fct+"  in type  "+this);
+		
+		
 		
 		List<Function> ls = fcts.get(fct.signature.name);
 		if (ls == null) {
@@ -70,15 +74,26 @@ public class Type implements TypeReference {
 		List<Function> ls = fcts.get(callSign.name);
 		if (ls == null)
 			//throw new CompilerException("Name '"+callSign.name+"' is unknown in type "+this);
-			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this+"\n\t\t"+candidates.toString());
+			///throw new UnknownFunctionCompExc(callSign.getLine(), "Name '"+callSign.name+"' is unknown in type "+this+"\n\t  "+candidates.toString());
+			throw new UnknownFunctionCompExc(callSign.getLine(),
+					"Name '"+callSign.name+"' is unknown in type "+this
+					+(candidates.count() > 0 ? " with parameters "+callSign.params : "")
+					+"\n\t  "+candidates.toString()
+				);
 		for (Function f : ls) {
 			
 			ParamBinding pb = callSign.getBinding(f, candidates.searchDepth);
 			
 			candidates.add(this,pb);
-			
+			/*
 			if (!pb.isSuccessful()) {
 				candidates.add(this,pb);
+				if (ret != null)
+					throw new CompilerException("Ambiguous call signature\n\t"+candidates);
+				ret = pb;
+			}*/
+			
+			if (pb.isSuccessful()) {
 				if (ret != null)
 					throw new CompilerException("Ambiguous call signature\n\t"+candidates);
 				ret = pb;
@@ -86,7 +101,7 @@ public class Type implements TypeReference {
 			
 		}
 		if (ret == null)
-			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this+" with parameters "+callSign.params+"\n\t\t"+candidates.toString());
+			throw new UnknownFunctionCompExc(callSign.getLine(), "Name '"+callSign.name+"' is unknown in type "+this+" with parameters "+callSign.params+"\n\t  "+candidates.toString());
 		return ret;
 	}
 	
@@ -127,8 +142,11 @@ public class Type implements TypeReference {
 		assert isTuple(); // even single and void params are converted to a tuple with one or zero unnamed value, when passed to a function
 		ParamBinding pb = new ParamBinding(f,searchDepth);
 		
-		System.out.println("Getting binding for "+this+" with "+f);
 		
+		////System.out.println("Getting binding for "+this+" with "+f);
+		
+		
+		/*
 		int i = 0;
 		for (String n : attributeNames) {
 			if (n != null)
@@ -140,10 +158,65 @@ public class Type implements TypeReference {
 			pb.addBinding(i, f.signature.params.namedTypes[i].name);
 			i++;
 		}
+		*/
 		
+		int k = 0;
+		for (String n : attributeNames) {
+			if (n != null)
+				break;
+			if (k >= f.signature.params.namedTypes.length) {
+				pb.setUnsuccessful("Too many arguments given: "+attributeNames.size()+" given, "+f.signature.params.namedTypes.length+" expected.");
+				break;
+			}
+			/**
+			if (f.signature.params.namedTypes[k].name == null) {
+				pb.setUnsuccessful("Parameter "+k+" of "+f+"  has no name and cannot be bound.");
+				break;
+			}
+			*/
+			pb.addBinding(k, f.signature.params.namedTypes[k].name);
+			k++;
+		}
 		
+		if (!pb.isSuccessful()) return pb;
 		
+		/*
+		 *  At this point we've covered all unnamed arguments in the arg type; we've yet to check the rest
+		 *  
+		 */
 		
+		//for (int i = 0; i < f.signature.params.namedTypes.length; i++) {
+		for (int i = k; i < f.signature.params.namedTypes.length; i++) {
+			NamedType param = f.signature.params.namedTypes[i];
+			boolean found = false;
+			/*for (String n : attributeNames) {
+				if (n != null && n.equals(param.name)) {
+					found = true;
+					break;
+				}
+			}*/
+			for (int j = k; j < attributeNames.size(); j++) {
+				String n = attributeNames.get(i);
+				if (n != null && n.equals(param.name)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				if(!pb.hasName(param.name)) {
+					pb.setUnsuccessful("Not enough arguments: parameter '"+param.name+"' expected, not found.");
+				}
+			}
+		}
+		
+		/*
+		if (i >= f.signature.params.namedTypes.length) {
+				pb.setUnsuccessful("Not enough parameters. Parameter "+i+" expected, not found.");
+				break;
+			}
+		*/
+		
+		//pb.setSuccessful();
 		
 		return pb;
 	}

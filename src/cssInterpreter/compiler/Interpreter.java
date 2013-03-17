@@ -36,6 +36,7 @@ import cssInterpreter.program.PrimitiveRuntimeObject;
 import cssInterpreter.program.Scope;
 import cssInterpreter.program.Signature;
 import cssInterpreter.program.Type;
+import cssInterpreter.program.TypeByName;
 import cssInterpreter.program.TypeOf;
 import cssInterpreter.program.TypeReference;
 import cssInterpreter.program.expressions.Constant;
@@ -247,7 +248,11 @@ public class Interpreter extends DepthFirstAdapter {
 			
 			//return new TypeOf(new FieldAccessExpression(null, ((AIdentNakedType) t).getName().getText(), new EmptyExpr()));
 			//return new TypeOf(new FieldAccessExpression(null, ((AIdentNakedType) t).getName().getText(), getEmptyExpr(currentScope.type)));
-			return new TypeOf(new FunctionCallExpression(exec, currentScope.getType(), ((AIdentNakedType) t).getName().getText()), this);
+			
+			
+			
+			/**return new TypeOf(new FunctionCallExpression(exec, currentScope.getType(), ((AIdentNakedType) t).getName().getText()), this);*/
+			return new TypeByName(currentScope, ((AIdentNakedType) t).getName().getText());
 			
 		} else if (t instanceof AAccessNakedType) {
 			/*
@@ -257,6 +262,13 @@ public class Interpreter extends DepthFirstAdapter {
 			return new FieldAccessExpression(expr, fa.getIdent().getText()).getType();
 			*/
 			//return otherExprs.get(((AAccessNakedType) t).getFieldAccess()).getType();
+			
+			/*
+			 * Shall we consider that "f: Mc" works and "f: A.Mc" doesn't? And that we whould write "f: {A.Mc}" ?
+			 * It might be useful that the rule be the same than this of "f := ..."
+			 * As "def f := A.print" is eqto "def f := {A.print}", we might be able to write "f: A.Mc"
+			 * TODO: make a closure?
+			 */
 			return new TypeOf(otherExprs.get(((AAccessNakedType) t).getFieldAccess()), this);
 		} else
 			throw new CompilerError("PNakedType is neither a AIdentNakedType or a AAccessNakedType");

@@ -10,6 +10,8 @@ public abstract class Expression {
 	static int nb = 0;
 	int id = nb++;
 	
+	Integer line;
+	
 	public abstract TypeReference getTypeRef() throws CompilerException;
 	public abstract RuntimeObject evaluate();
 	
@@ -21,5 +23,8 @@ public abstract class Expression {
 	}
 	public RuntimeObject assignDelegate(RuntimeObject value) { assert false; throw new AssertionError(); }
 	public String toString() { return "(Unnamed Expr)"; }
+
+	public void setLine(Integer line) { this.line = line; }
+	public Integer getLine() { return line; }
 
 }

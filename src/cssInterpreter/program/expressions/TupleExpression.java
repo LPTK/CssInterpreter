@@ -38,6 +38,9 @@ public class TupleExpression extends Expression {
 	}
 	
 	public TupleExpression(Execution exec, Expression[] exs, Type parentType, String name) throws CompilerException {
+		
+		// TODO: add line detection
+		
 		//this.exprs = exs;
 		this.exec = exec;
 		

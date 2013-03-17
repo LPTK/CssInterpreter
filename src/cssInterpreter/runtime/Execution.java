@@ -88,14 +88,14 @@ public class Execution {
 		//out("<<<< Execution Message: \""+msg+"\" >>>>");
 		
 		
-		out("<<<< Execution Message: "+msg+" >>>>");
-		output.add(msg.toOutput());
+//		out("<<<< Execution Message: "+msg+" >>>>");
+//		output.add(msg.toOutput());
 		
-		/*
+		
 		assert msg.getRuntimeType().getAttributeTypes().length == 1; // only one arg
-		out("<<<< Execution Message: "+msg.read(0)+" >>>>");
+		out("<<<< Execution Message: "+msg.read(0)+", from "+msg+" >>>>");
 		output.add(msg.read(0).toOutput());
-		*/
+		
 		
 		//System.out.println("!!! Adding "+msg);
 	}
