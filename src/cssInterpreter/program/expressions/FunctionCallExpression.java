@@ -126,8 +126,9 @@ public class FunctionCallExpression extends Expression {
 		
 		//return getFunction().getOutputType();
 		//return getFunction().fct.getOutputType(); // FIXME?! Type -> TypeRef
-		return getFunction(new CandidateList()).fct.getOutputType(); // FIXME?! Type -> TypeRef
 		
+		//return getFunction(new CandidateList()).fct.getOutputType(); // FIXME?! Type -> TypeRef
+		return getFunction(new CandidateList(evalThisType())).fct.getOutputType(); // FIXME?! Type -> TypeRef
 	}
 	
 	public Pair<ParamBinding,RuntimeObject> getFunctionAndThisOrExecArgs() throws CompilerException {
@@ -146,7 +147,8 @@ public class FunctionCallExpression extends Expression {
 		return new Pair<>(getFunction(candidates), getThis());
 		*/
 		
-		return new Pair<>(getFunction(new CandidateList()), getThis());
+		//return new Pair<>(getFunction(new CandidateList()), getThis());
+		return new Pair<>(getFunction(new CandidateList(evalThisType())), getThis());
 		
 	}
 	

@@ -76,7 +76,7 @@ public class Type implements TypeReference {
 			//throw new CompilerException("Name '"+callSign.name+"' is unknown in type "+this);
 			///throw new UnknownFunctionCompExc(callSign.getLine(), "Name '"+callSign.name+"' is unknown in type "+this+"\n\t  "+candidates.toString());
 			throw new UnknownFunctionCompExc(callSign.getLine(),
-					"Name '"+callSign.name+"' is unknown in type "+this
+					"Name '"+callSign.name+"' is unknown in type "+candidates.getInitialType()
 					+(candidates.count() > 0 ? " with parameters "+callSign.params : "")
 					+"\n\t  "+candidates.toString()
 				);
@@ -100,8 +100,8 @@ public class Type implements TypeReference {
 			}
 			
 		}
-		if (ret == null)
-			throw new UnknownFunctionCompExc(callSign.getLine(), "Name '"+callSign.name+"' is unknown in type "+this+" with parameters "+callSign.params+"\n\t  "+candidates.toString());
+		if (ret == null) // TODO: factorize (le meme en haut)
+			throw new UnknownFunctionCompExc(callSign.getLine(), "Name '"+callSign.name+"' is unknown in type "+candidates.getInitialType()+" with parameters "+callSign.params+"\n\t  "+candidates.toString());
 		return ret;
 	}
 	
@@ -196,7 +196,7 @@ public class Type implements TypeReference {
 				}
 			}*/
 			for (int j = k; j < attributeNames.size(); j++) {
-				String n = attributeNames.get(i);
+				String n = attributeNames.get(j);
 				if (n != null && n.equals(param.name)) {
 					found = true;
 					break;

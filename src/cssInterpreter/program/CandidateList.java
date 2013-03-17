@@ -9,6 +9,11 @@ public class CandidateList {
 	//private List<Pair<Type,Pair<Function, String>>> list = new ArrayList<>();
 	private List<Pair<Type,ParamBinding>> candidates = new ArrayList<>();
 	public int searchDepth = 0; // FIXME no public
+	Type initialType;
+	
+	public CandidateList(Type initialType) {
+		this.initialType = initialType;
+	}
 	
 	/*public void add(Type t, Function f, String s) {
 		list.add(new Pair<Type, Pair<Function,String>>(t, new Pair<Function,String>(f, s)));
@@ -37,5 +42,9 @@ public class CandidateList {
 
 	public int count() {
 		return candidates.size();
+	}
+
+	public Type getInitialType() {
+		return initialType;
 	}
 }
