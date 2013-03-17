@@ -3,7 +3,9 @@ package cssInterpreter.program;
 import java.util.Arrays;
 import java.util.List;
 
-import cssInterpreter.test.DumbInterpreter;
+import cssInterpreter.compiler.NotSupportedCompExc;
+import cssInterpreter.runtime.Execution;
+import cssInterpreter.runtime.RuntimeObject;
 
 public 
 class TupleType extends Type {
@@ -14,14 +16,14 @@ class TupleType extends Type {
 	 * 0..p unnamed attributes, THEN 0..q named attributes
 	 */
 	
-	public TupleType(TypeIdentifier id) {
+	public TupleType(TypeIdentifier id, Type parent) {
 		//super(id, false);
-		super(id);
+		super(id, parent);
 	}
 	
 	@Override public boolean isTuple() { return true; }
 	
-	public void generateConstructor() {
+	public void generateConstructor(final Execution exec) {
 		
 		NamedType[] nts = new NamedType[attributeTypes.size()];
 		for (int i = 0; i < attributeTypes.size(); i++) {
@@ -32,10 +34,22 @@ class TupleType extends Type {
 			@Override public Type getOutputType() {
 				return that;
 			}
-			@Override public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject params) {
-				if (!params.getRuntimeType().conformsTo(signature))
+			@Override public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject args) {
+				/*if (!params.getRuntimeType().conformsTo(signature))
 					throw new IllegalArgumentException();
-				return new RuntimeObjectBase(that, params, DumbInterpreter.standardScopeRO, false);
+				return new RuntimeObject(that, params, DumbInterpreter.standardScopeRO, false);*/
+				if (!args.getRuntimeType().getBinding(this).isSuccessful())
+					throw new IllegalArgumentException();
+				//return new RuntimeObject(that, args, exec.standardScopeRO, false);
+				//return new RuntimeObject(that, args, exec.standardScopeRO, false);
+				
+				
+				
+				
+				throw new NotSupportedCompExc();
+				
+				
+				
 			}
 		};
 		
@@ -45,5 +59,11 @@ class TupleType extends Type {
 		//return new ArrayList<Function>();
 		return Arrays.asList(new Function[]{constructor});
 	}
+	
+	/*
+	public void setName(String newName) {
+		// TODO Auto-generated method stub
+		
+	}*/
 	
 }

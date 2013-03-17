@@ -1,13 +1,9 @@
 package cssInterpreter.program;
 
-public class TypeReference {
+import cssInterpreter.compiler.CompilerException;
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
-	}
-
+public interface TypeReference {
+	Type getType() throws CompilerException;
+	//String getTypeName();
+	String toString();
 }

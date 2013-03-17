@@ -6,8 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.lang.model.type.PrimitiveType;
-
 import cssInterpreter.analysis.DepthFirstAdapter;
 import cssInterpreter.node.AAccessNakedType;
 import cssInterpreter.node.AAssignExpr;
@@ -31,9 +29,32 @@ import cssInterpreter.node.PClosure;
 import cssInterpreter.node.PExpr;
 import cssInterpreter.node.PNakedType;
 import cssInterpreter.node.Start;
-import cssInterpreter.program.Execution;
-import cssInterpreter.program.TypeIdentifier;
+import cssInterpreter.program.AssignExpression;
+import cssInterpreter.program.FormalParameters;
+import cssInterpreter.program.Function;
+import cssInterpreter.program.PrimitiveRuntimeObject;
+import cssInterpreter.program.Scope;
+import cssInterpreter.program.Signature;
+import cssInterpreter.program.Type;
+import cssInterpreter.program.TypeOf;
+import cssInterpreter.program.TypeReference;
+import cssInterpreter.program.expressions.Constant;
+import cssInterpreter.program.expressions.Expression;
+import cssInterpreter.program.expressions.FunctionCallExpression;
+import cssInterpreter.program.expressions.TupleExpression;
+import cssInterpreter.runtime.Execution;
 import cssInterpreter.runtime.ExecutionException;
+import cssInterpreter.runtime.RuntimeObject;
+
+/*
+
+TODO list:
+
+handle refs and rvals
+use typerefs
+name scopes
+
+*/
 
 public class Interpreter extends DepthFirstAdapter {
 	/*
@@ -42,47 +63,59 @@ public class Interpreter extends DepthFirstAdapter {
 	public final static PrimitiveType<Long> LongType = new PrimitiveType<Long>(new TypeIdentifier("[Builtin Long]", null));
 	public final static PrimitiveType<String> StringType = new PrimitiveType<String>(new TypeIdentifier("[Builtin String]", null));
 	*/
+	/**
 	public final static PrimitiveType<Void> VoidType = new PrimitiveType<Void>(new TypeIdentifier("Void", null));
 	public final static PrimitiveType<Integer> IntType = new PrimitiveType<Integer>(new TypeIdentifier("Int", null));
 	public final static PrimitiveType<Long> LongType = new PrimitiveType<Long>(new TypeIdentifier("Long", null));
 	public final static PrimitiveType<String> StringType = new PrimitiveType<String>(new TypeIdentifier("Str", null));
+	*/
 	
-	public final static Scope standardScope = new Scope("[StdScope]");
+	//public final static Scope standardScope = new Scope("[StdScope]");
+	////public Scope standardScope;// = new Scope("[StdScope]");
+	
+	
 	//public final static RuntimeObject standardScopeRO = new RuntimeObjectBase(new TypeBase(new TypeIdentifier("StdType", null), false) {}, null, true) {};
-	public final static RuntimeObject standardScopeRO = new RuntimeObjectBase(standardScope.type, null, false) {};
+	////public final RuntimeObject standardScopeRO = new RuntimeObject(standardScope.getType(), null, false) {};
 	//public final static TupleExpression emptyExpr = new TupleExpression();
 	
 	//public static TupleExpression getEmptyExpr() {
-	public static TupleExpression getEmptyExpr(Type parentType) {
+	/*public TupleExpression getEmptyExpr(Type parentType) {
 		try {
-			return new TupleExpression(parentType);
+			return new TupleExpression(exec, parentType);
 		} catch (CompilerException e) {
 			throw new ExecutionException(e);
 		}
-	}
+	}*/
 	
 	int indentation = 0;
 	Scope currentScope;
+	Execution exec;
 	Map<PExpr,Expression> exprs = new HashMap<>();
 	Map<Node,Expression> otherExprs = new HashMap<>();
 	//Map<PExpr,Scope> scopes = new HashMap<>();
 	Map<PClosure,Scope> scopes = new HashMap<>();
+	boolean finishedReading = false;
 
-	public DumbInterpreter() {
-		
+	/*private void init() {
+		standardScope = new Scope("[StdScope]", exec);
+	}*/
+	
+	public Interpreter() {
+		exec = new Execution(this, System.out);
+		//init();
 	}
 	
-	public DumbInterpreter(String source, PrintStream out) {
-		Execution.out = out;
-		Execution.started = false;
+	public Interpreter(String source, PrintStream out) {
+		exec = new Execution(this, out);
+		//init();
 		out("############# SOURCE CODE #############");
 		out(source);
 	}
 	
 	private void out(String string) {
 		for (int i = 0; i < indentation; i++)
-			Execution.out.print("\t");
-		Execution.out.println(string);
+			exec.getOut().print("\t");
+		exec.getOut().println(string);
 	}
 	
 
@@ -95,7 +128,7 @@ public class Interpreter extends DepthFirstAdapter {
     	//AClosure module = (AClosure) node.getPClosure();
     	//currentScope = new Scope();
 		//currentScope = null;
-		currentScope = standardScope;
+		currentScope = exec.standardScope;
 		
     	/// TODO: define standard lib in a closure
     	
@@ -104,26 +137,37 @@ public class Interpreter extends DepthFirstAdapter {
 	@Override
     public void outStart(Start node)
     {
-		Execution.output.clear();
+		//Execution.output.clear();
     	// Execute the program
+		finishedReading = true;
 		out("\n############# PROGRAM EXECUTION #############");
 		/*for (Expression expr : currentScope.exprs) {
 			System.out.println("Expression "+expr+" produced: "+expr.evaluate());
 		}*/
-		Execution.execute(standardScopeRO, currentScope);
+		exec.execute(exec.standardScopeRO, currentScope);
 		out("\n############# PROGRAM OUTPUT #############");
-		for (String str : Execution.output)
-			Execution.out.println(str);
+		for (String str : exec.getOutput())
+			exec.getOut().println(str);
     }
+	
+	
+	public boolean hasFinishedReading() {
+		return finishedReading;
+	}
+	
+	
 	
 	private int nbClos = 0;
 	@Override
     public void inAClosure(AClosure node)
     {
-    	currentScope = new Scope("[AnonClosure "+nbClos+"]", currentScope);
 		/*if (currentScope == null)
 			 currentScope = standardScope;
 		else currentScope = new Scope("[AnonClosure "+nbClos+"]", currentScope);*/
+		
+    	//currentScope = new Scope("[AnonClosure "+nbClos+"]", currentScope);
+		String scopeName = nbClos == 0? "[Main]": "[AnonClosure "+nbClos+"]";
+		currentScope = new Scope(scopeName, currentScope);
 		
     	scopes.put(node, currentScope);
 		nbClos++;
@@ -134,9 +178,9 @@ public class Interpreter extends DepthFirstAdapter {
     {
     	//currentScope = currentScope.parent;
 		//if (currentScope.parent != null)
-		currentScope.type.done();
-		if (currentScope.parent != standardScope)
-			currentScope = currentScope.parent;
+		currentScope.getType().generateConstructor(exec);
+		if (currentScope.getParent() != exec.standardScope)
+			currentScope = currentScope.getParent();
     }
 	
 	/*
@@ -153,10 +197,13 @@ public class Interpreter extends DepthFirstAdapter {
 		//AFieldAccess fa = ((AFieldAccess)((AAccessNakedType) t).getFieldAccess());
 		Expression expr = exprs.get(fa.getPrefixExpr());
 		//otherExprs.put(fa, new FieldAccessExpression(expr, fa.getIdent().getText(), new EmptyExpr()));
-		otherExprs.put(fa, new FieldAccessExpression(expr, fa.getIdent().getText(), getEmptyExpr(currentScope.type)));
+		otherExprs.put(fa, new FunctionCallExpression(exec, expr, fa.getIdent().getText(), exec.getEmptyExpr(currentScope.getType())));
     }
 	
-	Type determineType(ATypedValue tval) throws CompilerException {
+	
+	
+	
+	TypeReference determineType(ATypedValue tval) throws CompilerException {
 		//AType t;
 		if (tval.getType() == null) { // Determine type using expression
 			
@@ -169,7 +216,7 @@ public class Interpreter extends DepthFirstAdapter {
 			
 			Expression expr = exprs.get(tval.getValue());
 			//return expr.getType();
-			return new TypeOf(expr);
+			return new TypeOf(expr, this);
 			
 		} else { // Type is stated explicitly
 			
@@ -179,10 +226,12 @@ public class Interpreter extends DepthFirstAdapter {
 		}
 	}
 	
-	private Type determineType(AType type) throws CompilerException {
+	private TypeReference determineType(AType type) throws CompilerException {
 		PNakedType t = type.getBase();
 		
 		//System.out.println("det type");
+		
+		// TODO: handle template specialization
 		
 		if (t instanceof AIdentNakedType) {
 			/*
@@ -197,7 +246,8 @@ public class Interpreter extends DepthFirstAdapter {
 			//System.out.println("det type "+((AIdentNakedType) t).getName().getText());
 			
 			//return new TypeOf(new FieldAccessExpression(null, ((AIdentNakedType) t).getName().getText(), new EmptyExpr()));
-			return new TypeOf(new FieldAccessExpression(null, ((AIdentNakedType) t).getName().getText(), getEmptyExpr(currentScope.type)));
+			//return new TypeOf(new FieldAccessExpression(null, ((AIdentNakedType) t).getName().getText(), getEmptyExpr(currentScope.type)));
+			return new TypeOf(new FunctionCallExpression(exec, currentScope.getType(), ((AIdentNakedType) t).getName().getText()), this);
 			
 		} else if (t instanceof AAccessNakedType) {
 			/*
@@ -207,10 +257,13 @@ public class Interpreter extends DepthFirstAdapter {
 			return new FieldAccessExpression(expr, fa.getIdent().getText()).getType();
 			*/
 			//return otherExprs.get(((AAccessNakedType) t).getFieldAccess()).getType();
-			return new TypeOf(otherExprs.get(((AAccessNakedType) t).getFieldAccess()));
+			return new TypeOf(otherExprs.get(((AAccessNakedType) t).getFieldAccess()), this);
 		} else
 			throw new CompilerError("PNakedType is neither a AIdentNakedType or a AAccessNakedType");
 	}
+	
+	
+	
 	
 
 	@Override
@@ -244,7 +297,7 @@ public class Interpreter extends DepthFirstAdapter {
 		
 		try {
 			ATypedValue tv = (ATypedValue)node.getTypedValue();
-			currentScope.type.addAttribute(node.getAttrType(), node.getName(), determineType(tv));
+			currentScope.getType().addAttribute(node.getAttrType(), node.getName(), determineType(tv));
 			
 			// TODONE: add expr
 			
@@ -253,7 +306,10 @@ public class Interpreter extends DepthFirstAdapter {
 			if (tv.getValue() != null) {
 				Expression val = exprs.get(tv.getValue());
 				
-				currentScope.exprs.add(new AssignExpression(new FieldAccessExpression(null, node.getName().getText(), getEmptyExpr(currentScope.type)), val));
+				currentScope.getExprs().add(new AssignExpression(new FunctionCallExpression(
+							exec,
+							currentScope.getType(),
+							node.getName().getText()), val));
 				
 			}
 					
@@ -306,7 +362,7 @@ public class Interpreter extends DepthFirstAdapter {
 				exs[i] = exprs.get(ls.get(i));
 			try {
 				//System.out.println("-------->"+exs[0]);
-				exprs.put(node, new TupleExpression(exs, currentScope.type, null/*TODO*/));
+				exprs.put(node, new TupleExpression(exec, exs, currentScope.getType(), null/*TODO*/));
 			} catch (CompilerException e) {
 				throw new ExecutionException(e);
 			}
@@ -322,7 +378,7 @@ public class Interpreter extends DepthFirstAdapter {
 	{
 		out("Number: "+node.getIntegerNumber().getText());
 		//exprs.put(node, new Constant(new ConstantRuntimeObject<Long>(Long.parseLong(node.getIntegerNumber().getText()))));
-		exprs.put(node, new Constant(new PrimitiveRuntimeObject<Long>(LongType, (Long)Long.parseLong(node.getIntegerNumber().getText()), standardScopeRO, true)));
+		exprs.put(node, new Constant(new PrimitiveRuntimeObject<Long>(exec.LongType, (Long)Long.parseLong(node.getIntegerNumber().getText()), exec.standardScopeRO, true)));
 		//out("Number: "+node.hashCode());
 	}
 
@@ -330,7 +386,7 @@ public class Interpreter extends DepthFirstAdapter {
 	public void inAStringExpr(AStringExpr node)
 	{
 		out("String: "+node.getStringContent().getText());
-		exprs.put(node, new Constant(new PrimitiveRuntimeObject<String>(StringType, node.getStringContent().getText(), standardScopeRO, true)));
+		exprs.put(node, new Constant(new PrimitiveRuntimeObject<String>(exec.StringType, node.getStringContent().getText(), exec.standardScopeRO, true)));
 	}
 	
 	@Override
@@ -345,7 +401,7 @@ public class Interpreter extends DepthFirstAdapter {
 		//Name n = 
 		///currentScope.getOrCreate(str, null);
 		
-		exprs.put(node, new FieldAccessExpression(null, str, getEmptyExpr(currentScope.type)));
+		exprs.put(node, new FunctionCallExpression(exec, currentScope.getType(), str));
 		
 	}
 	
@@ -372,6 +428,14 @@ public class Interpreter extends DepthFirstAdapter {
 				return null;
 			}
     	});
+    	*/
+    	
+    	/**
+    	if (value instanceof TupleExpression) {
+    		TupleExpression teVal = (TupleExpression) value;
+    		if (teVal.isSingleExpr())
+    			value = teVal.getSingleExpr();
+    	}
     	*/
     	
     	exprs.put(node, new AssignExpression(assigned, value));
@@ -427,7 +491,7 @@ public class Interpreter extends DepthFirstAdapter {
 		assert callee != null;
 		//System.out.println(callee.getClass());
 		
-		if (callee instanceof FieldAccessExpression) {
+		if (callee instanceof FunctionCallExpression) {
 			
 			
 			/*
@@ -468,16 +532,17 @@ public class Interpreter extends DepthFirstAdapter {
 				
 				try {
 					
-					if ((args instanceof TupleExpression))
+					if ((args instanceof TupleExpression)) {
 						 tupleArgs = (TupleExpression) args;
-					else tupleArgs = new TupleExpression(new Expression[]{args},currentScope.type,"[SingleArg]");
+						 args.getTypeRef().getType().setName("[CallArgs "+args+"]");
+					} else tupleArgs = new TupleExpression(exec, new Expression[]{args},currentScope.getType(),"[SingleCallArg "+args+"]");
 					
 					//System.out.println("*********"+tupleArgs.namedParams);
 					
 					//TupleExpression tupleArgs = (TupleExpression) exprs.get(node.getArgs());
 					
 					//if (tupleArgs == null) tupleArgs = getEmptyExpr();
-					((FieldAccessExpression) callee).setArgs(tupleArgs);
+					((FunctionCallExpression) callee).setArgs(tupleArgs);
 					
 					
 					if (callees.size() == 1) {
@@ -537,9 +602,14 @@ public class Interpreter extends DepthFirstAdapter {
 		
 		if (initVal instanceof AClosureExpr) {
 			
+			String fctName = node.getName().getText();
+			
 			//final Scope subScope = scopes.get(((AClosureExpr)v).getClosure());
 			final PClosure myClosure = ((AClosureExpr)initVal).getClosure();
 			//System.out.println(subScope);
+			
+			scopes.get(myClosure).setName("["+fctName+"]");
+			//System.out.println("----------> setting name of "+fctName+": "+scopes.get(myClosure).getType());
 			
 			FormalParameters fparams;
 			//fparams = new FormalParameters(new NamedType[] { });
@@ -547,18 +617,19 @@ public class Interpreter extends DepthFirstAdapter {
 			if (paramClosure == null)
 				 fparams = new FormalParameters();
 			else {
-				assert scopes.get(paramClosure).type.getConstructors().size() == 1;
-				fparams = scopes.get(paramClosure).type.getConstructors().get(0).signature.params;
+				assert scopes.get(paramClosure).getType().getConstructors().size() == 1;
+				fparams = scopes.get(paramClosure).getType().getConstructors().get(0).getSignature().params;
+				scopes.get(paramClosure).setName("[ParamsOf "+fctName+"]");
 			}
 			
-			currentScope.type.addFct(new Function(new Signature(node.getName().getText(), fparams)) {
+			currentScope.getType().addFct(new Function(new Signature(fctName, fparams)) {
 				
 				//final Scope scope = currentScope;
 				//final PClosure myClosure = ((AClosureExpr)v).getClosure());
 				
 				@Override
 				public Type getOutputType() {
-					return VoidType; // FIXME
+					return exec.VoidType; // FIXME
 				}
 				
 				@Override
@@ -566,8 +637,9 @@ public class Interpreter extends DepthFirstAdapter {
 					//System.out.println(scopes.get(myClosure));
 					
 					//Execution.execute(subScope);
-					Execution.execute(params, scopes.get(myClosure));
-					return Execution.voidObj;//new PrimitiveRuntimeObject<Void>(VoidType, new Void(), true); // TODO
+					exec.execute(params, scopes.get(myClosure));
+					//return Execution.getVoidobj();//new PrimitiveRuntimeObject<Void>(VoidType, new Void(), true); // TODO
+					return exec.getVoidobj();//new PrimitiveRuntimeObject<Void>(VoidType, new Void(), true); // TODO
 					
 					
 					

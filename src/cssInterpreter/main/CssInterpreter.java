@@ -5,10 +5,10 @@ import java.io.FileReader;
 import java.io.PushbackReader;
 import java.io.StringReader;
 
+import cssInterpreter.compiler.Interpreter;
 import cssInterpreter.lexer.CssLexer;
 import cssInterpreter.node.Start;
 import cssInterpreter.parser.Parser;
-import cssInterpreter.test.DumbInterpreter;
 
 public class CssInterpreter {
 
@@ -59,7 +59,8 @@ public class CssInterpreter {
 			e.printStackTrace();
 		}
 	
-		ast.apply(new DumbInterpreter());
+		//ast.apply(new DumbInterpreter());
+		ast.apply(new Interpreter());
 		
 
 	}

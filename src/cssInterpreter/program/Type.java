@@ -9,21 +9,23 @@ import cssInterpreter.compiler.UnknownFunctionCompExc;
 import cssInterpreter.node.PAttrType;
 import cssInterpreter.node.TIdent;
 
-public class Type {
+public class Type implements TypeReference {
 	HashMap<String, List<Function>> fcts = new HashMap<>();
 	//Type[] attributes;
 	TypeIdentifier id;
 	//boolean tuple;
-
+	Type parent;
+	
 	List<String> attributeNames = new ArrayList<>();
-	List<Type> attributeTypes = new ArrayList<>();
+	List<TypeReference> attributeTypes = new ArrayList<>();
 
 	
 	
-	public TypeBase(TypeIdentifier id) {//, boolean tuple) {
+	public Type(TypeIdentifier id, Type parent) {//, boolean tuple) {
 		this.id = id;
 		//this.tuple = tuple;
 		id.type = this; // sale
+		this.parent = parent;
 	}
 	
 	public void addFct(Function fct) { // TODO: detect ambiguities
@@ -38,27 +40,27 @@ public class Type {
 		ls.add(fct);
 	}
 
+	
 	public void addType(Type t) {
 		for (Function f : t.getConstructors())
 			addFct(f);
 	}
 	
 	
-	@Override
-	public boolean isDetermined() {
-		return true;
+	public List<Function> getConstructors() {
+		return new ArrayList<Function>(); // FIXME: correct?
 	}
-	@Override
+	
 	public ParamBinding getFunction(CallSignature callSign, CandidateList candidates) throws CompilerException {
 		
 		// HEAVY //System.out.println("Searching for function "+callSign+" in "+id.detailedString());
-		// LIGHT // System.out.println("Searching for "+callSign.name+" in "+id);
+		// LIGHT //System.out.println("Searching for "+callSign.name+" in "+id);
 		
 		ParamBinding ret = null;
 		List<Function> ls = fcts.get(callSign.name);
 		if (ls == null)
 			//throw new CompilerException("Name '"+callSign.name+"' is unknown in type "+this);
-			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this+"\n\t"+candidates.toString());
+			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this+"\n\t\t"+candidates.toString());
 		for (Function f : ls) {
 			
 			ParamBinding pb = callSign.getBinding(f);
@@ -74,14 +76,14 @@ public class Type {
 			
 		}
 		if (ret == null)
-			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this+" with parameters "+callSign.args+"\n\t"+candidates.toString());
+			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this+" with parameters "+callSign.args+"\n\t\t"+candidates.toString());
 		return ret;
 	}
 	
-	public void addAttribute(PAttrType attrType, TIdent name, Type type) {
+	public void addAttribute(PAttrType attrType, TIdent name, TypeReference type) {
 		addAttribute(attrType, name.getText(), type);
 	}
-	public void addAttribute(PAttrType attrType, String name, Type type) {
+	public void addAttribute(PAttrType attrType, String name, TypeReference type) {
 		// TODO: use attrType to generate a Function.FieldType
 		//addFct(new RuntimeField(name, type, attributeTypes.size()));
 		attributeNames.add(name);
@@ -89,23 +91,20 @@ public class Type {
 		attributeTypes.add(type);
 		setAttributeFunction(attributeNames.size()-1);
 	}
-
-	@Override
+	
 	public String[] getAttributeNames() {
 		assert attributeNames.size() == attributeTypes.size();
 		return attributeNames.toArray(new String[attributeNames.size()]);
 	}
 	
-	@Override
-	public Type[] getAttributeTypes() {
+	public TypeReference[] getAttributeTypes() {
 		assert attributeNames.size() == attributeTypes.size();
 		//return (Type[]) attributeTypes.toArray();
 		//return attributeTypes.toArray<Type>();
 		//new ArrayList<Type>().t
-		return attributeTypes.toArray(new Type[attributeTypes.size()]);
+		return attributeTypes.toArray(new TypeReference[attributeTypes.size()]);
 	}
-
-	@Override
+	
 	public boolean isTuple() {
 		//return tuple;
 		return false;
@@ -113,7 +112,6 @@ public class Type {
 	
 	
 	
-	@Override
 	public ParamBinding getBinding(Function f) {
 		//String error = null;
 		assert isTuple(); // even single and void params are converted to a tuple with one or zero unnamed value, when passed to a function
@@ -141,61 +139,17 @@ public class Type {
 	}
 	
 	
-	@Override
-	// returns null if it conforms
-	public String notConformingToBecause(Signature sign) { // TODO rm
-		
-		//System.out.println(this);
-		
-		assert isTuple(); // even single and void params are converted to a tuple with one or zero unnamed value, when passed to a function
-//		if (isTuple()) {
-//			throw new NotSupportedCompExc();
-//		} else {
-//			if (sign.params.withoutValueNb() > 1)
-//				return "More than one argument is needed";
-//			return null;
-//		}
-		
-		
-		
-		
-		
-		
-		
-		// handle default values
-		
-		
-		// bind ordinals to names...?
-		
-		
-		
-		
-		
-		
-		
-		
-		return null;
-		/*
-		if (sign.params.namedTypes.length == 1) {
-			
-		}*/
-	}
-	
 	
 	public void setAttributeFunction(int index) {
-		addFct(new RuntimeField(attributeNames.get(index), attributeTypes.get(index), index));
+		assert attributeNames.get(index) == null || !attributeNames.get(index).equals("_"+index); // TODO: better check for this shit
+		String attrName = attributeNames.get(index) == null? "_"+index : attributeNames.get(index);
+		addFct(new FieldAccessFunction(attrName, attributeTypes.get(index), index));
 	}
 	
 	public void setAttributeName(int index, String name) {
 		assert attributeNames.get(index) == null;
 		attributeNames.set(index, name);
 		setAttributeFunction(index);
-	}
-	
-	
-	
-	public boolean conformsTo(Signature sign) {
-		return notConformingToBecause(sign) == null;
 	}
 	
 	public boolean hasAttributes() {
@@ -210,7 +164,21 @@ public class Type {
 	}
 	
 	@Override
+	public Type getType() {
+		return this;
+	}
+	
+	@Override
 	public String toString() {
 		return id.toString();
 	}
+
+	public Type getParent() {
+		return parent;
+	}
+
+	public void setName(String newName) {
+		id.name = newName;
+	}
+
 }
