@@ -38,15 +38,28 @@ class TupleType extends Type {
 				/*if (!params.getRuntimeType().conformsTo(signature))
 					throw new IllegalArgumentException();
 				return new RuntimeObject(that, params, DumbInterpreter.standardScopeRO, false);*/
+				
+				
+				
+				
+				
+				/* TODO
+				
 				if (!args.getRuntimeType().getBinding(this).isSuccessful())
 					throw new IllegalArgumentException();
 				//return new RuntimeObject(that, args, exec.standardScopeRO, false);
 				//return new RuntimeObject(that, args, exec.standardScopeRO, false);
 				
 				
+				*/
+				
+				
+				
 				
 				
 				throw new NotSupportedCompExc();
+				
+				
 				
 				
 				

@@ -11,10 +11,10 @@ class RuntimeObject  {
 	Type type;
 	boolean constant;
 	protected RuntimeObject[] attributes;
-	//RuntimeObject parent;
+	RuntimeObject parent;
 	boolean destructed;
 	
-	RuntimeObject associatedArgs;
+	//RuntimeObject associatedArgs;
 	
 	
 	//public RuntimeObject(Type type, RuntimeObject parent, boolean constant) {
@@ -23,10 +23,11 @@ class RuntimeObject  {
 	 * should be null in any other cases
 	 * 
 	 */
-	public RuntimeObject(Type type, RuntimeObject associatedArgs, boolean constant) {
+	//public RuntimeObject(Type type, RuntimeObject associatedArgs, boolean constant) {
+	public RuntimeObject(Type type, RuntimeObject parent, boolean constant) {
 		this.type = type;
-		//this.parent = parent;
-		this.associatedArgs = associatedArgs;
+		this.parent = parent;
+		//this.associatedArgs = associatedArgs;
 		this.constant = constant;
 		attributes = new RuntimeObject[type.getAttributeTypes().length];
 	}
@@ -97,12 +98,19 @@ class RuntimeObject  {
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("{");
+		
 		for (int i = 0; i < attributes.length; i++) {
 			String fname = type.getAttributeNames()[i];
 			sb.append((fname==null?"":fname)+":"+type.getAttributeTypes()[i]+"="+attributes[i]+"; ");
 		}
-		if (attributes.length > 0)
+		
+		for (String fname : type.getFcts().keySet()) {
+			sb.append(fname+"(...); "); // type.getFcts()
+		}
+		
+		if (attributes.length > 0 || type.getFcts().size() > 0)
 			sb.delete(sb.length()-2, sb.length());
+		
 		sb.append("}");
 		return sb.toString();
 	}
@@ -120,9 +128,14 @@ class RuntimeObject  {
 		destructed = true;
 	}
 
+	public RuntimeObject getParent() {
+		return parent;
+	}
+
+	/*
 	public RuntimeObject getAssociatedArgs() {
 		return associatedArgs;
-	}
+	}*/
 	
 }
 

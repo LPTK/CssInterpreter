@@ -21,7 +21,7 @@ public class FormalParameters {
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("{");
+		sb.append("FP{");
 		for (NamedType nt : namedTypes)
 			sb.append((nt.name==null?"":nt.name)+":"+nt.type+"; ");
 		if (namedTypes.length != 0)

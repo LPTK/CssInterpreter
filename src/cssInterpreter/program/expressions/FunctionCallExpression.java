@@ -88,6 +88,7 @@ public class FunctionCallExpression extends Expression {
 					
 				} catch(UnknownFunctionCompExc e) {
 					thisType = thisType.getParent();
+					candidates.searchDepth++;
 					//System.out.println(thisObj);
 					if (thisType == null)
 						throw e; // TODO: keep the most appropriate message (which parameters are missing?)
@@ -131,6 +132,8 @@ public class FunctionCallExpression extends Expression {
 	
 	public Pair<ParamBinding,RuntimeObject> getFunctionAndThisOrExecArgs() throws CompilerException {
 		//RuntimeObject execArgs = exec.getCurrentArgObject();
+		
+		/*
 		RuntimeObject execArgs = getThis().getAssociatedArgs();
 		CandidateList candidates = new CandidateList();
 		
@@ -141,6 +144,10 @@ public class FunctionCallExpression extends Expression {
 				return new Pair<>(execArgs.getRuntimeType().getFunction(new CallSignature(fieldName, args), candidates), execArgs);
 			} catch(UnknownFunctionCompExc e) {}
 		return new Pair<>(getFunction(candidates), getThis());
+		*/
+		
+		return new Pair<>(getFunction(new CandidateList()), getThis());
+		
 	}
 	
 	@Override

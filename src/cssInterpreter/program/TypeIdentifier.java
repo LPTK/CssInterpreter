@@ -15,7 +15,7 @@ class TypeIdentifier {
 	public String toString() {
 		return (parent == null ? "" : parent.toString()+".")+name;
 	}
-	public String detailedString() {
+	public String toDetailedString() {
 		//return toString()+"  ("+type.attributeTypes+")";
 		StringBuffer sb = new StringBuffer();
 		sb.append("{");
@@ -32,4 +32,10 @@ class TypeIdentifier {
 		sb.append("}");
 		return toString()+"  "+sb.toString();
 	}
+	
+	public void setParent(TupleType par) {
+		parent = par;
+	}
+	
 }
+

@@ -173,9 +173,12 @@ public class TupleExpression extends Expression {
 			StringBuffer sb = new StringBuffer();
 			//sb.append("[Tpl](");
 			sb.append("(");
+			
 			for (Expression e : ordinalParams)
 				//sb.append(e+", ");
-				sb.append(e+":"+e.getTypeRef()+", ");
+				//sb.append(e+":"+e.getTypeRef()+", ");
+				sb.append(":"+e.getTypeRef()+"="+e+", ");
+			
 			//for (Expression e : namedParams.values())
 			
 			//for (Map.Entry<String,Expression> e : namedParams.entrySet()) System.out.println(e+" "+e.getValue().getClass());
@@ -195,3 +198,11 @@ public class TupleExpression extends Expression {
 		}
 	}
 }
+
+
+
+
+
+
+
+

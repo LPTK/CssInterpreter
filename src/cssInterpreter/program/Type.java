@@ -3,6 +3,7 @@ package cssInterpreter.program;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.UnknownFunctionCompExc;
@@ -28,6 +29,12 @@ public class Type implements TypeReference {
 		this.parent = parent;
 	}
 	
+
+	public void setParent(Type par) {
+		parent = par;
+	}
+	
+	
 	public void addFct(Function fct) { // TODO: detect ambiguities
 		//System.out.println("Adding "+fct.signature);
 		System.out.println("Adding "+fct+"  in type  "+this);
@@ -39,7 +46,10 @@ public class Type implements TypeReference {
 		}
 		ls.add(fct);
 	}
-
+	
+	public Map<String, List<Function>> getFcts() {
+		return fcts;
+	}
 	
 	public void addType(Type t) {
 		for (Function f : t.getConstructors())
@@ -63,7 +73,7 @@ public class Type implements TypeReference {
 			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this+"\n\t\t"+candidates.toString());
 		for (Function f : ls) {
 			
-			ParamBinding pb = callSign.getBinding(f);
+			ParamBinding pb = callSign.getBinding(f, candidates.searchDepth);
 			
 			candidates.add(this,pb);
 			
@@ -76,7 +86,7 @@ public class Type implements TypeReference {
 			
 		}
 		if (ret == null)
-			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this+" with parameters "+callSign.args+"\n\t\t"+candidates.toString());
+			throw new UnknownFunctionCompExc("Name '"+callSign.name+"' is unknown in type "+this+" with parameters "+callSign.params+"\n\t\t"+candidates.toString());
 		return ret;
 	}
 	
@@ -112,10 +122,10 @@ public class Type implements TypeReference {
 	
 	
 	
-	public ParamBinding getBinding(Function f) {
+	public ParamBinding getBinding(Function f, int searchDepth) {
 		//String error = null;
 		assert isTuple(); // even single and void params are converted to a tuple with one or zero unnamed value, when passed to a function
-		ParamBinding pb = new ParamBinding(f);
+		ParamBinding pb = new ParamBinding(f,searchDepth);
 		
 		System.out.println("Getting binding for "+this+" with "+f);
 		

@@ -13,12 +13,14 @@ public class ParamBinding {
 	List<Pair<Integer,String>> names = new ArrayList<>();
 	//private Function fct;
 	public final Function fct;
+	private int searchDepth;
 	
 	/*public ParamBinding(String bindingError) {
 		this.bindingError = bindingError;
 	}*/
-	public ParamBinding(Function fct) {
+	public ParamBinding(Function fct, int searchDepth) {
 		this.fct = fct;
+		this.searchDepth = searchDepth;
 	}
 	
 	private void mutate(RuntimeObject args) { // FIXME: duplicate type before?? this code adds reeaaally nasty states
@@ -26,12 +28,25 @@ public class ParamBinding {
 			args.renameAttribute(p.getFirst(), p.getSecond());
 	}
 	
+	
+	// reaches up the right type through parent hierarchy
+	private RuntimeObject recurseBack(RuntimeObject args) {
+		for (int i = 0; i < searchDepth; i++)
+			args = args.getParent();
+		return args;
+	}
+	
+	
 	public void set(RuntimeObject thisReference, RuntimeObject args, RuntimeObject value) {
+		//args = recurseBack(args);
+		thisReference = recurseBack(thisReference);
 		mutate(args);
 		fct.set(thisReference, args, value);
 	}
 	
 	public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject args) {
+		//args = recurseBack(args);
+		thisReference = recurseBack(thisReference);
 		mutate(args);
 		return fct.evaluate(thisReference, args);
 	}
@@ -61,3 +76,4 @@ public class ParamBinding {
 		else return bindingError;
 	}
 }
+

@@ -5,22 +5,22 @@ import cssInterpreter.program.expressions.TupleExpression;
 
 public class CallSignature {
 	String name;
-	TupleExpression args;
+	TupleExpression params;
 	
-	ParamBinding getBinding(Function f) throws CompilerException {
-		return args.getTypeRef().getBinding(f);
+	public CallSignature(String name, TupleExpression params) {
+		this.name = name;
+		if (params == null)
+			throw new IllegalArgumentException();
+		this.params = params;
 	}
 	
-	public CallSignature(String name, TupleExpression args) {
-		this.name = name;
-		if (args == null)
-			throw new IllegalArgumentException();
-		this.args = args;
+	ParamBinding getBinding(Function f, int searchDepth) throws CompilerException {
+		return params.getTypeRef().getBinding(f, searchDepth);
 	}
 	
 	@Override
 	public String toString() {
 		//return "CallSignature: " + name + args;
-		return name + args;
+		return name + params;
 	}
 }

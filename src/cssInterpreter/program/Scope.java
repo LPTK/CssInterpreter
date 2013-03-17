@@ -11,6 +11,8 @@ public class Scope {
 	private Scope parent;
 	TupleType type;
 	List<Expression> exprs = new ArrayList<>();
+	//String name;
+	TypeIdentifier typeId;
 	
 	public Scope(String name, final Execution exec) { // TODO: replace with a StandardLibraryScope class
 		type = new TupleType(new TypeIdentifier(name, null), null);
@@ -39,9 +41,28 @@ public class Scope {
 	}
 
 	public Scope(String name, Scope parent) {
-		this.parent = parent;
-		type = new TupleType(new TypeIdentifier(name, (parent==null?null:parent.type)), parent.type);
+		//this.parent = parent;
+		//type = new TupleType(new TypeIdentifier(name, (parent==null?null:parent.type)), parent.type);
+		//this.name = name;
+		setParent(parent, name);
 	}
+	
+	public Scope getParent() {
+		return parent;
+	}
+
+	public void setParent(Scope par, String name) {
+		parent = par;
+		type = new TupleType(typeId = new TypeIdentifier(name, (parent==null?null:parent.type)), parent.type);
+	}
+	
+	public void setParent(Scope par) {
+		//setParent(par, typeId.name);
+		parent = par;
+		type.setParent(par.type);
+		typeId.setParent(par.type);
+	}
+	
 	
 	public void setName(String newName) {
 		//type.id.name = newName;
@@ -87,9 +108,11 @@ public class Scope {
 			throw new IllegalArgumentException();
 		exprs.add(expression);
 	}
-
-	public Scope getParent() {
-		return parent;
-	}
+	
 
 }
+
+
+
+
+

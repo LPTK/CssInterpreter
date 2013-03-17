@@ -611,6 +611,11 @@ public class Interpreter extends DepthFirstAdapter {
 			scopes.get(myClosure).setName("["+fctName+"]");
 			//System.out.println("----------> setting name of "+fctName+": "+scopes.get(myClosure).getType());
 			
+			
+			
+			
+			
+			/*
 			FormalParameters fparams;
 			//fparams = new FormalParameters(new NamedType[] { });
 			
@@ -621,6 +626,33 @@ public class Interpreter extends DepthFirstAdapter {
 				fparams = scopes.get(paramClosure).getType().getConstructors().get(0).getSignature().params;
 				scopes.get(paramClosure).setName("[ParamsOf "+fctName+"]");
 			}
+			*/
+			/*
+			Type paramType;
+			if (paramClosure == null)
+				paramType = new TupleType(new TypeIdentifier("[EmptyParam]", currentScope.getType()), currentScope.getType());
+			else {
+				paramType = scopes.get(paramClosure).getType();
+				scopes.get(paramClosure).setName("[ParamsOf "+fctName+"]");
+			}*/
+			
+			Scope paramScope;
+			if (paramClosure == null) {
+				paramScope = new Scope("[EmptyParamOf "+fctName+"]", currentScope);
+				paramScope.getType().generateConstructor(exec);
+			} else {
+				paramScope = scopes.get(paramClosure);
+				paramScope.setName("[ParamOf "+fctName+"]");
+			}
+			
+			scopes.get(myClosure).setParent(paramScope);
+			
+			
+			assert paramScope.getType().getConstructors().size() == 1;
+			FormalParameters fparams = scopes.get(paramClosure).getType().getConstructors().get(0).getSignature().params;
+			
+			
+			
 			
 			currentScope.getType().addFct(new Function(new Signature(fctName, fparams)) {
 				
@@ -633,11 +665,11 @@ public class Interpreter extends DepthFirstAdapter {
 				}
 				
 				@Override
-				public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject params) {
+				public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject args) {
 					//System.out.println(scopes.get(myClosure));
 					
 					//Execution.execute(subScope);
-					exec.execute(params, scopes.get(myClosure));
+					exec.execute(args, scopes.get(myClosure));
 					//return Execution.getVoidobj();//new PrimitiveRuntimeObject<Void>(VoidType, new Void(), true); // TODO
 					return exec.getVoidobj();//new PrimitiveRuntimeObject<Void>(VoidType, new Void(), true); // TODO
 					
