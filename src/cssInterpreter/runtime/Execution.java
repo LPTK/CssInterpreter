@@ -85,10 +85,20 @@ public class Execution {
 		}
 		//indentation--;
 		
-		thisObject.destruct();
+		RuntimeObject retObj;
+		
+		if (scope.hasReturnStatement()) {
+			thisObject.destruct();
+			retObj = null; // TODO
+		} else {
+			retObj = thisObject;
+		}
+		
 		thisObject = thisStack.pop();
 		indentation--;
-		return getVoidobj(); // FIXME
+		
+		//return getVoidobj(); // FIXME
+		return retObj;
 	}
 	
 	public boolean hasStarted() {

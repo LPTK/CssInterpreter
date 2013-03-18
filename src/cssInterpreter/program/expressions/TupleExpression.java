@@ -20,9 +20,11 @@ import cssInterpreter.runtime.RuntimeObject;
 public class TupleExpression extends Expression {
 	Type type;
 	//Expression[] exprs;
-	List<Expression> ordinalParams = new ArrayList<>();
+	Expression[] rawEprs;
+	
+	List<Expression> ordinalArgs = new ArrayList<>();
 	//Map<String,Expression> namedParams = new HashMap<>();
-	Map<String,Pair<Integer,Expression>> namedParams = new HashMap<>();
+	Map<String,Pair<Integer,Expression>> namedArgs = new HashMap<>();
 	Execution exec;
 	
 	/*
@@ -43,6 +45,8 @@ public class TupleExpression extends Expression {
 		
 		//this.exprs = exs;
 		this.exec = exec;
+		
+		this.rawEprs = exs;
 		
 		//TupleType tt = new TupleType(new TypeIdentifier("[AnonTuple]", DumbInterpreter.standardScope.type)); //FIXME?
 		TupleType tt = new TupleType(new TypeIdentifier((name==null?"[AnonTuple]":name), parentType), parentType); //FIXME?
@@ -75,14 +79,14 @@ public class TupleExpression extends Expression {
 				
 				//namedParams.put(fa.fieldName, fa.args);
 				//namedParams.put(fa.fieldName, ae.value);
-				namedParams.put(fa.fieldName, new Pair<>(i, ae.getValue()));
+				namedArgs.put(fa.fieldName, new Pair<>(i, ae.getValue()));
 				tt.addAttribute(null, fa.fieldName, new TypeOf(ae.getValue(), exec.getInterpreter()));
 				
 			} else {
 				
 				if (namedParamsBegan)
 					throw new CompilerException("Invalid sequence of arguments: named arguments must follow ordinal arguments");
-				ordinalParams.add(e);
+				ordinalArgs.add(e);
 				tt.addAttribute(null, (String) null, new TypeOf(e, exec.getInterpreter()));
 
 				///System.out.println(":o:"+e+" "+new TypeOf(e));
@@ -114,11 +118,14 @@ public class TupleExpression extends Expression {
 	}
 	public Expression getSingleExpr() {
 		assert isSingleExpr();
-		return ordinalParams.get(0);
+		return ordinalArgs.get(0);
+	}
+	
+	public Expression[] getRawExprs() {
+		return rawEprs;
 	}
 	
 	
-
 	@Override
 	public Type getTypeRef() throws CompilerException {
 		// TODO
@@ -147,14 +154,14 @@ public class TupleExpression extends Expression {
 				ret.write(i, exprs[i].evaluate());
 			}*/
 			int i;
-			for (i = 0; i < ordinalParams.size(); i++)
-				ret.write(i, ordinalParams.get(i).evaluate());
+			for (i = 0; i < ordinalArgs.size(); i++)
+				ret.write(i, ordinalArgs.get(i).evaluate());
 			/*
 			Iterator<Expression> ite = namedParams.values().iterator(); // FIXME: in right order?
 			while(ite.hasNext())
 				ret.write(i++, ite.next().evaluate());
 			*/
-			Iterator<Pair<Integer,Expression>> ite = namedParams.values().iterator(); // FIXEDME: in right order?
+			Iterator<Pair<Integer,Expression>> ite = namedArgs.values().iterator(); // FIXEDME: in right order?
 			while(ite.hasNext()) {
 				Pair<Integer,Expression> p = ite.next();
 				ret.write(p.getFirst(), p.getSecond().evaluate());
@@ -177,7 +184,7 @@ public class TupleExpression extends Expression {
 			//sb.append("[Tpl](");
 			sb.append("(");
 			
-			for (Expression e : ordinalParams)
+			for (Expression e : ordinalArgs)
 				//sb.append(e+", ");
 				//sb.append(e+":"+e.getTypeRef()+", ");
 				sb.append(":"+e.getTypeRef()+"="+e+", ");
@@ -188,10 +195,10 @@ public class TupleExpression extends Expression {
 			
 //			for (Map.Entry<String,Expression> e : namedParams.entrySet())
 //				sb.append(e.getKey()+":"+e.getValue().getType()+"="+e.getValue()+", ");
-			for (Map.Entry<String,Pair<Integer,Expression>> e : namedParams.entrySet())
+			for (Map.Entry<String,Pair<Integer,Expression>> e : namedArgs.entrySet())
 				sb.append(e.getKey()+":"+e.getValue().getSecond().getTypeRef()+"="+e.getValue().getSecond()+", ");
 			
-			if (ordinalParams.size() != 0 || namedParams.size() != 0)
+			if (ordinalArgs.size() != 0 || namedArgs.size() != 0)
 				sb.delete(sb.length()-2, sb.length());
 			sb.append(")");
 			return sb.toString(); // TODONE

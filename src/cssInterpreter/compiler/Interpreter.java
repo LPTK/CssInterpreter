@@ -395,9 +395,47 @@ public class Interpreter extends DepthFirstAdapter {
 		assert ls.size() > 0;
 		//exprs.put(node, exprs.get(ls.get(0)));
 		
-		Expression firstExpr = exprs.get(ls.get(0));
+		Expression firstExpr = exprs.get(ls.get(0)); // firstExpr can be null in cases like "; a,b;" where we have [[a,b]]
 		//if (firstExpr == null)
 		//	firstExpr = otherExprs.get(ls.get(0));
+		
+		
+		/***
+		if (firstExpr == null) { // firstExpr can be null in cases like "; a,b;" where we have [[a,b]]
+			assert ls.size() == 1;
+			ls = ((AListExpr)ls.get(0)).getExpr(); // wrong; "a = 42, print 'ok'" is a call expr with "a = 42, print" and "ok"
+			// ls.get(0) can be a closure
+			
+			
+			
+			
+			
+			
+			
+			
+			// FIXME TODO
+			
+			
+			
+			
+			
+			
+			
+			
+		}
+		
+		//if (ls.size() == 1 && firstExpr != null && !(firstExpr instanceof AssignExpression)) {		// wrong
+		
+		*/
+		
+		
+		
+		/*
+		if (firstExpr instanceof AssignExpression) {
+			curr
+			return;
+		}
+		*/
 		
 		if (ls.size() == 1 && !(firstExpr instanceof AssignExpression)) {
 			//System.out.println("OK");
@@ -769,14 +807,16 @@ public class Interpreter extends DepthFirstAdapter {
 			
 
 			//currentScope.getType().addFct(new Function(new Signature(fctName, fparams)) {
-			currentScope.getType().addFct(new Function(new Signature(fctName, scopes.get(paramClosure).getType())) {
+			//currentScope.getType().addFct(new Function(new Signature(fctName, scopes.get(paramClosure).getType())) {
+			currentScope.getType().addFct(new Function(new Signature(fctName, paramScope.getType())) {
 				
 				//final Scope scope = currentScope;
 				//final PClosure myClosure = ((AClosureExpr)v).getClosure());
 				
 				@Override
 				public Type getOutputType() {
-					return exec.VoidType; // FIXME
+					//return exec.VoidType; // FIXME
+					return scopes.get(myClosure).getType();
 				}
 				
 				@Override
@@ -827,7 +867,16 @@ public class Interpreter extends DepthFirstAdapter {
 				return null;
 			}
 		});*/
-		currentScope.addExpr(exprs.get(node.getExpr()));
+		
+		//currentScope.addExpr(exprs.get(node.getExpr()));
+		
+		Expression expr = exprs.get(node.getExpr());
+		if (expr instanceof TupleExpression) {
+			for (Expression ex : ((TupleExpression) expr).getRawExprs()) {
+				currentScope.addExpr(ex);
+			}
+		}
+		else currentScope.addExpr(expr);
 		indentation--;
 	}
 	

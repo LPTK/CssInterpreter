@@ -41,6 +41,7 @@ public class Scope {
 			
 			@Override
 			public RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) throws CompilerException {
+				// TODO: use exec
 				Scanner sc = new Scanner(System.in);
 				String str = sc.nextLine();
 				sc.close();
@@ -157,6 +158,11 @@ public class Scope {
 			s = s.parent;
 		}
 		return null;
+	}
+
+	public boolean hasReturnStatement() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }
