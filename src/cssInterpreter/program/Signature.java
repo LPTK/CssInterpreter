@@ -1,11 +1,17 @@
 package cssInterpreter.program;
 
+import cssInterpreter.node.ARefAttrType;
+
 
 public class Signature {
-	String name;
+	private String name = null;
 	//Type[] types;
 	//NamedType[] namedTypes;
+	Type type;
+	
 	public final FormalParameters params;
+	
+	private TypeIdentifier id; // used when the function this signature signs is a cosntructor
 	
 	//public Signature(String name, Type[] types) {
 	//public Signature(String name, NamedType[] namedTypes) {
@@ -14,7 +20,44 @@ public class Signature {
 		if (params == null)
 			throw new IllegalArgumentException();
 		this.params = params;
+		this.type = new TupleType(new TypeIdentifier("[FormalParam?!]", null), null);
+		
+		for (NamedType nt : params.namedTypes)
+		type.addAttribute(new ARefAttrType(), nt.name, nt.type);
+		
+		
+		// FIXME: no fparams
+		
+		
 	}
+	/*
+	public Signature(Type type, FormalParameters params) {
+		this(null, type);
+	}*/
+	public Signature(TypeIdentifier id, FormalParameters params) {
+		this((String)null, params);
+		this.id = id;
+	}
+
+	public Signature(final String name, Type type) {
+	//public Signature(TypeIdentifier id, Type type) {
+		this.name = name;
+		//this.id = id;
+		if (name == null)
+			this.id = type.id;
+		this.type = type;
+		
+		//assert type.getConstructors().size() == 1;
+		//this.params = type.getConstructors().get(0).signature.params; // TODO: dump 'params' and only use 'type'
+		
+		NamedType[] nts = new NamedType[type.attributeTypes.size()];
+		for (int i = 0; i < type.attributeTypes.size(); i++) {
+			nts[i] = new NamedType(type.attributeTypes.get(i), type.attributeNames.get(i), false); // FIXME: use provided default values!
+		}
+		this.params = new FormalParameters(nts);
+		
+	}
+	
 	
 	// TODO: implement hashCode/equality?
 	/*
@@ -42,6 +85,14 @@ public class Signature {
 	public String toString() {
 		//return name+": {"+params+"}";
 		return (name==null?"":name)+": "+params;
+	}
+
+	public Type getType() {
+		return type;
+	}
+
+	public String getName() {
+		return name==null? id.name : name;
 	}
 	
 }

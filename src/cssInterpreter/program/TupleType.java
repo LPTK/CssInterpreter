@@ -3,7 +3,6 @@ package cssInterpreter.program;
 import java.util.Arrays;
 import java.util.List;
 
-import cssInterpreter.compiler.NotSupportedCompExc;
 import cssInterpreter.runtime.Execution;
 import cssInterpreter.runtime.RuntimeObject;
 
@@ -25,12 +24,18 @@ class TupleType extends Type {
 	
 	public void generateConstructor(final Execution exec) {
 		
+		/**
 		NamedType[] nts = new NamedType[attributeTypes.size()];
 		for (int i = 0; i < attributeTypes.size(); i++) {
 			nts[i] = new NamedType(attributeTypes.get(i), attributeNames.get(i), false); // FIXME: use provided default values!
-		}
+		}*/
+		
 		final Type that = this;
-		constructor = new Function(new Signature(id.name, new FormalParameters(nts))) {
+		
+		//constructor = new Function(new Signature(id.name, new FormalParameters(nts))) {
+		//constructor = new Function(new Signature(this, new FormalParameters(nts))) {
+		constructor = new Function(new Signature(null, this)) {
+			
 			@Override public Type getOutputType() {
 				return that;
 			}
@@ -54,10 +59,10 @@ class TupleType extends Type {
 				*/
 				
 				
+				return args; // TODO: is it really THIS simple?
 				
 				
-				
-				throw new NotSupportedCompExc();
+				//throw new NotSupportedException();
 				
 				
 				

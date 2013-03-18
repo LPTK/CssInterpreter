@@ -18,6 +18,8 @@ import cssInterpreter.program.expressions.TupleExpression;
 
 public class Execution {
 	
+	private static Execution instance;
+	
 	private RuntimeObject thisObject = null; //DumbInterpreter.standardScopeRO;
 	Stack<RuntimeObject> thisStack = new Stack<>();
 	
@@ -30,11 +32,12 @@ public class Execution {
 	boolean started;
 	Interpreter interp;
 
-	public final PrimitiveType<Void> AnyType = new PrimitiveType<Void>(new TypeIdentifier("Any", null), this);
-	public final PrimitiveType<Void> VoidType = new PrimitiveType<Void>(new TypeIdentifier("Void", null), this);
-	public final PrimitiveType<Integer> IntType = new PrimitiveType<Integer>(new TypeIdentifier("Int", null), this);
-	public final PrimitiveType<Long> LongType = new PrimitiveType<Long>(new TypeIdentifier("Long", null), this);
-	public final PrimitiveType<String> StringType = new PrimitiveType<String>(new TypeIdentifier("Str", null), this);
+	public final PrimitiveType<Void> AnyType = new PrimitiveType<>(new TypeIdentifier("Any", null), this);
+	public final PrimitiveType<Void> VoidType = new PrimitiveType<>(new TypeIdentifier("Void", null), this);
+	public final PrimitiveType<Boolean> BoolType = new PrimitiveType<>(new TypeIdentifier("Bool", null), this);
+	public final PrimitiveType<Integer> IntType = new PrimitiveType<>(new TypeIdentifier("Int", null), this);
+	public final PrimitiveType<Long> LongType = new PrimitiveType<>(new TypeIdentifier("Long", null), this);
+	public final PrimitiveType<String> StringType = new PrimitiveType<>(new TypeIdentifier("Str", null), this);
 	
 	public final Scope standardScope = new Scope("[Std]", this);
 	public final RuntimeObject standardScopeRO = new RuntimeObject(standardScope.getType(), null, false) {};
@@ -44,15 +47,23 @@ public class Execution {
 	public Execution(Interpreter interp, PrintStream out) {
 		this.interp = interp;
 		this.out = out;
+		instance = this;
 	}
 	
 	public RuntimeObject execute(RuntimeObject args, Scope scope) throws CompilerException
 	{
-		System.out.println(">> Executing:  "+scope.getType()+"  with params  "+args);
+		////System.out.println(">> Executing:  "+scope.getType()+"  with params  "+args);
+		
+		assert scope.getParent() == null || args.type.conformsTo(scope.getParent().getType());
+		
 		started = true;
 		indentation++;
 		//System.out.println(scope);
-		out("Executing scope with "+scope.getExprs().size()+" expression statements");
+		
+		//out("Executing scope with "+scope.getExprs().size()+" expression statements");
+		out("Executing "+scope.getType()+" with args "+args+", containing "+scope.getExprs().size()+" expression statements");
+		//out("containing "+scope.getExprs().size()+" expression statements");
+		
 		thisStack.push(thisObject);
 		//thisObject = new RuntimeObjectBase(scope.type, thisObject, false) {};
 		
@@ -64,6 +75,7 @@ public class Execution {
 		
 		thisObject = new RuntimeObject(scope.getType(), args, false);
 		
+		//indentation++;
 		for (Expression expr : scope.getExprs()) {
 			//out("Expression "+expr+" produced: "+expr.evaluate());
 			RuntimeObject res = expr.evaluate();
@@ -71,6 +83,8 @@ public class Execution {
 			out("\tproduced: "+res);*/
 			out("Expression  \""+expr+"\"  produced value: "+res);
 		}
+		//indentation--;
+		
 		thisObject.destruct();
 		thisObject = thisStack.pop();
 		indentation--;
@@ -143,6 +157,10 @@ public class Execution {
 		return currentArgObject;
 	}
 	*/
+
+	public static Execution getInstance() {
+		return instance;
+	}
 }
 
 

@@ -18,12 +18,12 @@ public class RuntimeObjectRef extends RuntimeObject {
 	}
 	
 	@Override
-	public RuntimeObject readDelegate(int index) {
+	protected RuntimeObject readDelegate(int index) {
 		return referenced.readDelegate(index);
 	}
 	
 	@Override
-	public void writeDelegate(int index, RuntimeObject obj) {
+	protected void writeDelegate(int index, RuntimeObject obj) {
 		referenced.writeDelegate(index, obj);
 	}
 	

@@ -58,6 +58,15 @@ Tokens
     {normal} key_package  = 'package';
     {normal} key_parent   = 'parent';
     {normal} key_this     = 'this';
+    
+    {normal} key_if     = 'if';
+    {normal} key_while     = 'while';
+    
+    {normal} key_true     = 'true';
+    {normal} key_false     = 'false';
+    {normal} equalequal     = '==';
+    {normal} inferiority     = 'lt';
+    {normal} not     = '!';
 
     /* Type annotation keywords */
     {normal} key_val	  = 'val';
@@ -196,7 +205,21 @@ statement {-> statement} =
     {expr} expression {-> New statement.expr (expression.expr)}
   | {attribute_decl} attribute_decl {-> attribute_decl.statement}
   | {function_decl} function_decl {-> function_decl.statement}
+  | {class_decl} class_decl {-> class_decl.statement}
+  | {conditional} conditional_stmt {-> conditional_stmt.statement}
   ;
+
+
+conditional_key {-> cond_type} =
+    {if} key_if {-> New cond_type.if()}
+  | {while} key_while {-> New cond_type.while()}
+  ;
+
+conditional_stmt {-> statement} =
+    [cond_key]:conditional_key l_paren [cond_expr]:expression r_paren [stmt_expr]:expression
+      {-> New statement.conditional (cond_key.cond_type, cond_expr.expr, stmt_expr.expr)}
+  ;
+
 
 
 class_decl {-> statement} =
@@ -358,12 +381,41 @@ arg_expression {-> expr*} =
 
 
 assign_expression {-> expr} =
-    {single} [restxpr]:restricted_expression
+    {single} [restxpr]:boolean_expression
       {-> restxpr.expr}
-  | {assign} [restxpr]:restricted_expression equal [restxpr2]:restricted_expression
+  | {assign} [restxpr]:restricted_expression equal [restxpr2]:boolean_expression
       { -> New expr.assign (restxpr.expr, restxpr2.expr) }
+  
+  /*
+  | {boolean} boolean_expression
+      {-> New expr.boolean (boolean_expression.boolean)}
+  */
+  
   ;
 
+boolean_expression {-> expr} =
+    {single} [restxpr]:restricted_expression
+      {-> restxpr.expr}
+  | {true} key_true
+      {-> New expr.true ()}
+  | {false} key_false
+      {-> New expr.false ()}
+  | {not} not restricted_expression
+      {-> New expr.not (restricted_expression.expr)}
+  | {comparison} [expr1]:restricted_expression comp_operator [expr2]:restricted_expression
+      {-> New expr.comparison (expr1.expr, comp_operator.comp_op, expr2.expr)}
+  ;
+
+
+
+/*******************/ // TODO // /*******************/
+
+// use '<' for "less than" by only allowing template args in function calls after field accesses...
+// or more generally identifiers.
+// eg: "something.field<args>" and not "42<args>"
+// hmm... looks like it's still ambiguous for LR1...
+
+/*******************/ //------// /*******************/
 
 
 restricted_expression {-> expr} =
@@ -387,6 +439,11 @@ restricted_expression {-> expr} =
       {-> New expr.closure (closure)}
   
   /*
+  | {boolean} boolean_expression
+      {-> New expr.boolean (boolean_expression.boolean)}
+  */
+  
+  /*
   | {assign} [restxpr]:restricted_expression equal [restxpr2]:restricted_expression
       { -> New expr.assign (restxpr.expr, restxpr2.expr) }
   */
@@ -394,10 +451,23 @@ restricted_expression {-> expr} =
   ;
 
 
-
-
-
-
+/*
+boolean_expression {-> boolean} =
+    {single} [restxpr]:restricted_expression
+   {true} key_true
+      {-> New boolean.true ()}
+  | {false} key_false
+      {-> New boolean.false ()}
+  | {not} not restricted_expression
+      {-> New boolean.not (restricted_expression.expr)}
+  | {comparison} [expr1]:restricted_expression comp_operator [expr2]:restricted_expression
+      {-> New boolean.comparison (expr1.expr, comp_operator.comp_op, expr2.expr)}
+  ;
+*/
+comp_operator {-> comp_op} =
+    {equal} equalequal {-> New comp_op.equality ()}
+  | {inferior} inferiority {-> New comp_op.inferiority ()}
+  ;
 
 
 
@@ -444,11 +514,18 @@ def_decl =
     [name]:ident? [params]:closure? typed_value?
   ;
 */
+
+cond_type =
+    {if}
+  | {while}
+  ;
+
 statement = 
     {expr} expr
   | {attr_decl} [attr_type]:attr_type? [name]:ident? typed_value?
   | {def_decl} [name]:ident? [params]:closure? typed_value?
   | {class_decl} [name]:ident typed_value?
+  | {conditional} [condition_type]:cond_type [condition_expr]:expr [statement_expr]:expr
   ;
 
 /*
@@ -488,8 +565,25 @@ expr =
   | {assign} [assigned]:expr [value]:expr
   | {invocation} [callee]:expr* [targs]:expr? [args]:expr?
   | {field_access} field_access
+//  | {boolean} boolean
+  | {true}
+  | {false}
+  | {not} expr
+  | {comparison} [expr1]:expr comp_op [expr2]:expr
   ;
 
+/*
+boolean =
+    {true}
+  | {false}
+  | {not} expr
+  | {comparison} [expr1]:expr comp_op [expr2]:expr
+  ;
+*/
+comp_op =
+    {equality}
+  | {inferiority}
+  ;
 
 field_access =
     [prefix_expr]:expr ident

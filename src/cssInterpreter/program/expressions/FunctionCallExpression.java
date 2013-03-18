@@ -2,7 +2,7 @@ package cssInterpreter.program.expressions;
 
 import util.Pair;
 import cssInterpreter.compiler.CompilerException;
-import cssInterpreter.compiler.UnknownFunctionCompExc;
+import cssInterpreter.compiler.UnknownFunctionException;
 import cssInterpreter.program.CallSignature;
 import cssInterpreter.program.CandidateList;
 import cssInterpreter.program.ParamBinding;
@@ -88,7 +88,7 @@ public class FunctionCallExpression extends Expression {
 					//return fct;
 					return pb;
 					
-				} catch(UnknownFunctionCompExc e) {
+				} catch(UnknownFunctionException e) {
 					ttype = ttype.getParent();
 					candidates.searchDepth++;
 					//System.out.println(thisObj);
@@ -206,10 +206,30 @@ public class FunctionCallExpression extends Expression {
 			return "("+thisExpression+")";*/
 		//String ret = "("+(thisExpression == null ? (thisObj == null ? : ) : thisExpression)+").";
 		//String ret = (thisExpression == null ? "[CurrentScope]." : "("+ thisExpression) + ").";
-		String ret = (thisExpression == null ? "." : "("+ thisExpression + ").");
+		//String ret = (thisExpression == null ? "." : "("+ thisExpression + ").");
+		/**String ret = (thisExpression == null ? "" : "("+ thisExpression + ").");
 		ret += fieldName;
 		//ret += "("+args+")";
 		ret += args;
-		return ret;
+		return ret;*/
+
+		return
+				(thisExpression == null ? "" : "("+ thisExpression + ").")
+				+ fieldName
+				+ args;
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

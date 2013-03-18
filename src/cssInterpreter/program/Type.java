@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import cssInterpreter.compiler.CompilerException;
-import cssInterpreter.compiler.UnknownFunctionCompExc;
+import cssInterpreter.compiler.UnknownFunctionException;
 import cssInterpreter.node.PAttrType;
 import cssInterpreter.node.TIdent;
 
@@ -19,7 +19,8 @@ public class Type implements TypeReference {
 	
 	List<String> attributeNames = new ArrayList<>();
 	List<TypeReference> attributeTypes = new ArrayList<>();
-
+	
+	boolean isAClass = false; // TODO: use
 	
 	
 	public Type(TypeIdentifier id, Type parent) {//, boolean tuple) {
@@ -43,10 +44,10 @@ public class Type implements TypeReference {
 		
 		
 		
-		List<Function> ls = fcts.get(fct.signature.name);
+		List<Function> ls = fcts.get(fct.signature.getName());
 		if (ls == null) {
 			ls = new ArrayList<Function>();
-			fcts.put(fct.signature.name, ls);
+			fcts.put(fct.signature.getName(), ls);
 		}
 		ls.add(fct);
 	}
@@ -56,6 +57,7 @@ public class Type implements TypeReference {
 	}
 	
 	public void addType(Type t) { // FIXME: still useful???
+		assert t.getConstructors().size() > 0;
 		for (Function f : t.getConstructors())
 			addFct(f);
 	}
@@ -75,8 +77,8 @@ public class Type implements TypeReference {
 		if (ls == null)
 			//throw new CompilerException("Name '"+callSign.name+"' is unknown in type "+this);
 			///throw new UnknownFunctionCompExc(callSign.getLine(), "Name '"+callSign.name+"' is unknown in type "+this+"\n\t  "+candidates.toString());
-			throw new UnknownFunctionCompExc(callSign.getLine(),
-					"Name '"+callSign.name+"' is unknown in type "+candidates.getInitialType()
+			throw new UnknownFunctionException(callSign.getLine(),
+					"Name '"+callSign.name+"' is unknown in scope of type "+candidates.getInitialType()
 					+(candidates.count() > 0 ? " with parameters "+callSign.params : "")
 					+"\n\t  "+candidates.toString()
 				);
@@ -95,13 +97,13 @@ public class Type implements TypeReference {
 			
 			if (pb.isSuccessful()) {
 				if (ret != null)
-					throw new CompilerException("Ambiguous call signature\n\t"+candidates);
+					throw new CompilerException("Ambiguous call signature "+callSign+"\n\t"+candidates.withoutNonSuccessful());
 				ret = pb;
 			}
 			
 		}
 		if (ret == null) // TODO: factorize (le meme en haut)
-			throw new UnknownFunctionCompExc(callSign.getLine(), "Name '"+callSign.name+"' is unknown in type "+candidates.getInitialType()+" with parameters "+callSign.params+"\n\t  "+candidates.toString());
+			throw new UnknownFunctionException(callSign.getLine(), "Name '"+callSign.name+"' is unknown in type "+candidates.getInitialType()+" with parameters "+callSign.params+"\n\t  "+candidates.toString());
 		return ret;
 	}
 	
@@ -160,8 +162,13 @@ public class Type implements TypeReference {
 		}
 		*/
 		
+		/*
+		 * Currently, actual bindings are created only for unnamed args
+		 * If the ParamBinding is successful, then all named args correspond to their named param counterpart
+		 */
+		
 		int k = 0;
-		for (String n : attributeNames) {
+		for (String n : attributeNames) { // Looping through all attributes not having a name
 			if (n != null) {
 				//k++;
 				break;
@@ -189,7 +196,10 @@ public class Type implements TypeReference {
 					);
 				break;
 			}
-			pb.addBinding(k, f.signature.params.namedTypes[k].name);
+			//pb.addBinding(k, f.signature.params.namedTypes[k].name);
+			pb.addBinding(k, k);
+			
+			
 			k++;
 		}
 		
@@ -202,7 +212,8 @@ public class Type implements TypeReference {
 		 */
 		
 		//for (int i = 0; i < f.signature.params.namedTypes.length; i++) {
-		for (int i = k; i < f.signature.params.namedTypes.length; i++) {
+		int i;
+		for (i = k; i < f.signature.params.namedTypes.length; i++) {
 			NamedType param = f.signature.params.namedTypes[i];
 			boolean found = false;
 			/*for (String n : attributeNames) {
@@ -212,7 +223,8 @@ public class Type implements TypeReference {
 				}
 			}*/
 			//System.out.println("searching for "+param.name);
-			for (int j = k; j < attributeNames.size(); j++) {
+			int j;
+			for (j = k; j < attributeNames.size(); j++) {
 				String n = attributeNames.get(j);
 				assert n != null;
 				if (n != null && n.equals(param.name)) {
@@ -220,11 +232,31 @@ public class Type implements TypeReference {
 					break;
 				}
 			}
-			if (!found) {
-				if(!pb.hasName(param.name)) {
+			if (found) {
+				
+				
+				
+				//pb.addBinding(i, f.signature.params.namedTypes[j].name);
+				pb.addBinding(i, j);
+				
+				
+			} else {
+				if (!pb.hasName(param.name)) {
 					pb.setUnsuccessful("Not enough arguments: parameter '"+param.name+"' expected, not found.");
+					break;
 				}
 			}
+			
+		}
+		if (pb.isSuccessful() && i < attributeNames.size()) {
+			//pb.setUnsuccessful("Too many arguments given: "+attributeNames.size()+" given, "+f.signature.params.namedTypes.length+" expected.");
+			pb.setUnsuccessful(
+					"Too many arguments given: "
+					+attributeNames.size()+" given, "
+					+f.signature.params.namedTypes.length
+					+" expected. Argument '"+attributeNames.get(i)
+					+"' was not expected"
+				);
 		}
 		
 		/*
@@ -238,6 +270,28 @@ public class Type implements TypeReference {
 		
 		return pb;
 	}
+	
+	
+	
+	
+	
+	public boolean conformsTo(Type type) throws CompilerException {
+		if (isAClass)
+			return this == type;
+		for (int i = 0; i < getAttributeCount(); i++) {
+			if (!attributeTypes.get(i).getType().conformsTo(type.attributeTypes.get(i).getType()))
+				return false;
+		}
+		// TODO: check that functions are also present
+		return true;
+	}
+	
+	
+	public int getAttributeCount() {
+		assert attributeNames.size() == attributeTypes.size();
+		return attributeNames.size();
+	}
+	
 	
 	public boolean isSettableTo(Type t) { // TODO: implement inheritance and traits
 		if (id.name.equals("Any")) // FIXME!
@@ -285,5 +339,6 @@ public class Type implements TypeReference {
 	public void setName(String newName) {
 		id.name = newName;
 	}
+	
 
 }

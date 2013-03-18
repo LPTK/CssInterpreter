@@ -13,16 +13,23 @@ import cssInterpreter.node.AAttrDeclStatement;
 import cssInterpreter.node.AClassDeclStatement;
 import cssInterpreter.node.AClosure;
 import cssInterpreter.node.AClosureExpr;
+import cssInterpreter.node.AComparisonExpr;
+import cssInterpreter.node.AConditionalStatement;
 import cssInterpreter.node.ADefDeclStatement;
 import cssInterpreter.node.AExprStatement;
+import cssInterpreter.node.AFalseExpr;
 import cssInterpreter.node.AFieldAccess;
+import cssInterpreter.node.AFieldAccessExpr;
 import cssInterpreter.node.AIdExpr;
 import cssInterpreter.node.AIdentGeneralId;
 import cssInterpreter.node.AIdentNakedType;
+import cssInterpreter.node.AIfCondType;
 import cssInterpreter.node.AInvocationExpr;
 import cssInterpreter.node.AListExpr;
+import cssInterpreter.node.ANotExpr;
 import cssInterpreter.node.ANumberExpr;
 import cssInterpreter.node.AStringExpr;
+import cssInterpreter.node.ATrueExpr;
 import cssInterpreter.node.AType;
 import cssInterpreter.node.ATypedValue;
 import cssInterpreter.node.Node;
@@ -31,18 +38,19 @@ import cssInterpreter.node.PExpr;
 import cssInterpreter.node.PNakedType;
 import cssInterpreter.node.Start;
 import cssInterpreter.program.AssignExpression;
-import cssInterpreter.program.FormalParameters;
 import cssInterpreter.program.Function;
 import cssInterpreter.program.PrimitiveRuntimeObject;
 import cssInterpreter.program.Scope;
 import cssInterpreter.program.Signature;
 import cssInterpreter.program.Type;
-import cssInterpreter.program.TypeByName2;
+import cssInterpreter.program.TypeByName;
 import cssInterpreter.program.TypeOf;
 import cssInterpreter.program.TypeReference;
-import cssInterpreter.program.expressions.Constant;
+import cssInterpreter.program.expressions.ConstantExpression;
 import cssInterpreter.program.expressions.Expression;
 import cssInterpreter.program.expressions.FunctionCallExpression;
+import cssInterpreter.program.expressions.IfExpression;
+import cssInterpreter.program.expressions.NotExpression;
 import cssInterpreter.program.expressions.TupleExpression;
 import cssInterpreter.runtime.Execution;
 import cssInterpreter.runtime.ExecutionException;
@@ -93,7 +101,7 @@ public class Interpreter extends DepthFirstAdapter {
 	Scope currentScope;
 	Execution exec;
 	Map<PExpr,Expression> exprs = new HashMap<>();
-	Map<Node,Expression> otherExprs = new HashMap<>();
+	Map<Node,Expression> otherExprs = new HashMap<>(); // because "fieldAccess" is not an expression...
 	//Map<PExpr,Scope> scopes = new HashMap<>();
 	Map<PClosure,Scope> scopes = new HashMap<>();
 	boolean finishedReading = false;
@@ -205,7 +213,23 @@ public class Interpreter extends DepthFirstAdapter {
 		//otherExprs.put(fa, new FieldAccessExpression(expr, fa.getIdent().getText(), new EmptyExpr()));
 		otherExprs.put(fa, new FunctionCallExpression(exec, expr, fa.getIdent().getText(), exec.getEmptyExpr(currentScope.getType())));
     }
+
+	@Override
+    public void outAFieldAccessExpr(AFieldAccessExpr node)
+    {
+		exprs.put(node, otherExprs.get(node.getFieldAccess()));
+    }
 	
+
+	@Override
+    public void outAConditionalStatement(AConditionalStatement node)
+    {
+        if (node.getConditionType() instanceof AIfCondType) {
+        	currentScope.addExpr(new IfExpression(exec, exprs.get(node.getConditionExpr()), exprs.get(node.getStatementExpr())));
+        } else {
+        	throw new NotSupportedException();
+        }
+    }
 	
 	
 	
@@ -258,7 +282,8 @@ public class Interpreter extends DepthFirstAdapter {
 			
 			/**return new TypeOf(new FunctionCallExpression(exec, currentScope.getType(), ((AIdentNakedType) t).getName().getText()), this);*/
 			//return new TypeByName(currentScope, ((AIdentNakedType) t).getName().getText());
-			return new TypeByName2(currentScope, ((AIdentNakedType) t).getName().getText());
+			//return new TypeByName2(currentScope, ((AIdentNakedType) t).getName().getText());
+			return new TypeByName(currentScope, ((AIdentNakedType) t).getName().getText());
 			
 		} else if (t instanceof AAccessNakedType) {
 			/*
@@ -371,6 +396,9 @@ public class Interpreter extends DepthFirstAdapter {
 		//exprs.put(node, exprs.get(ls.get(0)));
 		
 		Expression firstExpr = exprs.get(ls.get(0));
+		//if (firstExpr == null)
+		//	firstExpr = otherExprs.get(ls.get(0));
+		
 		if (ls.size() == 1 && !(firstExpr instanceof AssignExpression)) {
 			//System.out.println("OK");
 			exprs.put(node, firstExpr);
@@ -389,14 +417,42 @@ public class Interpreter extends DepthFirstAdapter {
     }
     
 
+	/*
+	@Override
+    public void outABooleanExpr(ABooleanExpr node)
+    {
+		PBoolean bool = node.getBoolean();
+        if (bool instanceof ATrueBoolean)
+        	exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<Boolean>(exec.BoolType, true, exec.standardScopeRO, true)));
+        else if (bool instanceof AFalseBoolean)
+        	exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<Boolean>(exec.BoolType, false, exec.standardScopeRO, true)));
+        else if (bool instanceof ANotBoolean)
+        	exprs.put(node, new NotExpression(exprs.get(((ANotBoolean) bool).getExpr())));
+        else {
+        	throw new NotSupportedException();
+        }
+    }
+	*/
 
+	@Override public void outATrueExpr(ATrueExpr node)
+    { exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<Boolean>(exec.BoolType, true, exec.standardScopeRO, true))); }
+
+	@Override public void outAFalseExpr(AFalseExpr node)
+    { exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<Boolean>(exec.BoolType, true, exec.standardScopeRO, true))); }
+
+	@Override public void outANotExpr(ANotExpr node)
+    { exprs.put(node, new NotExpression(exprs.get(node.getExpr()))); }
+
+	@Override public void outAComparisonExpr(AComparisonExpr node)
+	{ throw new NotSupportedException(); }
+	
 	
 	@Override
 	public void inANumberExpr(ANumberExpr node)
 	{
 		out("Number: "+node.getIntegerNumber().getText());
 		//exprs.put(node, new Constant(new ConstantRuntimeObject<Long>(Long.parseLong(node.getIntegerNumber().getText()))));
-		exprs.put(node, new Constant(new PrimitiveRuntimeObject<Long>(exec.LongType, (Long)Long.parseLong(node.getIntegerNumber().getText()), exec.standardScopeRO, true)));
+		exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<Long>(exec.LongType, (Long)Long.parseLong(node.getIntegerNumber().getText()), exec.standardScopeRO, true)));
 		//out("Number: "+node.hashCode());
 	}
 
@@ -404,7 +460,7 @@ public class Interpreter extends DepthFirstAdapter {
 	public void inAStringExpr(AStringExpr node)
 	{
 		out("String: "+node.getStringContent().getText());
-		exprs.put(node, new Constant(new PrimitiveRuntimeObject<String>(exec.StringType, node.getStringContent().getText(), exec.standardScopeRO, true)));
+		exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<String>(exec.StringType, node.getStringContent().getText(), exec.standardScopeRO, true)));
 	}
 	
 	@Override
@@ -530,7 +586,8 @@ public class Interpreter extends DepthFirstAdapter {
 			
 			
 			//System.out.println("!!! "+node.getArgs()+" "+exprs.get(node.getArgs()));
-			assert node.getArgs() == null || (node.getArgs() != null && exprs.get(node.getArgs()) != null);
+			//assert node.getArgs() == null || (node.getArgs() != null && exprs.get(node.getArgs()) != null);
+			assert node.getArgs() == null || exprs.get(node.getArgs()) != null;
 			//assert exprs.get(node.getArgs()) instanceof TupleExpression;
 			
 			//if (args == null) {
@@ -588,7 +645,7 @@ public class Interpreter extends DepthFirstAdapter {
 			} 
 			
 		} else {
-			throw new NotSupportedCompExc();
+			throw new NotSupportedException();
 		}
 		
 		
@@ -604,6 +661,13 @@ public class Interpreter extends DepthFirstAdapter {
     public void outAClassDeclStatement(AClassDeclStatement node)
     {
 		PExpr initVal = ((ATypedValue)node.getTypedValue()).getValue();
+
+		if (initVal instanceof AListExpr) {
+			LinkedList<PExpr> ls = ((AListExpr) initVal).getExpr();
+			if (ls.size() != 1)
+				throw new ExecutionException(new CompilerException("Class was initialized with "+ls.size()+" expression(s) instead of 1"));
+			initVal = ls.get(0);
+		}
 		
 		if (!(initVal instanceof AClosureExpr))
 			throw new ExecutionException(new CompilerException("Class was not initialized with a closure"));
@@ -615,9 +679,12 @@ public class Interpreter extends DepthFirstAdapter {
 			
 			//scopes.get(myClosure).setName("["+className+"]");
 			
-			
 			Scope myScope = scopes.get(myClosure); // The main scope defined by the class
-			myScope.setName("["+className+"]");
+			
+			// TODO: here we only treat the case where there is no explicit constructor defined; (this should actually be treated in tupleType's ctor generation)
+			
+			myScope.setName(className);
+			
 			currentScope.addType(myScope.getType());
 			
 			
@@ -698,12 +765,11 @@ public class Interpreter extends DepthFirstAdapter {
 			
 			
 			assert paramScope.getType().getConstructors().size() == 1;
-			FormalParameters fparams = scopes.get(paramClosure).getType().getConstructors().get(0).getSignature().params;
+			//FormalParameters fparams = scopes.get(paramClosure).getType().getConstructors().get(0).getSignature().params;
 			
-			
-			
-			
-			currentScope.getType().addFct(new Function(new Signature(fctName, fparams)) {
+
+			//currentScope.getType().addFct(new Function(new Signature(fctName, fparams)) {
+			currentScope.getType().addFct(new Function(new Signature(fctName, scopes.get(paramClosure).getType())) {
 				
 				//final Scope scope = currentScope;
 				//final PClosure myClosure = ((AClosureExpr)v).getClosure());
@@ -717,15 +783,15 @@ public class Interpreter extends DepthFirstAdapter {
 				public RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) throws CompilerException {
 					//System.out.println(scopes.get(myClosure));
 					
+					/**
 					//Execution.execute(subScope);
 					exec.execute(args, scopes.get(myClosure));
 					//return Execution.getVoidobj();//new PrimitiveRuntimeObject<Void>(VoidType, new Void(), true); // TODO
 					return exec.getVoidobj();//new PrimitiveRuntimeObject<Void>(VoidType, new Void(), true); // TODO
+					*/
 					
 					
-					
-					
-					
+					return exec.execute(args, scopes.get(myClosure));
 					
 					
 				}

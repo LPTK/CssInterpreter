@@ -47,4 +47,8 @@ public class CandidateList {
 	public Type getInitialType() {
 		return initialType;
 	}
+
+	public String withoutNonSuccessful() {
+		return toString(); // FIXME?
+	}
 }

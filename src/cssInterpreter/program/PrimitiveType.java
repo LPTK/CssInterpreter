@@ -12,6 +12,7 @@ public class PrimitiveType<T> extends Type {
 	public PrimitiveType(TypeIdentifier id, final Execution exec) {
 		//super(id, false);
 		super(id, null); // TODO: null or standardScope?
+		isAClass = true;
 		final PrimitiveType<T> that = this;
 		constructor = new Function(new Signature(id.name, new FormalParameters(new NamedType[]{new NamedType(this,null,true)}))) {
 			@Override public Type getOutputType() {

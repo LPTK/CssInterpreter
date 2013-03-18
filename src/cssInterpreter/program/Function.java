@@ -36,7 +36,9 @@ public abstract class Function {
 	
 	public final RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject args) throws CompilerException {
 		if (!args.getRuntimeType().getBinding(this, 0).isSuccessful())
+		//if (!args.getRuntimeType().conformsTo(  type  )) // FIXME: functions MUST have an input type/trait rather than (just) "FormalParams"
 			throw new AccessViolationException("Type "+args.getRuntimeType()+" does not conform with "+this);
+		
 		return evaluateDelegate(thisReference, args);
 	}
 	public abstract RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) throws CompilerException;
@@ -50,5 +52,17 @@ public abstract class Function {
 	public Signature getSignature() {
 		return signature;
 	}
+	public Type getInputType() {
+		return signature.getType();
+	}
 	
 }
+
+
+
+
+
+
+
+
+

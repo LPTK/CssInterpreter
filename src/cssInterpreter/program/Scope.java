@@ -2,7 +2,9 @@ package cssInterpreter.program;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
+import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.program.expressions.Expression;
 import cssInterpreter.runtime.Execution;
 import cssInterpreter.runtime.RuntimeObject;
@@ -29,6 +31,25 @@ public class Scope {
 			}
 			
 		});
+		
+		type.addFct(new Function(new Signature("read", new FormalParameters())) {
+			
+			@Override
+			public TypeReference getOutputType() {
+				return exec.StringType;
+			}
+			
+			@Override
+			public RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) throws CompilerException {
+				Scanner sc = new Scanner(System.in);
+				String str = sc.nextLine();
+				sc.close();
+				return new PrimitiveRuntimeObject<String>(exec.StringType, str, null, true);
+			}
+			
+		});
+		
+		
 		/*
 		type.addType(Interpreter.VoidType);
 		type.addType(Interpreter.IntType);

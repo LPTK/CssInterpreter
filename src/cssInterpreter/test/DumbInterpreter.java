@@ -13,8 +13,8 @@ import java.util.Stack;
 import cssInterpreter.analysis.DepthFirstAdapter;
 import cssInterpreter.compiler.CompilerError;
 import cssInterpreter.compiler.CompilerException;
-import cssInterpreter.compiler.NotSupportedCompExc;
-import cssInterpreter.compiler.UnknownFunctionCompExc;
+import cssInterpreter.compiler.NotSupportedException;
+import cssInterpreter.compiler.UnknownFunctionException;
 import cssInterpreter.node.AAccessNakedType;
 import cssInterpreter.node.AAssignExpr;
 import cssInterpreter.node.AAttrDeclStatement;
@@ -530,7 +530,7 @@ class FieldAccessExpression extends Expression {
 					//return fct;
 					return pb;
 					
-				} catch(UnknownFunctionCompExc e) {
+				} catch(UnknownFunctionException e) {
 					thisObj = thisObj.getParent();
 					//System.out.println(thisObj);
 					if (thisObj == null)
@@ -1167,7 +1167,7 @@ abstract class TypeBase implements Type {
 		List<Function> ls = fcts.get(callSign.name);
 		if (ls == null)
 			//throw new CompilerException("Name '"+callSign.name+"' is unknown in type "+this);
-			throw new UnknownFunctionCompExc(null, "Name '"+callSign.name+"' is unknown in type "+this+"\n\t"+candidates.toString());
+			throw new UnknownFunctionException(null, "Name '"+callSign.name+"' is unknown in type "+this+"\n\t"+candidates.toString());
 		for (Function f : ls) {
 			/*
 			System.out.println(f);
@@ -1226,7 +1226,7 @@ abstract class TypeBase implements Type {
 			
 		}
 		if (ret == null)
-			throw new UnknownFunctionCompExc(null, "Name '"+callSign.name+"' is unknown in type "+this+" with parameters "+callSign.args+"\n\t"+candidates.toString());
+			throw new UnknownFunctionException(null, "Name '"+callSign.name+"' is unknown in type "+this+" with parameters "+callSign.args+"\n\t"+candidates.toString());
 		return ret;
 	}
 	/*
@@ -2267,7 +2267,7 @@ public class DumbInterpreter extends DepthFirstAdapter {
 			} 
 			
 		} else {
-			throw new NotSupportedCompExc();
+			throw new NotSupportedException();
 		}
 		
 		

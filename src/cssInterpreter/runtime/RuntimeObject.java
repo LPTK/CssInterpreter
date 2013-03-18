@@ -73,7 +73,8 @@ class RuntimeObject  {
 		Type t = type.getAttributeTypes()[index].getType();
 		//System.out.println(type.getAttributeTypes()[index]);
 		if (!t.isSettableTo(obj.type))
-			throw new AccessViolationException("Field of type '"+t+"' cannot be set to object of type '"+obj.type+"'");
+			//throw new AccessViolationException("Field of type '"+t+"' cannot be set to object of type '"+obj.type+"'");
+			throw new AccessViolationException("Object of type '"+obj.type+"' cannot be assigned to field of type '"+t+"' in "+this+":"+type);
 		writeDelegate(index, obj);
 	}
 
@@ -85,14 +86,14 @@ class RuntimeObject  {
 		return readDelegate(index);
 	}
 	
-	public RuntimeObject readDelegate(int index) {
+	protected RuntimeObject readDelegate(int index) {
 		return attributes[index];
 	}
 	
 	public Type getRuntimeType() {
 		return type;
 	}
-	public void writeDelegate(int index, RuntimeObject obj) {
+	protected void writeDelegate(int index, RuntimeObject obj) {
 		attributes[index] = obj;
 	}
 	/*

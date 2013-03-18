@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.PushbackReader;
 import java.io.StringReader;
 
+import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.Interpreter;
 import cssInterpreter.lexer.CssLexer;
 import cssInterpreter.node.Start;
@@ -60,8 +61,19 @@ public class CssInterpreter {
 		}
 	
 		//ast.apply(new DumbInterpreter());
-		ast.apply(new Interpreter());
 		
+		final boolean debug = true;
+		
+		if (debug)
+			ast.apply(new Interpreter());			
+		else try {
+			ast.apply(new Interpreter());
+		} catch (Exception e) {
+			if (e.getCause() instanceof CompilerException)
+				System.err.println(e);
+			else
+				throw e;
+		}
 
 	}
 
