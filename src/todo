@@ -12,6 +12,7 @@ AV:
 LP:
 
 	todo
+- handle recursive type references
 - valeurs par défaut pour les paramètres (et les champs de classe)
 - implémenter ref/rval
 - datapaths
