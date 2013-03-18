@@ -73,13 +73,15 @@ public class FunctionCallExpression extends Expression {
 					return execArgs.getRuntimeType().getFunction(new CallSignature(fieldName, args), candidates);
 				} catch(UnknownFunctionCompExc e) {}*/
 			
-			while (thisType != null) {
+			Type ttype = thisType;
+			
+			while (ttype != null) {
 				try {
 					//System.out.println("+++"+args);
 					//return thisObj.getRuntimeType().getFunction(new CallSignature(fieldName, args), candidates);
 					
 					///Function fct = thisObj.getRuntimeType().getFunction(new CallSignature(fieldName, args), candidates);
-					ParamBinding pb = thisType.getFunction(new CallSignature(fieldName, args), candidates);
+					ParamBinding pb = ttype.getFunction(new CallSignature(fieldName, args), candidates);
 					
 					//System.out.println("\tFound "+fct.signature);
 					//System.out.println(candidates);
@@ -87,10 +89,10 @@ public class FunctionCallExpression extends Expression {
 					return pb;
 					
 				} catch(UnknownFunctionCompExc e) {
-					thisType = thisType.getParent();
+					ttype = ttype.getParent();
 					candidates.searchDepth++;
 					//System.out.println(thisObj);
-					if (thisType == null)
+					if (ttype == null)
 						throw e; // TODO: keep the most appropriate message (which parameters are missing?)
 								 // TODO: aggregate all possible functions with this name?
 				}
@@ -126,7 +128,12 @@ public class FunctionCallExpression extends Expression {
 		
 		//return getFunction().getOutputType();
 		//return getFunction().fct.getOutputType(); // FIXME?! Type -> TypeRef
+		
+		
 		return getFunction(new CandidateList()).fct.getOutputType(); // FIXME?! Type -> TypeRef
+		
+		//Function f = getFunction(new CandidateList()).fct;
+		//return f.getOutputType(); // FIXME?! Type -> TypeRef
 		
 	}
 	
@@ -145,7 +152,8 @@ public class FunctionCallExpression extends Expression {
 			} catch(UnknownFunctionCompExc e) {}
 		return new Pair<>(getFunction(candidates), getThis());
 		*/
-		
+		//System.out.println(getThis());
+		//RuntimeObject th = getThis();
 		return new Pair<>(getFunction(new CandidateList()), getThis());
 		
 	}

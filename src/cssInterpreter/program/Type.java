@@ -55,7 +55,7 @@ public class Type implements TypeReference {
 		return fcts;
 	}
 	
-	public void addType(Type t) {
+	public void addType(Type t) { // FIXME: still useful???
 		for (Function f : t.getConstructors())
 			addFct(f);
 	}
@@ -137,7 +137,7 @@ public class Type implements TypeReference {
 	
 	
 	
-	public ParamBinding getBinding(Function f, int searchDepth) {
+	public ParamBinding getBinding(Function f, int searchDepth) throws CompilerException { // TODO: also check for functions existence
 		//String error = null;
 		assert isTuple(); // even single and void params are converted to a tuple with one or zero unnamed value, when passed to a function
 		ParamBinding pb = new ParamBinding(f,searchDepth);
@@ -162,8 +162,10 @@ public class Type implements TypeReference {
 		
 		int k = 0;
 		for (String n : attributeNames) {
-			if (n != null)
+			if (n != null) {
+				//k++;
 				break;
+			}
 			if (k >= f.signature.params.namedTypes.length) {
 				pb.setUnsuccessful("Too many arguments given: "+attributeNames.size()+" given, "+f.signature.params.namedTypes.length+" expected.");
 				break;
@@ -174,6 +176,19 @@ public class Type implements TypeReference {
 				break;
 			}
 			*/
+			String pname = f.signature.params.namedTypes[k].name;
+			Type ptype = f.signature.params.namedTypes[k].type.getType();
+			if (!ptype.isSettableTo(attributeTypes.get(k).getType())) {
+				pb.setUnsuccessful(
+						"Cannot use argument "
+						+(n==null? "": n+" ")
+						+"of type "+attributeTypes.get(k).getType()
+						+" to initialize parameter "
+						+(pname==null? "": pname+" ")
+						+"of type "+ptype
+					);
+				break;
+			}
 			pb.addBinding(k, f.signature.params.namedTypes[k].name);
 			k++;
 		}
@@ -182,6 +197,7 @@ public class Type implements TypeReference {
 		
 		/*
 		 *  At this point we've covered all unnamed arguments in the arg type; we've yet to check the rest
+		 *  THe rest starts at index k
 		 *  
 		 */
 		
@@ -195,8 +211,10 @@ public class Type implements TypeReference {
 					break;
 				}
 			}*/
+			//System.out.println("searching for "+param.name);
 			for (int j = k; j < attributeNames.size(); j++) {
-				String n = attributeNames.get(i);
+				String n = attributeNames.get(j);
+				assert n != null;
 				if (n != null && n.equals(param.name)) {
 					found = true;
 					break;
@@ -222,6 +240,8 @@ public class Type implements TypeReference {
 	}
 	
 	public boolean isSettableTo(Type t) { // TODO: implement inheritance and traits
+		if (id.name.equals("Any")) // FIXME!
+			return true;
 		return this == t;
 	}
 	

@@ -10,6 +10,7 @@ import cssInterpreter.analysis.DepthFirstAdapter;
 import cssInterpreter.node.AAccessNakedType;
 import cssInterpreter.node.AAssignExpr;
 import cssInterpreter.node.AAttrDeclStatement;
+import cssInterpreter.node.AClassDeclStatement;
 import cssInterpreter.node.AClosure;
 import cssInterpreter.node.AClosureExpr;
 import cssInterpreter.node.ADefDeclStatement;
@@ -36,6 +37,7 @@ import cssInterpreter.program.PrimitiveRuntimeObject;
 import cssInterpreter.program.Scope;
 import cssInterpreter.program.Signature;
 import cssInterpreter.program.Type;
+import cssInterpreter.program.TypeByName2;
 import cssInterpreter.program.TypeOf;
 import cssInterpreter.program.TypeReference;
 import cssInterpreter.program.expressions.Constant;
@@ -255,7 +257,8 @@ public class Interpreter extends DepthFirstAdapter {
 			
 			
 			/**return new TypeOf(new FunctionCallExpression(exec, currentScope.getType(), ((AIdentNakedType) t).getName().getText()), this);*/
-			return new TypeByName(currentScope, ((AIdentNakedType) t).getName().getText());
+			//return new TypeByName(currentScope, ((AIdentNakedType) t).getName().getText());
+			return new TypeByName2(currentScope, ((AIdentNakedType) t).getName().getText());
 			
 		} else if (t instanceof AAccessNakedType) {
 			/*
@@ -590,7 +593,38 @@ public class Interpreter extends DepthFirstAdapter {
 		
 		
     }
-	
+
+	@Override
+    public void inAClassDeclStatement(AClassDeclStatement node)
+    {
+		out("Reading class: "+node.getName());
+		indentation++;
+    }
+	@Override
+    public void outAClassDeclStatement(AClassDeclStatement node)
+    {
+		PExpr initVal = ((ATypedValue)node.getTypedValue()).getValue();
+		
+		if (!(initVal instanceof AClosureExpr))
+			throw new ExecutionException(new CompilerException("Class was not initialized with a closure"));
+		else {
+			
+			String className = node.getName().getText();
+			
+			final PClosure myClosure = ((AClosureExpr)initVal).getClosure();
+			
+			//scopes.get(myClosure).setName("["+className+"]");
+			
+			
+			Scope myScope = scopes.get(myClosure); // The main scope defined by the class
+			myScope.setName("["+className+"]");
+			currentScope.addType(myScope.getType());
+			
+			
+		}
+		
+		indentation--;
+    }
     
 
 	@Override
@@ -680,7 +714,7 @@ public class Interpreter extends DepthFirstAdapter {
 				}
 				
 				@Override
-				public RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) {
+				public RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) throws CompilerException {
 					//System.out.println(scopes.get(myClosure));
 					
 					//Execution.execute(subScope);

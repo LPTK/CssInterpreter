@@ -199,6 +199,14 @@ statement {-> statement} =
   ;
 
 
+class_decl {-> statement} =
+    
+    key_class [name]:ident [type_init]:type_init
+      {-> New statement.class_decl (name, type_init.typed_value)}
+    
+  ;
+
+
 function_decl {-> statement} =
     
     key_def [name]:ident? [params]:param_list? [type_init]:type_init //semicolon
@@ -440,6 +448,7 @@ statement =
     {expr} expr
   | {attr_decl} [attr_type]:attr_type? [name]:ident? typed_value?
   | {def_decl} [name]:ident? [params]:closure? typed_value?
+  | {class_decl} [name]:ident typed_value?
   ;
 
 /*

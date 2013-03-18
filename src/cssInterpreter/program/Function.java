@@ -16,9 +16,9 @@ public abstract class Function {
 	FieldType fieldType = FieldType.NONE;
 	boolean meta = false;
 	Signature signature;
-	/*public Function(Signature signature) {
+	public Function(Signature signature) {
 		this.signature = signature;
-	}*/
+	}
 	public boolean isSettable() {
 		return false;
 	}
@@ -34,12 +34,12 @@ public abstract class Function {
 	
 	//public abstract RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject args);
 	
-	public final RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject args) {
-		if (args.getRuntimeType().)
-			throw new AccessViolationException("Type ");
+	public final RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject args) throws CompilerException {
+		if (!args.getRuntimeType().getBinding(this, 0).isSuccessful())
+			throw new AccessViolationException("Type "+args.getRuntimeType()+" does not conform with "+this);
 		return evaluateDelegate(thisReference, args);
 	}
-	public abstract RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject args);
+	public abstract RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) throws CompilerException;
 	
 	
 	@Override

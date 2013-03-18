@@ -30,6 +30,7 @@ public class Execution {
 	boolean started;
 	Interpreter interp;
 
+	public final PrimitiveType<Void> AnyType = new PrimitiveType<Void>(new TypeIdentifier("Any", null), this);
 	public final PrimitiveType<Void> VoidType = new PrimitiveType<Void>(new TypeIdentifier("Void", null), this);
 	public final PrimitiveType<Integer> IntType = new PrimitiveType<Integer>(new TypeIdentifier("Int", null), this);
 	public final PrimitiveType<Long> LongType = new PrimitiveType<Long>(new TypeIdentifier("Long", null), this);

@@ -71,8 +71,9 @@ class RuntimeObject  {
 		if (destructed)
 			throw new AccessViolationException("Cannot write to a destructed object");
 		Type t = type.getAttributeTypes()[index].getType();
-		if (t.isSettableTo(obj.type))
-			throw new AccessViolationException("Type "+t+" cannot be set to type "+obj.type);
+		//System.out.println(type.getAttributeTypes()[index]);
+		if (!t.isSettableTo(obj.type))
+			throw new AccessViolationException("Field of type '"+t+"' cannot be set to object of type '"+obj.type+"'");
 		writeDelegate(index, obj);
 	}
 
@@ -110,7 +111,7 @@ class RuntimeObject  {
 		}
 		
 		for (String fname : type.getFcts().keySet()) {
-			sb.append(fname+"(.); "); // type.getFcts()
+			sb.append(fname+"(); "); // type.getFcts()
 		}
 		
 		if (attributes.length > 0 || type.getFcts().size() > 0)

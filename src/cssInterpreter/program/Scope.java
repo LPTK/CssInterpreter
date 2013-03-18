@@ -18,7 +18,7 @@ public class Scope {
 	public Scope(String name, final Execution exec) { // TODO: replace with a StandardLibraryScope class
 		type = new TupleType(new TypeIdentifier(name, null), null);
 		
-		type.addFct(new VoidFunction("print", exec, new FormalParameters(new NamedType[]{new NamedType(exec.VoidType,null,false)})) {
+		type.addFct(new VoidFunction("print", exec, new FormalParameters(new NamedType[]{new NamedType(exec.AnyType,null,false)})) {
 			
 			@Override public void execute(RuntimeObject thisReference, RuntimeObject params) {
 				/*if (params.isValue())
@@ -35,11 +35,16 @@ public class Scope {
 		type.addType(Interpreter.LongType);
 		type.addType(Interpreter.StringType);
 		*/
-		
+		/*
 		type.addType(exec.VoidType);
 		type.addType(exec.IntType);
 		type.addType(exec.LongType);
 		type.addType(exec.StringType);
+		*/
+		addType(exec.VoidType);
+		addType(exec.IntType);
+		addType(exec.LongType);
+		addType(exec.StringType);
 		
 	}
 
@@ -116,11 +121,15 @@ public class Scope {
 		if (t == null)
 			throw new IllegalArgumentException();
 		types.add(t);
+		type.addType(t);
 	}
 	
 	public Type getType(String name) {
 		Scope s = this;
+		//System.out.println("..."+types);
 		while (s != null) {
+			//for (Type t : s.types)
+			//	System.out.println(".."+t.id.name);
 			for (Type t : s.types)
 				if (t.id.name.equals(name))
 					return t;

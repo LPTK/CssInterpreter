@@ -28,8 +28,13 @@ public class ParamBinding {
 	}
 	
 	private void mutate(RuntimeObject args) { // FIXME: duplicate type before?? this code adds reeaaally nasty states
+
+		//System.out.println(args);
+		
 		for (Pair<Integer,String> p : names)
 			args.renameAttribute(p.getFirst(), p.getSecond());
+		
+		//System.out.println(args);
 	}
 	
 	
@@ -48,7 +53,7 @@ public class ParamBinding {
 		fct.set(thisReference, args, value);
 	}
 	
-	public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject args) {
+	public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject args) throws CompilerException {
 		//args = recurseBack(args);
 		thisReference = recurseBack(thisReference);
 		mutate(args);
