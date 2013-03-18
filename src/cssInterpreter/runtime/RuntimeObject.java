@@ -3,6 +3,7 @@ package cssInterpreter.runtime;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.program.Type;
 
 public 
@@ -59,27 +60,32 @@ class RuntimeObject  {
 		throw new ExecutionException("Cannot get the value of a non-value object");
 	}
 	
-	public final RuntimeObject read(int index) { // TODO: check types?
-		return readDelegate(index);
-	}
-	
 	public Iterator<RuntimeObject> values() {
 		//return new ArrayList<RuntimeObject>(attributes).iterator();
 		return Arrays.asList(attributes).iterator();
 	}
 	
-	public final void write(int index, RuntimeObject obj) { // TODO: check types?
+	public final void write(int index, RuntimeObject obj) throws CompilerException { // TODONE: check types?
 		if (constant)
 			throw new AccessViolationException("Cannot write to a constant object");
 		if (destructed)
 			throw new AccessViolationException("Cannot write to a destructed object");
+		Type t = type.getAttributeTypes()[index].getType();
+		//System.out.println(type.getAttributeTypes()[index]);
+		if (!t.isSettableTo(obj.type))
+			throw new AccessViolationException("Field of type '"+t+"' cannot be set to object of type '"+obj.type+"'");
 		writeDelegate(index, obj);
 	}
-	public RuntimeObject readDelegate(int index) {
+
+	public final RuntimeObject read(int index) { // TODO: check types?
 		if (attributes[index] == null)
 			throw new AccessViolationException("Value "+type.getAttributeNames()[index]+" (at index "+index+") in "+this+" was not initialized when read");
 		if (destructed)
 			throw new AccessViolationException("Cannot write to a destructed object");
+		return readDelegate(index);
+	}
+	
+	public RuntimeObject readDelegate(int index) {
 		return attributes[index];
 	}
 	
@@ -105,7 +111,7 @@ class RuntimeObject  {
 		}
 		
 		for (String fname : type.getFcts().keySet()) {
-			sb.append(fname+"(...); "); // type.getFcts()
+			sb.append(fname+"(); "); // type.getFcts()
 		}
 		
 		if (attributes.length > 0 || type.getFcts().size() > 0)
@@ -125,6 +131,8 @@ class RuntimeObject  {
 	}
 	
 	public void destruct() {
+		for (RuntimeObject obj : attributes)
+			obj.destruct();
 		destructed = true;
 	}
 

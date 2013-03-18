@@ -1,5 +1,7 @@
 package cssInterpreter.program;
 
+import cssInterpreter.compiler.CompilerException;
+import cssInterpreter.runtime.AccessViolationException;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class FieldAccessFunction extends Function { // TODO: add checks for the return value is of the right type
@@ -22,11 +24,11 @@ public class FieldAccessFunction extends Function { // TODO: add checks for the 
 		return type;
 	}
 	@Override
-	public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject params) {
+	public RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) {
 		//assert params.length == 0;
 		//assert params == null;
 		//assert params.getRuntimeType() == DumbInterpreter.VoidType;
-		assert params.getRuntimeType().isTuple() && ((TupleType)params.getRuntimeType()).isEmpty();
+		assert args.getRuntimeType().isTuple() && ((TupleType)args.getRuntimeType()).isEmpty();
 		
 		///System.out.println("--->"+index+" "+thisReference.read(index));
 		
@@ -39,8 +41,13 @@ public class FieldAccessFunction extends Function { // TODO: add checks for the 
 		return true;
 	}
 	@Override
-	public void setDelegate(RuntimeObject thisReference, RuntimeObject params, RuntimeObject value) {
-		thisReference.write(index, value);
+	public void setDelegate(RuntimeObject thisReference, RuntimeObject params, RuntimeObject value) throws CompilerException {
+		try {
+			thisReference.write(index, value);
+		} catch (AccessViolationException ave) { // TODO: useful?
+			System.err.println("Error in call to "+this);
+			throw ave;
+		}
 	}
 
 }

@@ -32,7 +32,7 @@ public class AssignExpression extends Expression {
 	}
 
 	@Override
-	public RuntimeObject evaluate() {
+	public RuntimeObject evaluate() throws CompilerException {
 		//RuntimeObject assignedRO = assigned.evaluate();
 		/*if (!assignedRO.isAssignable())
 			throw new ExecutionException("Expression "+assignedRO+" is not assignable");*/

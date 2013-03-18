@@ -25,7 +25,7 @@ public abstract class VoidFunction extends Function {
 	abstract protected void execute(RuntimeObject thisReference, RuntimeObject params);
 	
 	@Override
-	public final RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject params) {
+	public final RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject params) {
 		execute(thisReference, params);
 		//return Execution.getVoidobj();
 		return exec.getVoidobj();

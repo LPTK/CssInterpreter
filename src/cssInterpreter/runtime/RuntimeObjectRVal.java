@@ -2,11 +2,17 @@ package cssInterpreter.runtime;
 
 import cssInterpreter.program.Type;
 
-public class RuntimeObjectRVal extends RuntimeObject {
+
+public class RuntimeObjectRVal extends RuntimeObjectRef {
 
 	public RuntimeObjectRVal(Type type, RuntimeObject parent, boolean constant) {
 		super(type, parent, constant);
-		// TODO Auto-generated constructor stub
 	}
-
+	
+	@Override
+	public void destruct() {
+		referenced.destruct();
+		super.destruct();
+	}
+	
 }

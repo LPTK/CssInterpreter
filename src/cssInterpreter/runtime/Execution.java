@@ -30,6 +30,7 @@ public class Execution {
 	boolean started;
 	Interpreter interp;
 
+	public final PrimitiveType<Void> AnyType = new PrimitiveType<Void>(new TypeIdentifier("Any", null), this);
 	public final PrimitiveType<Void> VoidType = new PrimitiveType<Void>(new TypeIdentifier("Void", null), this);
 	public final PrimitiveType<Integer> IntType = new PrimitiveType<Integer>(new TypeIdentifier("Int", null), this);
 	public final PrimitiveType<Long> LongType = new PrimitiveType<Long>(new TypeIdentifier("Long", null), this);
@@ -45,7 +46,7 @@ public class Execution {
 		this.out = out;
 	}
 	
-	public RuntimeObject execute(RuntimeObject args, Scope scope)
+	public RuntimeObject execute(RuntimeObject args, Scope scope) throws CompilerException
 	{
 		System.out.println(">> Executing:  "+scope.getType()+"  with params  "+args);
 		started = true;
@@ -70,6 +71,7 @@ public class Execution {
 			out("\tproduced: "+res);*/
 			out("Expression  \""+expr+"\"  produced value: "+res);
 		}
+		thisObject.destruct();
 		thisObject = thisStack.pop();
 		indentation--;
 		return getVoidobj(); // FIXME
