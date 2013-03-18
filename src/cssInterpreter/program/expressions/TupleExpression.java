@@ -128,7 +128,7 @@ public class TupleExpression extends Expression {
 		return type;
 	}
 	@Override
-	public RuntimeObject evaluate() {
+	public RuntimeObject evaluate() throws CompilerException {
 		//throw new NotSupportedCompExc();
 		//if (type.isEmpty())
 		//return Execution.voidObj;

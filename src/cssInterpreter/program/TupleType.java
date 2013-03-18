@@ -34,7 +34,7 @@ class TupleType extends Type {
 			@Override public Type getOutputType() {
 				return that;
 			}
-			@Override public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject args) {
+			@Override public RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) {
 				/*if (!params.getRuntimeType().conformsTo(signature))
 					throw new IllegalArgumentException();
 				return new RuntimeObject(that, params, DumbInterpreter.standardScopeRO, false);*/

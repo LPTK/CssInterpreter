@@ -221,7 +221,9 @@ public class Type implements TypeReference {
 		return pb;
 	}
 	
-	
+	public boolean isSettableTo(Type t) { // TODO: implement inheritance and traits
+		return this == t;
+	}
 	
 	public void setAttributeFunction(int index) {
 		assert attributeNames.get(index) == null || !attributeNames.get(index).equals("_"+index); // TODO: better check for this shit

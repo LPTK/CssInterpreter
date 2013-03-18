@@ -36,7 +36,6 @@ import cssInterpreter.program.PrimitiveRuntimeObject;
 import cssInterpreter.program.Scope;
 import cssInterpreter.program.Signature;
 import cssInterpreter.program.Type;
-import cssInterpreter.program.TypeByName;
 import cssInterpreter.program.TypeOf;
 import cssInterpreter.program.TypeReference;
 import cssInterpreter.program.expressions.Constant;
@@ -145,7 +144,11 @@ public class Interpreter extends DepthFirstAdapter {
 		/*for (Expression expr : currentScope.exprs) {
 			System.out.println("Expression "+expr+" produced: "+expr.evaluate());
 		}*/
-		exec.execute(exec.standardScopeRO, currentScope);
+		try {
+			exec.execute(exec.standardScopeRO, currentScope);
+		} catch (CompilerException e) {
+			throw new ExecutionException(e);
+		}
 		out("\n############# PROGRAM OUTPUT #############");
 		for (String str : exec.getOutput())
 			exec.getOut().println(str);
@@ -677,7 +680,7 @@ public class Interpreter extends DepthFirstAdapter {
 				}
 				
 				@Override
-				public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject args) {
+				public RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) {
 					//System.out.println(scopes.get(myClosure));
 					
 					//Execution.execute(subScope);

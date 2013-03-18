@@ -1,5 +1,6 @@
 package cssInterpreter.program;
 
+import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class FieldAccessFunction extends Function { // TODO: add checks for the return value is of the right type
@@ -22,7 +23,7 @@ public class FieldAccessFunction extends Function { // TODO: add checks for the 
 		return type;
 	}
 	@Override
-	public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject params) {
+	public RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject params) {
 		//assert params.length == 0;
 		//assert params == null;
 		//assert params.getRuntimeType() == DumbInterpreter.VoidType;
@@ -39,7 +40,7 @@ public class FieldAccessFunction extends Function { // TODO: add checks for the 
 		return true;
 	}
 	@Override
-	public void setDelegate(RuntimeObject thisReference, RuntimeObject params, RuntimeObject value) {
+	public void setDelegate(RuntimeObject thisReference, RuntimeObject params, RuntimeObject value) throws CompilerException {
 		thisReference.write(index, value);
 	}
 

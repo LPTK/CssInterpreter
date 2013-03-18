@@ -17,7 +17,7 @@ public class PrimitiveType<T> extends Type {
 			@Override public Type getOutputType() {
 				return that;
 			}
-			@Override public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject params) {
+			@Override public RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject params) {
 				//return new RuntimeObjectBase(that, DumbInterpreter.standardScopeRO, false);
 				return new PrimitiveRuntimeObject<T>(that, (T) params.getValue(), exec.standardScopeRO, false); // FIXME: perform checks..?
 			}

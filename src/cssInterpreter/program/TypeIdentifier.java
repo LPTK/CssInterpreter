@@ -7,6 +7,9 @@ class TypeIdentifier {
 	Type parent;
 	Type type;
 	
+	public final int idNumber = nbTypes++;;
+	private static int nbTypes = 0;
+	
 	public TypeIdentifier(String name, Type parent) {
 		this.name = name;
 		this.parent = parent;

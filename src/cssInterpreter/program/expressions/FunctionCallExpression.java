@@ -112,7 +112,7 @@ public class FunctionCallExpression extends Expression {
 			thisType = thisExpression.getTypeRef().getType();
 		return thisType;
 	}
-	private RuntimeObject getThis() {
+	private RuntimeObject getThis() throws CompilerException {
 		return thisExpression == null ? exec.getThis() : thisExpression.evaluate();
 	}
 	

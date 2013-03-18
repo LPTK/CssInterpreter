@@ -13,7 +13,7 @@ public abstract class Expression {
 	Integer line;
 	
 	public abstract TypeReference getTypeRef() throws CompilerException;
-	public abstract RuntimeObject evaluate();
+	public abstract RuntimeObject evaluate() throws CompilerException;
 	
 	public boolean isAssignable() { return false; }
 	public final RuntimeObject assign(RuntimeObject value) {

@@ -11,6 +11,7 @@ public class Scope {
 	private Scope parent;
 	TupleType type;
 	List<Expression> exprs = new ArrayList<>();
+	List<Type> types = new ArrayList<>();
 	//String name;
 	TypeIdentifier typeId;
 	
@@ -111,6 +112,22 @@ public class Scope {
 		exprs.add(expression);
 	}
 	
+	public void addType(Type t) {
+		if (t == null)
+			throw new IllegalArgumentException();
+		types.add(t);
+	}
+	
+	public Type getType(String name) {
+		Scope s = this;
+		while (s != null) {
+			for (Type t : s.types)
+				if (t.id.name.equals(name))
+					return t;
+			s = s.parent;
+		}
+		return null;
+	}
 
 }
 

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import util.Pair;
+import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class ParamBinding {
@@ -40,7 +41,7 @@ public class ParamBinding {
 	}
 	
 	
-	public void set(RuntimeObject thisReference, RuntimeObject args, RuntimeObject value) {
+	public void set(RuntimeObject thisReference, RuntimeObject args, RuntimeObject value) throws CompilerException {
 		//args = recurseBack(args);
 		thisReference = recurseBack(thisReference);
 		mutate(args);

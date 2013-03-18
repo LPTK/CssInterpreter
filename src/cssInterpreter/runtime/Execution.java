@@ -45,7 +45,7 @@ public class Execution {
 		this.out = out;
 	}
 	
-	public RuntimeObject execute(RuntimeObject args, Scope scope)
+	public RuntimeObject execute(RuntimeObject args, Scope scope) throws CompilerException
 	{
 		System.out.println(">> Executing:  "+scope.getType()+"  with params  "+args);
 		started = true;
@@ -70,6 +70,7 @@ public class Execution {
 			out("\tproduced: "+res);*/
 			out("Expression  \""+expr+"\"  produced value: "+res);
 		}
+		thisObject.destruct();
 		thisObject = thisStack.pop();
 		indentation--;
 		return getVoidobj(); // FIXME
