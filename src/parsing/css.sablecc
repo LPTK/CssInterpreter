@@ -60,6 +60,7 @@ Tokens
     {normal} key_this     = 'this';
     
     {normal} key_if     = 'if';
+    {normal} key_else = 'else';
     {normal} key_while     = 'while';
     
     {normal} key_true     = 'true';
@@ -67,6 +68,7 @@ Tokens
     {normal} equalequal     = '==';
     {normal} inferiority     = 'lt';
     {normal} not     = '!';
+    {normal} key_or = 'or';
 
     /* Type annotation keywords */
     {normal} key_val	  = 'val';
@@ -103,23 +105,18 @@ Tokens
 
     integer_number = '0' | non_zero_digit digits?;
 
+    
+    at_sign = '@';
+    {normal} key_into = 'into';
+    {normal} key_to = 'to';
+    {normal} key_as = 'as';
+    {normal} key_any = 'any';
+
 Ignored Tokens
     blank,
     comment_begin, comment_body, comment_end,
     double_quote
     ;
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -486,7 +483,23 @@ general_identifier {-> general_id} =
 
 
 
+method_annot_id = ident;
 
+
+generic_location = key_any type;
+
+data_path /*{-> data_path}*/ =
+    generic_location; /* TODO */
+
+data_name = ident;
+data_name_conj_second = key_or data_name;
+data_name_conj = l_paren data_name data_name_conj_second? r_paren;
+
+
+method_annot /*{-> method_annotation}*/ =
+    at_sign method_annot_id
+/*      {-> New method_annotation ()} */
+  ;
 
 
 
