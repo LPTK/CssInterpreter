@@ -41,7 +41,8 @@ public class AssignExpression extends Expression {
 		getAssigned().assign(valueRO);
 		return valueRO;
 	}
-
+	
+	@Override
 	public String toString() { return getAssigned()+" = "+getValue(); }
 
 	public Expression getValue() {

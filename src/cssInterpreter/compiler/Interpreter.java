@@ -46,6 +46,7 @@ import cssInterpreter.program.Type;
 import cssInterpreter.program.TypeByName;
 import cssInterpreter.program.TypeOf;
 import cssInterpreter.program.TypeReference;
+import cssInterpreter.program.expressions.ClosureExpression;
 import cssInterpreter.program.expressions.ConstantExpression;
 import cssInterpreter.program.expressions.Expression;
 import cssInterpreter.program.expressions.FunctionCallExpression;
@@ -193,8 +194,11 @@ public class Interpreter extends DepthFirstAdapter {
     	//currentScope = currentScope.parent;
 		//if (currentScope.parent != null)
 		currentScope.getType().generateConstructor(exec);
+		exprs.put(node, new ClosureExpression(currentScope));
+		
 		if (currentScope.getParent() != exec.standardScope)
 			currentScope = currentScope.getParent();
+		
     }
 	
 	/*
@@ -382,6 +386,9 @@ public class Interpreter extends DepthFirstAdapter {
 	
 	@Override
     public void outAListExpr(AListExpr node) {
+		
+		//System.out.println("LEX>> "+node);
+		
 		//indentation--;
 		/*
 		List<PExpr> ls = node.getExpr();
@@ -454,7 +461,7 @@ public class Interpreter extends DepthFirstAdapter {
 		
     }
     
-
+	
 	/*
 	@Override
     public void outABooleanExpr(ABooleanExpr node)
