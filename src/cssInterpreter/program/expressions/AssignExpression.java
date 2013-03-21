@@ -1,7 +1,7 @@
-package cssInterpreter.program;
+package cssInterpreter.program.expressions;
 
 import cssInterpreter.compiler.CompilerException;
-import cssInterpreter.program.expressions.Expression;
+import cssInterpreter.program.TypeReference;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class AssignExpression extends Expression {
@@ -26,7 +26,7 @@ public class AssignExpression extends Expression {
 	}
 
 	@Override
-	public TypeReference getTypeRefDelegate(int currentTypeInferenceId) throws CompilerException {
+	public TypeReference getTypeRef() {
 		//System.out.println("____"+value.getType());
 		return getValue().getTypeRef();
 	}
@@ -52,6 +52,14 @@ public class AssignExpression extends Expression {
 	public Expression getAssigned() {
 		return assigned;
 	}
-	
+
+	@Override
+	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
+		//System.out.println("Resolving "+this);
+		assigned.resolveTypes(currentTypeInferenceId);
+		value.resolveTypes(currentTypeInferenceId);
+	}
 	
 }
+
+

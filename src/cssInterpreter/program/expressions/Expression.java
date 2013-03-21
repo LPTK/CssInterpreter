@@ -12,17 +12,19 @@ public abstract class Expression {
 	
 	Integer line;
 	
-	public final TypeReference getTypeRef() throws CompilerException {
-		/*if (Execution.getInstance().getInterpreter().getCurrentTypeInferenceId() == lastTypeInferenceId)
-			throw new CompilerException("Cyclic tye reference"); // TODO
-		return getTypeRefDelegate();*/
-		if (myTypeInferenceId == )
-		
-		return getTypeRefDelegate(getNewTypeInferenceId());
-	}
-	protected abstract TypeReference getTypeRefDelegate(int currentTypeInferenceId) throws CompilerException;
 	
-
+//	public final TypeReference getTypeRef() throws CompilerException {
+//		/*if (Execution.getInstance().getInterpreter().getCurrentTypeInferenceId() == lastTypeInferenceId)
+//			throw new CompilerException("Cyclic tye reference"); // TODO
+//		return getTypeRefDelegate();*/
+//		if (myTypeInferenceId == )
+//		
+//		return getTypeRefDelegate(getNewTypeInferenceId());
+//	}
+//	protected abstract TypeReference getTypeRefDelegate(int currentTypeInferenceId) throws CompilerException;
+	
+	public abstract TypeReference getTypeRef();
+	
 	public abstract void resolveTypes(int currentTypeInferenceId) throws CompilerException;
 	
 	

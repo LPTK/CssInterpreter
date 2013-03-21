@@ -8,13 +8,12 @@ import java.util.Map;
 
 import util.Pair;
 import cssInterpreter.compiler.CompilerException;
-import cssInterpreter.program.AssignExpression;
 import cssInterpreter.program.TupleType;
 import cssInterpreter.program.Type;
 import cssInterpreter.program.TypeIdentifier;
 import cssInterpreter.program.TypeOf;
+import cssInterpreter.program.TypeReference;
 import cssInterpreter.runtime.Execution;
-import cssInterpreter.runtime.ExecutionException;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class TupleExpression extends Expression {
@@ -70,8 +69,8 @@ public class TupleExpression extends Expression {
 				//System.out.println(((TupleExpression)fa.thisExpression));
 				
 				assert ((TupleExpression)fa.thisExpression) == null
-				//		|| (((TupleExpression)fa.thisExpression).getTypeRef()).isEmpty(); // laid comme ta mère
-						|| (((TupleExpression)fa.thisExpression).getTypeRef()).getType(-1).isEmpty(); // laid comme ta mère
+						|| (((TupleExpression)fa.thisExpression).getTypeRef()).isEmpty(); // laid comme ta mère
+				//		|| (((TupleExpression)fa.thisExpression).getTypeRef()).getType().isEmpty(); // laid comme ta mère
 				//assert ae.assigned instanceof 
 				
 				//System.out.println(":n:"+fa.fieldName);
@@ -128,13 +127,14 @@ public class TupleExpression extends Expression {
 	
 	
 	@Override
-	public Type getTypeRefDelegate(int currentTypeInferenceId) throws CompilerException {
+	public Type getTypeRef() {
 		// TODO
 		//throw new NotSupportedCompExc();
 		//if (type.isEmpty())
 		//return DumbInterpreter.VoidType;
 		return type;
 	}
+	
 	@Override
 	public RuntimeObject evaluate() throws CompilerException {
 		//throw new NotSupportedCompExc();
@@ -176,7 +176,7 @@ public class TupleExpression extends Expression {
 	}
 	public String toString() {
 		//if (exprs.length == 0)
-		try {
+		//try {
 		if (type == exec.VoidType) // WARNING: object address equality here
 			 //return "[Tpl]()";
 			return "()";
@@ -204,10 +204,25 @@ public class TupleExpression extends Expression {
 			sb.append(")");
 			return sb.toString(); // TODONE
 		}
-		} catch (CompilerException e) {
+		/*} catch (CompilerException e) {
 			throw new ExecutionException(e);
-		}
+		}*/
 	}
+
+	@Override
+	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
+		
+		
+		//type.resolve(currentTypeInferenceId);
+		//type.getAttributeTypes()[0].resolve(currentTypeInferenceId);
+		for (TypeReference tr : type.getAttributeTypes())
+			tr.resolve(currentTypeInferenceId); // FIXME: really ok?!
+		
+		for (Expression e : getRawExprs())
+			e.resolveTypes(currentTypeInferenceId);
+		
+	}
+	
 }
 
 

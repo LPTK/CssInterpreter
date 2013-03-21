@@ -37,7 +37,6 @@ import cssInterpreter.node.PClosure;
 import cssInterpreter.node.PExpr;
 import cssInterpreter.node.PNakedType;
 import cssInterpreter.node.Start;
-import cssInterpreter.program.AssignExpression;
 import cssInterpreter.program.Function;
 import cssInterpreter.program.PrimitiveRuntimeObject;
 import cssInterpreter.program.Scope;
@@ -46,6 +45,7 @@ import cssInterpreter.program.Type;
 import cssInterpreter.program.TypeByName;
 import cssInterpreter.program.TypeOf;
 import cssInterpreter.program.TypeReference;
+import cssInterpreter.program.expressions.AssignExpression;
 import cssInterpreter.program.expressions.ClosureExpression;
 import cssInterpreter.program.expressions.ConstantExpression;
 import cssInterpreter.program.expressions.Expression;
@@ -143,10 +143,6 @@ public class Interpreter extends DepthFirstAdapter {
 		currentScope = exec.standardScope;
 		
     	/// TODO: define standard lib in a closure
-
-		out("\n############# STATIC ANALYSIS #############");
-		
-		currentScope.resolveTypes();
 		
     }
 	
@@ -156,6 +152,17 @@ public class Interpreter extends DepthFirstAdapter {
 		//Execution.output.clear();
     	// Execute the program
 		finishedReading = true;
+		
+		out("\n############# STATIC ANALYSIS #############");
+		
+		try {
+			currentScope.resolveTypes();
+		} catch (CompilerException e) {
+			throw new ExecutionException(e);
+		}
+		
+		//if (0==0) return;
+		
 		out("\n############# PROGRAM EXECUTION #############");
 		/*for (Expression expr : currentScope.exprs) {
 			System.out.println("Expression "+expr+" produced: "+expr.evaluate());
@@ -202,15 +209,25 @@ public class Interpreter extends DepthFirstAdapter {
 		//exprs.put(node, new ClosureExpression(currentScope));
 		///otherExprs.put(node, new ClosureExpression(currentScope));
 		
+		/**
+		currentScope.getParent().addChild(currentScope);
+		
 		if (currentScope.getParent() != exec.standardScope)
 			currentScope = currentScope.getParent();
-		
+		*/
     }
 	
 	@Override
     public void outAClosureExpr(AClosureExpr node)
     {
 		exprs.put(node, new ClosureExpression(currentScope));
+		
+		
+		currentScope.getParent().addChild(currentScope);
+		
+		if (currentScope.getParent() != exec.standardScope)
+			currentScope = currentScope.getParent();
+		
     }
 	
 	/*
@@ -668,7 +685,9 @@ public class Interpreter extends DepthFirstAdapter {
 					
 					if ((args instanceof TupleExpression)) {
 						 tupleArgs = (TupleExpression) args;
-						 args.getTypeRef().getType(Expression.getNewTypeInferenceId()).setName("[CallArgs "+args+"]");
+						 //args.getTypeRef().getType(Expression.getNewTypeInferenceId()).setName("[CallArgs "+args+"]");
+						 tupleArgs.getTypeRef().setName("[CallArgs "+args+"]");
+						 
 					} else tupleArgs = new TupleExpression(exec, new Expression[]{args},currentScope.getType(),"[SingleCallArg "+args+"]");
 					
 					//System.out.println("*********"+tupleArgs.namedParams);
@@ -891,6 +910,7 @@ public class Interpreter extends DepthFirstAdapter {
 		
 		//currentScope.addExpr(exprs.get(node.getExpr()));
 		
+		assert exprs.containsKey(node.getExpr());
 		Expression expr = exprs.get(node.getExpr());
 		if (expr instanceof TupleExpression) {
 			for (Expression ex : ((TupleExpression) expr).getRawExprs()) {

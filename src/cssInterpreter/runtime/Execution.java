@@ -57,7 +57,7 @@ public class Execution {
 	{
 		////System.out.println(">> Executing:  "+scope.getType()+"  with params  "+args);
 		
-		assert scope.getParent() == null || args.type.conformsTo(scope.getParent().getType(), -1);
+		assert scope.getParent() == null || args == null || args.type.conformsTo(scope.getParent().getType());
 		
 		started = true;
 		indentation++;
@@ -66,7 +66,7 @@ public class Execution {
 		//out("Executing scope with "+scope.getExprs().size()+" expression statements");
 		out("Executing "+scope.getType()+" with args "+args+", containing "+scope.getExprs().size()+" expression statements");
 		//out("containing "+scope.getExprs().size()+" expression statements");
-		
+
 		thisStack.push(thisObject);
 		//thisObject = new RuntimeObjectBase(scope.type, thisObject, false) {};
 		
@@ -75,6 +75,9 @@ public class Execution {
 		
 		//argStack.push(currentArgObject);
 		//currentArgObject = args; // TODO: remove arg's parents
+		
+		if (args == null)
+			args = thisObject;
 		
 		thisObject = new RuntimeObject(scope.getType(), args, false);
 		

@@ -29,7 +29,7 @@ public class Type extends TypeReference {
 	
 	public Type(TypeIdentifier id, Type parent) {//, boolean tuple) {
 		//super(Execution.getInstance().TypeType, parent, true);
-		objectRepr = new RuntimeObject(Execution.getInstance().TypeType, parent.getObjectRepresentation(), true);
+		objectRepr = new RuntimeObject(Execution.getInstance().TypeType, parent == null? null: parent.getObjectRepresentation(), true);
 		this.id = id;
 		//this.tuple = tuple;
 		id.type = this; // sale
@@ -285,11 +285,11 @@ public class Type extends TypeReference {
 	
 	
 	
-	public boolean conformsTo(Type type, int currentTypeInferenceId) throws CompilerException {
+	public boolean conformsTo(Type type) throws CompilerException {
 		if (isAClass)
 			return this == type;
 		for (int i = 0; i < getAttributeCount(); i++) {
-			if (!attributeTypes.get(i).getType(currentTypeInferenceId).conformsTo(type.attributeTypes.get(i).getType(currentTypeInferenceId), currentTypeInferenceId))
+			if (!attributeTypes.get(i).getType().conformsTo(type.attributeTypes.get(i).getType()))
 				return false;
 		}
 		// TODO: check that functions are also present
@@ -363,7 +363,8 @@ public class Type extends TypeReference {
 	}
 
 	@Override
-	public void resolveDelegate(int currentTypeInferenceId) throws CompilerException {
+	public Type resolveDelegate(int currentTypeInferenceId) throws CompilerException {
+		return this;
 	}
 	
 }

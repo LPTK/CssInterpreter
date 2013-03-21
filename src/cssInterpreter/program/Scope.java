@@ -14,6 +14,7 @@ public class Scope {
 	TupleType type;
 	List<Expression> exprs = new ArrayList<>();
 	List<Type> types = new ArrayList<>();
+	List<Scope> childs = new ArrayList<>();
 	//String name;
 	TypeIdentifier typeId;
 	
@@ -164,15 +165,38 @@ public class Scope {
 		// TODO Auto-generated method stub
 		return false;
 	}
-
-	public void resolveTypes() {
+	
+	private int getTypeInferenceId(Integer id) {
+		return id == null? TypeReference.getNewTypeInferenceId(): id;
+	}
+	public void resolveTypes() throws CompilerException {
+		//resolveTypes(TypeReference.getNewTypeInferenceId());
+		resolveTypes(null);
+	}
+	public void resolveTypes(Integer currentTypeInferenceId) throws CompilerException {
 		for (Expression e : exprs)
-			e.resolveType();
+			e.resolveTypes(getTypeInferenceId(currentTypeInferenceId));
 		//for (Type t : types)
 		//	t.resolveTypes
-		type.resolve();
+		for (Scope s : childs)
+			s.resolveTypes();
+		type.resolve(getTypeInferenceId(currentTypeInferenceId));
 	}
 
+	public void addChild(Scope s) {
+		childs.add(s);
+	}
+	
+	@Override
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("({");
+		for (Expression e : exprs)
+			sb.append(e.toString()+";");
+		sb.append("})");
+		return sb.toString();
+	}
+	
 }
 
 

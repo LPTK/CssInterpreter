@@ -17,14 +17,14 @@ public class IfExpression extends Expression {
 	}
 	
 	@Override
-	public TypeReference getTypeRefDelegate(int currentTypeInferenceId) throws CompilerException { // TODO: make the if/else expr return a true type
+	public TypeReference getTypeRef() { // TODO: make the if/else expr return a true type
 		return exec.VoidType;
 	}
 
 	@Override
 	public RuntimeObject evaluate() throws CompilerException {
 		RuntimeObject res = condition.evaluate();
-		if (!res.getRuntimeType().conformsTo(exec.BoolType, -1)) // TODO: really use "conformsTo"? (for classes, it's a mere equality) // FIXME -1?
+		if (!res.getRuntimeType().conformsTo(exec.BoolType)) // TODO: really use "conformsTo"? (for classes, it's a mere equality)
 			throw new CompilerException("Condition in expression "+this+" did not return a boolean-like");
 		assert res.isValue() && res.getValue() instanceof Boolean;
 		if (((Boolean)res.getValue()) == true)
@@ -37,4 +37,11 @@ public class IfExpression extends Expression {
 		return "if "+condition+" then "+result;
 	}
 	
+	@Override
+	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
+		condition.resolveTypes(currentTypeInferenceId);
+		result.resolveTypes(currentTypeInferenceId);
+	}
+	
 }
+

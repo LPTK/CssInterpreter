@@ -3,6 +3,7 @@ package cssInterpreter.program.expressions;
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.program.Scope;
 import cssInterpreter.program.TypeReference;
+import cssInterpreter.runtime.Execution;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class ClosureExpression extends Expression {
@@ -14,13 +15,27 @@ public class ClosureExpression extends Expression {
 	}
 	
 	@Override
-	public TypeReference getTypeRefDelegate(int currentTypeInferenceId) throws CompilerException {
-		return scope.getType().getType(currentTypeInferenceId);
+	public TypeReference getTypeRef() {
+		/**return scope.getType().getType();*/
+		return scope.getType();
 	}
 
 	@Override
 	public RuntimeObject evaluate() throws CompilerException {
-		return scope.getType();
+		/**return scope.getType().getObjectRepresentation();*/
+		return Execution.getInstance().execute(null, scope);
+	}
+	
+	@Override
+	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
+		//scope.resolveTypes(); // FIXME: not propagating id?
+		scope.resolveTypes(currentTypeInferenceId);
+	}
+	
+	@Override
+	public String toString() {
+		return scope.toString();
 	}
 
 }
+

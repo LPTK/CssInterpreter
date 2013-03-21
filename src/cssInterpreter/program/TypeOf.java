@@ -3,10 +3,9 @@ package cssInterpreter.program;
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.Interpreter;
 import cssInterpreter.program.expressions.Expression;
-import cssInterpreter.runtime.ExecutionException;
 
 
-public class TypeOf implements TypeReference { // FIXME: useless?
+public class TypeOf extends TypeReference { // FIXME: useless?
 	
 	Interpreter interp;
 	Expression expr;
@@ -16,7 +15,7 @@ public class TypeOf implements TypeReference { // FIXME: useless?
 		this.interp = interp;
 		this.expr = expr;
 	}
-
+	/**
 	@Override
 	public Type getType(int currentTypeInferenceId) throws CompilerException {
 		//return expr.getTypeRef().getType();
@@ -24,6 +23,7 @@ public class TypeOf implements TypeReference { // FIXME: useless?
 			inferredType = expr.getTypeRef().getType(currentTypeInferenceId);
 		return inferredType; // FIXME: doesn't address the actual problem of referring to formal params
 	}
+	*/
 	
 	/*
 	Type getType() {
@@ -42,13 +42,40 @@ public class TypeOf implements TypeReference { // FIXME: useless?
 		//else return "TypeOf"+expr+"";
 	}*/
 	
-	@Override public String toString() {
-		try {
-			if (interp.hasFinishedReading())
-				 return getType(-1).toString();
-			else return "TypeOf("+expr+")";
-		} catch (CompilerException e) {
-			throw new ExecutionException(e);
-		}
+	
+//	@Override
+//	public String toString() {
+//		//try {
+//			if (interp.hasFinishedReading())
+//				 return getType().toString();
+//			else return "TypeOf("+expr+")";
+//		/*} catch (CompilerException e) {
+//			throw new ExecutionException(e);
+//		}*/
+//	}
+	
+	@Override
+	public String toString() {
+		if (isResolved())
+			 return getType().toString();
+		else return "TypeOf("+expr+")";
+	}
+
+	@Override
+	protected Type getTypeDelegate() {
+		return inferredType;
+	}
+
+	@Override
+	public boolean isResolved() {
+		return inferredType != null;
+	}
+
+	@Override
+	public Type resolveDelegate(int currentTypeInferenceId) throws CompilerException {
+		expr.resolveTypes(currentTypeInferenceId);
+		return inferredType = expr.getTypeRef().resolve(currentTypeInferenceId);
 	}
 }
+
+

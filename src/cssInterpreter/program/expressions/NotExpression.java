@@ -15,10 +15,15 @@ public class NotExpression extends Expression {
 	}
 
 	@Override
-	public TypeReference getTypeRefDelegate(int currentTypeInferenceId) throws CompilerException {
+	public TypeReference getTypeRef() {
 		return Execution.getInstance().BoolType;
 	}
 
+	@Override
+	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
+		// Nothing to do here, type is already resolved
+	}
+	
 	@Override
 	public RuntimeObject evaluate() throws CompilerException {
 		RuntimeObject res = expr.evaluate();

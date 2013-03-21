@@ -9,11 +9,11 @@ public abstract class TypeReference {
 	
 	private static int lastTypeInferenceId = 0;
 	public static int getNewTypeInferenceId() {
-		return lastTypeInferenceId++;
+		return ++lastTypeInferenceId;
 	}
 	
 	//Integer currentTypeInferenceId;
-	Integer myTypeInferenceId;
+	int myTypeInferenceId = 0;
 	
 
 	public final Type getType() {
@@ -27,14 +27,17 @@ public abstract class TypeReference {
 	
 	public abstract boolean isResolved();
 	
-	public final void resolve(int currentTypeInferenceId) throws CompilerException {
+	public final Type resolve(int currentTypeInferenceId) throws CompilerException {
+		if (isResolved())
+			return getType();
 		if (myTypeInferenceId == currentTypeInferenceId)
 			throw new CircularTypeReferenceException(this);
+		System.out.println("Resolving tref "+this);
 		myTypeInferenceId = currentTypeInferenceId;
-		resolveDelegate(currentTypeInferenceId);
+		return resolveDelegate(currentTypeInferenceId);
 	}
 	
-	public abstract void resolveDelegate(int currentTypeInferenceId) throws CompilerException;
+	public abstract Type resolveDelegate(int currentTypeInferenceId) throws CompilerException;
 	
 	
 	

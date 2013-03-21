@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import cssInterpreter.compiler.CompilerException;
+import cssInterpreter.program.PrimitiveType;
 import cssInterpreter.program.Type;
 
 public 
@@ -73,7 +74,7 @@ class RuntimeObject  {
 			throw new AccessViolationException("Cannot write to a constant object");
 		if (destructed)
 			throw new AccessViolationException("Cannot write to a destructed object");
-		Type t = type.getAttributeTypes()[index].getType(-1); // FIXME -1?
+		Type t = type.getAttributeTypes()[index].getType(); // FIXME -1?
 		//System.out.println(type.getAttributeTypes()[index]);
 		if (!t.isSettableTo(obj.type))
 			//throw new AccessViolationException("Field of type '"+t+"' cannot be set to object of type '"+obj.type+"'");
@@ -142,6 +143,11 @@ class RuntimeObject  {
 
 	public RuntimeObject getParent() {
 		return parent;
+	}
+	
+	// should only be used to set the type of TypeType
+	public void setType(PrimitiveType<Type> typeType) {
+		type = typeType;
 	}
 
 	/*
