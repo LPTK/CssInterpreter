@@ -15,7 +15,7 @@ public class NotExpression extends Expression {
 	}
 
 	@Override
-	public TypeReference getTypeRef() throws CompilerException {
+	public TypeReference getTypeRefDelegate(int currentTypeInferenceId) throws CompilerException {
 		return Execution.getInstance().BoolType;
 	}
 

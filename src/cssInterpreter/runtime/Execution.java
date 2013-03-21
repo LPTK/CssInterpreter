@@ -19,6 +19,7 @@ import cssInterpreter.program.expressions.TupleExpression;
 public class Execution {
 	
 	private static Execution instance;
+	{instance = this;}
 	
 	private RuntimeObject thisObject = null; //DumbInterpreter.standardScopeRO;
 	Stack<RuntimeObject> thisStack = new Stack<>();
@@ -31,7 +32,9 @@ public class Execution {
 	PrintStream out;// = System.out;
 	boolean started;
 	Interpreter interp;
-
+	
+	public final PrimitiveType<Type> TypeType = new PrimitiveType<>(new TypeIdentifier("Type", null), this);
+	{TypeType.setType(TypeType);}
 	public final PrimitiveType<Void> AnyType = new PrimitiveType<>(new TypeIdentifier("Any", null), this);
 	public final PrimitiveType<Void> VoidType = new PrimitiveType<>(new TypeIdentifier("Void", null), this);
 	public final PrimitiveType<Boolean> BoolType = new PrimitiveType<>(new TypeIdentifier("Bool", null), this);
@@ -47,14 +50,14 @@ public class Execution {
 	public Execution(Interpreter interp, PrintStream out) {
 		this.interp = interp;
 		this.out = out;
-		instance = this;
+		//instance = this;
 	}
 	
 	public RuntimeObject execute(RuntimeObject args, Scope scope) throws CompilerException
 	{
 		////System.out.println(">> Executing:  "+scope.getType()+"  with params  "+args);
 		
-		assert scope.getParent() == null || args.type.conformsTo(scope.getParent().getType());
+		assert scope.getParent() == null || args.type.conformsTo(scope.getParent().getType(), -1);
 		
 		started = true;
 		indentation++;

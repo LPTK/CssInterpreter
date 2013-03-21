@@ -10,7 +10,7 @@ public class ConstantExpression extends Expression {
 		this.value = value;
 	}
 	@Override
-	public Type getTypeRef() {
+	public Type getTypeRefDelegate(int currentTypeInferenceId) {
 		return value.getRuntimeType();
 	}
 	@Override

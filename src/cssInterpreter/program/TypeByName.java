@@ -14,7 +14,7 @@ public class TypeByName implements TypeReference {
 	}
 	
 	@Override
-	public Type getType() throws CompilerException {
+	public Type getType(int currentTypeInferenceId) throws CompilerException {
 		/*if (type != null)
 			return type;
 		

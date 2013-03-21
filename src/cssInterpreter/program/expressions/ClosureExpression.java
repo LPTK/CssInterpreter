@@ -14,8 +14,8 @@ public class ClosureExpression extends Expression {
 	}
 	
 	@Override
-	public TypeReference getTypeRef() throws CompilerException {
-		return scope.getType();
+	public TypeReference getTypeRefDelegate(int currentTypeInferenceId) throws CompilerException {
+		return scope.getType().getType(currentTypeInferenceId);
 	}
 
 	@Override

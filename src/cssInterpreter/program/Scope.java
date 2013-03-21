@@ -165,6 +165,14 @@ public class Scope {
 		return false;
 	}
 
+	public void resolveTypes() {
+		for (Expression e : exprs)
+			e.resolveType();
+		//for (Type t : types)
+		//	t.resolveTypes
+		type.resolve();
+	}
+
 }
 
 

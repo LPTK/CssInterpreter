@@ -6,13 +6,31 @@ import cssInterpreter.runtime.ExecutionException;
 import cssInterpreter.runtime.RuntimeObject;
 
 public abstract class Expression {
-
+	
 	static int nb = 0;
 	int id = nb++;
 	
 	Integer line;
 	
-	public abstract TypeReference getTypeRef() throws CompilerException;
+	public final TypeReference getTypeRef() throws CompilerException {
+		/*if (Execution.getInstance().getInterpreter().getCurrentTypeInferenceId() == lastTypeInferenceId)
+			throw new CompilerException("Cyclic tye reference"); // TODO
+		return getTypeRefDelegate();*/
+		if (myTypeInferenceId == )
+		
+		return getTypeRefDelegate(getNewTypeInferenceId());
+	}
+	protected abstract TypeReference getTypeRefDelegate(int currentTypeInferenceId) throws CompilerException;
+	
+
+	public abstract void resolveTypes(int currentTypeInferenceId) throws CompilerException;
+	
+	
+	
+	
+	
+	
+	
 	public abstract RuntimeObject evaluate() throws CompilerException;
 	
 	public boolean isAssignable() { return false; }
@@ -26,5 +44,6 @@ public abstract class Expression {
 
 	public void setLine(Integer line) { this.line = line; }
 	public Integer getLine() { return line; }
+	
 
 }

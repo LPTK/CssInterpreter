@@ -26,7 +26,7 @@ public class AssignExpression extends Expression {
 	}
 
 	@Override
-	public TypeReference getTypeRef() throws CompilerException {
+	public TypeReference getTypeRefDelegate(int currentTypeInferenceId) throws CompilerException {
 		//System.out.println("____"+value.getType());
 		return getValue().getTypeRef();
 	}

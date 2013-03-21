@@ -9,7 +9,7 @@ import cssInterpreter.program.Type;
 public 
 class RuntimeObject  {
 	
-	Type type;
+	protected Type type;
 	boolean constant;
 	protected RuntimeObject[] attributes;
 	RuntimeObject parent;
@@ -30,7 +30,10 @@ class RuntimeObject  {
 		this.parent = parent;
 		//this.associatedArgs = associatedArgs;
 		this.constant = constant;
-		attributes = new RuntimeObject[type.getAttributeTypes().length];
+		if (type != null) { // normally only happens if this is the RuntimeObject associated with type TypeType
+			//assert ?
+			attributes = new RuntimeObject[type.getAttributeTypes().length];
+		}
 	}
 	/*
 	
@@ -70,7 +73,7 @@ class RuntimeObject  {
 			throw new AccessViolationException("Cannot write to a constant object");
 		if (destructed)
 			throw new AccessViolationException("Cannot write to a destructed object");
-		Type t = type.getAttributeTypes()[index].getType();
+		Type t = type.getAttributeTypes()[index].getType(-1); // FIXME -1?
 		//System.out.println(type.getAttributeTypes()[index]);
 		if (!t.isSettableTo(obj.type))
 			//throw new AccessViolationException("Field of type '"+t+"' cannot be set to object of type '"+obj.type+"'");

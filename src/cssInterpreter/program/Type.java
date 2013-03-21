@@ -9,13 +9,17 @@ import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.UnknownFunctionException;
 import cssInterpreter.node.PAttrType;
 import cssInterpreter.node.TIdent;
+import cssInterpreter.runtime.Execution;
+import cssInterpreter.runtime.RuntimeObject;
 
-public class Type implements TypeReference {
+//public class Type extends RuntimeObject implements TypeReference {
+public class Type extends TypeReference {
 	HashMap<String, List<Function>> fcts = new HashMap<>();
 	//Type[] attributes;
 	TypeIdentifier id;
 	//boolean tuple;
 	Type parent;
+	final private RuntimeObject objectRepr; // "inheritance" by composition
 	
 	List<String> attributeNames = new ArrayList<>();
 	List<TypeReference> attributeTypes = new ArrayList<>();
@@ -24,10 +28,16 @@ public class Type implements TypeReference {
 	
 	
 	public Type(TypeIdentifier id, Type parent) {//, boolean tuple) {
+		//super(Execution.getInstance().TypeType, parent, true);
+		objectRepr = new RuntimeObject(Execution.getInstance().TypeType, parent.getObjectRepresentation(), true);
 		this.id = id;
 		//this.tuple = tuple;
 		id.type = this; // sale
 		this.parent = parent;
+	}
+	
+	public RuntimeObject getObjectRepresentation() {
+		return objectRepr;
 	}
 	
 
@@ -275,11 +285,11 @@ public class Type implements TypeReference {
 	
 	
 	
-	public boolean conformsTo(Type type) throws CompilerException {
+	public boolean conformsTo(Type type, int currentTypeInferenceId) throws CompilerException {
 		if (isAClass)
 			return this == type;
 		for (int i = 0; i < getAttributeCount(); i++) {
-			if (!attributeTypes.get(i).getType().conformsTo(type.attributeTypes.get(i).getType()))
+			if (!attributeTypes.get(i).getType(currentTypeInferenceId).conformsTo(type.attributeTypes.get(i).getType(currentTypeInferenceId), currentTypeInferenceId))
 				return false;
 		}
 		// TODO: check that functions are also present
@@ -322,10 +332,12 @@ public class Type implements TypeReference {
 		return !hasAttributes() && !hasFunctions();
 	}
 	
+	/*
 	@Override
-	public Type getType() {
+	public Type getType(int currentTypeInferenceId) {
 		return this;
 	}
+	*/
 	
 	@Override
 	public String toString() {
@@ -339,6 +351,20 @@ public class Type implements TypeReference {
 	public void setName(String newName) {
 		id.name = newName;
 	}
-	
 
+	@Override
+	protected Type getTypeDelegate() {
+		return this;
+	}
+
+	@Override
+	public boolean isResolved() {
+		return true;
+	}
+
+	@Override
+	public void resolveDelegate(int currentTypeInferenceId) throws CompilerException {
+	}
+	
 }
+

@@ -106,6 +106,7 @@ public class Interpreter extends DepthFirstAdapter {
 	//Map<PExpr,Scope> scopes = new HashMap<>();
 	Map<PClosure,Scope> scopes = new HashMap<>();
 	boolean finishedReading = false;
+	private int currentTypeInferenceId;
 
 	/*private void init() {
 		standardScope = new Scope("[StdScope]", exec);
@@ -135,14 +136,18 @@ public class Interpreter extends DepthFirstAdapter {
 	@Override
     public void inStart(Start node)
     {
-		out("\n############# PROGRAM ANALYSIS #############");
+		out("\n############# PROGRAM CONSTRUCTION #############");
     	//AClosure module = (AClosure) node.getPClosure();
     	//currentScope = new Scope();
 		//currentScope = null;
 		currentScope = exec.standardScope;
 		
     	/// TODO: define standard lib in a closure
-    	
+
+		out("\n############# STATIC ANALYSIS #############");
+		
+		currentScope.resolveTypes();
+		
     }
 	
 	@Override
@@ -194,11 +199,18 @@ public class Interpreter extends DepthFirstAdapter {
     	//currentScope = currentScope.parent;
 		//if (currentScope.parent != null)
 		currentScope.getType().generateConstructor(exec);
-		exprs.put(node, new ClosureExpression(currentScope));
+		//exprs.put(node, new ClosureExpression(currentScope));
+		///otherExprs.put(node, new ClosureExpression(currentScope));
 		
 		if (currentScope.getParent() != exec.standardScope)
 			currentScope = currentScope.getParent();
 		
+    }
+	
+	@Override
+    public void outAClosureExpr(AClosureExpr node)
+    {
+		exprs.put(node, new ClosureExpression(currentScope));
     }
 	
 	/*
@@ -352,7 +364,9 @@ public class Interpreter extends DepthFirstAdapter {
 			
 			if (tv.getValue() != null) {
 				Expression val = exprs.get(tv.getValue());
-				
+				//if (val == null)
+				//	val = otherExprs.get(tv.getValue());
+				assert val != null;
 				currentScope.getExprs().add(new AssignExpression(new FunctionCallExpression(
 							exec,
 							currentScope.getType(),
@@ -654,7 +668,7 @@ public class Interpreter extends DepthFirstAdapter {
 					
 					if ((args instanceof TupleExpression)) {
 						 tupleArgs = (TupleExpression) args;
-						 args.getTypeRef().getType().setName("[CallArgs "+args+"]");
+						 args.getTypeRef().getType(Expression.getNewTypeInferenceId()).setName("[CallArgs "+args+"]");
 					} else tupleArgs = new TupleExpression(exec, new Expression[]{args},currentScope.getType(),"[SingleCallArg "+args+"]");
 					
 					//System.out.println("*********"+tupleArgs.namedParams);
@@ -886,6 +900,14 @@ public class Interpreter extends DepthFirstAdapter {
 		else currentScope.addExpr(expr);
 		indentation--;
 	}
+	
+	public int getCurrentTypeInferenceId() {
+		return currentTypeInferenceId;
+	}
+	public void newTypeInferenceId() {
+		currentTypeInferenceId++;
+	}
+	
 	
 	//@Override
 	//public void inA

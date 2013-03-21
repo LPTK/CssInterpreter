@@ -18,10 +18,10 @@ public class TypeOf implements TypeReference { // FIXME: useless?
 	}
 
 	@Override
-	public Type getType() throws CompilerException {
+	public Type getType(int currentTypeInferenceId) throws CompilerException {
 		//return expr.getTypeRef().getType();
 		if (inferredType == null)
-			inferredType = expr.getTypeRef().getType();
+			inferredType = expr.getTypeRef().getType(currentTypeInferenceId);
 		return inferredType; // FIXME: doesn't address the actual problem of referring to formal params
 	}
 	
@@ -45,7 +45,7 @@ public class TypeOf implements TypeReference { // FIXME: useless?
 	@Override public String toString() {
 		try {
 			if (interp.hasFinishedReading())
-				 return getType().toString();
+				 return getType(-1).toString();
 			else return "TypeOf("+expr+")";
 		} catch (CompilerException e) {
 			throw new ExecutionException(e);

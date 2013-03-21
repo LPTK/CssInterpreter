@@ -70,7 +70,8 @@ public class TupleExpression extends Expression {
 				//System.out.println(((TupleExpression)fa.thisExpression));
 				
 				assert ((TupleExpression)fa.thisExpression) == null
-					|| (((TupleExpression)fa.thisExpression).getTypeRef()).isEmpty(); // laid comme ta mère
+				//		|| (((TupleExpression)fa.thisExpression).getTypeRef()).isEmpty(); // laid comme ta mère
+						|| (((TupleExpression)fa.thisExpression).getTypeRef()).getType(-1).isEmpty(); // laid comme ta mère
 				//assert ae.assigned instanceof 
 				
 				//System.out.println(":n:"+fa.fieldName);
@@ -127,7 +128,7 @@ public class TupleExpression extends Expression {
 	
 	
 	@Override
-	public Type getTypeRef() throws CompilerException {
+	public Type getTypeRefDelegate(int currentTypeInferenceId) throws CompilerException {
 		// TODO
 		//throw new NotSupportedCompExc();
 		//if (type.isEmpty())

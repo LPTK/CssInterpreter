@@ -36,4 +36,12 @@ public class PrimitiveType<T> extends Type {
 		//return new ArrayList<Function>(new Function[]{constructor});
 		return Arrays.asList(new Function[]{constructor});
 	}
+	
+	// should only be called to set the type of TypeType
+	public void setType(PrimitiveType<Type> typeType) {
+		type = typeType;
+	}
+	
 }
+
+
