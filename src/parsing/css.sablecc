@@ -19,6 +19,8 @@ Helpers
 
     cr           = 13;
     lf 	         = 10;
+    eol = cr lf | cr | lf;
+    not_cr_lf = [all - [cr + lf]];
 
     star 	 = '*';
 
@@ -93,7 +95,7 @@ Tokens
     // (except_star*   star   except_slash)*   ;//star?;
     
     
-    
+    {normal} line_comment = '//' not_cr_lf* (cr | lf | cr lf)?;
     
 
 
@@ -114,7 +116,7 @@ Tokens
 
 Ignored Tokens
     blank,
-    comment_begin, comment_body, comment_end,
+    comment_begin, comment_body, comment_end, line_comment,
     double_quote
     ;
 

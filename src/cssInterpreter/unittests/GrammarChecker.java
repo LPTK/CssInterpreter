@@ -36,7 +36,7 @@ public class GrammarChecker {
 	   List<String> ret = new ArrayList<String>();
 	   File folder = new File(dirname);
 	   File[] listOfFiles = folder.listFiles();
-	   //System.out.println(dirname);
+	   System.out.println(dirname);
 	   for (int i = 0; i < listOfFiles.length; i++)
 		   if (listOfFiles[i].isFile())
 			   ret.add(dirname+"/"+listOfFiles[i].getName());
