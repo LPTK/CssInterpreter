@@ -356,14 +356,24 @@ public class Type extends TypeReference {
 	protected Type getTypeDelegate() {
 		return this;
 	}
-
+	
+	private boolean resolved = false;
 	@Override
 	public boolean isResolved() {
-		return true;
+		return resolved;
 	}
 
 	@Override
 	public Type resolveDelegate(int currentTypeInferenceId) throws CompilerException {
+		System.out.println("Resolving type "+this);
+		for (TypeReference t : attributeTypes)
+			t.resolve(currentTypeInferenceId);
+		for (List<Function> fls : fcts.values())
+			for (Function f: fls)
+				f.resolve(currentTypeInferenceId);
+		/*for (Function f: getConstructors()) // really necessary? should have been resolved by resolving the type that contains it...
+			f.resolve(currentTypeInferenceId);*/
+		resolved = true;
 		return this;
 	}
 	

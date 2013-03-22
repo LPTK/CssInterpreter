@@ -51,6 +51,7 @@ import cssInterpreter.program.expressions.ConstantExpression;
 import cssInterpreter.program.expressions.Expression;
 import cssInterpreter.program.expressions.FunctionCallExpression;
 import cssInterpreter.program.expressions.IfExpression;
+import cssInterpreter.program.expressions.ListExpression;
 import cssInterpreter.program.expressions.NotExpression;
 import cssInterpreter.program.expressions.TupleExpression;
 import cssInterpreter.runtime.Execution;
@@ -156,6 +157,7 @@ public class Interpreter extends DepthFirstAdapter {
 		out("\n############# STATIC ANALYSIS #############");
 		
 		try {
+			exec.standardScope.resolveTypes();
 			currentScope.resolveTypes();
 		} catch (CompilerException e) {
 			throw new ExecutionException(e);
@@ -636,7 +638,7 @@ public class Interpreter extends DepthFirstAdapter {
 //		System.out.println(callees.size());
 //		System.out.println(callees.get(callees.size()-1).getClass());
 		
-		Expression callee = exprs.get(callees.get(callees.size()-1)); // The last expression 'c' is actually the callee in  a syntax like "a,b,c params"
+		Expression callee = exprs.get(callees.get(callees.size()-1)); // The last expression 'c' is actually the callee in a syntax like "a,b,c params"
 		
 		assert callee != null;
 		//System.out.println(callee.getClass());
@@ -704,23 +706,28 @@ public class Interpreter extends DepthFirstAdapter {
 						
 					} else {
 						
-						// TODO
+						// TODONE
 						//exprs.put(node, new ListExpression(callees));
+						
+						Expression[] exprArray = new Expression[callees.size()];
+						int i = 0; for (PExpr e : callees)
+							exprArray[i++] = exprs.get(e);
+						//exprs.put(node, new TupleExpression(exec, exprArray, currentScope.getType(), "[AnonListExpr]"));
+						exprs.put(node, new ListExpression(exec, exprArray, currentScope.getType(), null/*name*/));
 						
 						
 					}
-						
-						
-						
-						
-						
-						
+					
+					
+					
+					
+					
 					
 				} catch (CompilerException e) {
 					throw new ExecutionException(e);
 				}
 				
-			} 
+			}
 			
 		} else {
 			throw new NotSupportedException();

@@ -1,0 +1,6 @@
+
+val a: Long;
+
+a=42, print "ok";
+
+print a;

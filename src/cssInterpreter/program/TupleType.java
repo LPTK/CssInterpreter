@@ -1,5 +1,6 @@
 package cssInterpreter.program;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -75,6 +76,7 @@ class TupleType extends Type {
 	
 	public List<Function> getConstructors() { // FIXME: correct?
 		//return new ArrayList<Function>();
+		if (constructor == null) return new ArrayList<>();
 		return Arrays.asList(new Function[]{constructor});
 	}
 	

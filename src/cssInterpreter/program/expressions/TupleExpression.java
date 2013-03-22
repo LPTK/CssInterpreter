@@ -68,10 +68,12 @@ public class TupleExpression extends Expression {
 				
 				//System.out.println(((TupleExpression)fa.thisExpression));
 				
+				/** Qu'est-ce que ce truc voulait dire ???:
 				assert ((TupleExpression)fa.thisExpression) == null
 						|| (((TupleExpression)fa.thisExpression).getTypeRef()).isEmpty(); // laid comme ta mère
 				//		|| (((TupleExpression)fa.thisExpression).getTypeRef()).getType().isEmpty(); // laid comme ta mère
 				//assert ae.assigned instanceof 
+				*/
 				
 				//System.out.println(":n:"+fa.fieldName);
 				///System.out.println(":n: "+fa.fieldName+" = "+ae.value);
@@ -118,7 +120,7 @@ public class TupleExpression extends Expression {
 	}
 	public Expression getSingleExpr() {
 		assert isSingleExpr();
-		return ordinalArgs.get(0);
+		return ordinalArgs.get(0); // FIXME use rawExprs instead?
 	}
 	
 	public Expression[] getRawExprs() {

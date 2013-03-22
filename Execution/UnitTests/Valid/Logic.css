@@ -1,0 +1,7 @@
+
+b := true;
+b = !b;
+
+if (b) print "ok";
+if (!b) print "nok";
+

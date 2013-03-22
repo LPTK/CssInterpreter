@@ -56,6 +56,17 @@ public abstract class Function {
 		return signature.getType();
 	}
 	
+	
+	
+	public void resolve(int currentTypeInferenceId) throws CompilerException {
+		// TODO useful?
+		signature.type.resolve(currentTypeInferenceId);
+		for (NamedType nt: signature.params.namedTypes) {
+			nt.type.resolve(currentTypeInferenceId);
+		}
+	}
+	
+	
 }
 
 

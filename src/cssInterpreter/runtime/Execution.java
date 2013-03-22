@@ -33,6 +33,7 @@ public class Execution {
 	boolean started;
 	Interpreter interp;
 	
+	// These must also be set in the standard scope in class Scope (to change because not convenient)
 	public final PrimitiveType<Type> TypeType = new PrimitiveType<>(new TypeIdentifier("Type", null), this);
 	{TypeType.setType(TypeType);}
 	public final PrimitiveType<Void> AnyType = new PrimitiveType<>(new TypeIdentifier("Any", null), this);

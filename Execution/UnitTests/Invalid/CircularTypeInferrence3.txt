@@ -1,0 +1,9 @@
+
+def lol := {
+  mdr;
+};
+
+def mdr := {
+  lol;
+};
+

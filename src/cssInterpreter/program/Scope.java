@@ -64,10 +64,15 @@ public class Scope {
 		type.addType(exec.LongType);
 		type.addType(exec.StringType);
 		*/
+		
+		addType(exec.TypeType);
+		addType(exec.AnyType);
 		addType(exec.VoidType);
+		addType(exec.BoolType);
 		addType(exec.IntType);
 		addType(exec.LongType);
 		addType(exec.StringType);
+		//addType(exec.);
 		
 	}
 
@@ -174,13 +179,24 @@ public class Scope {
 		resolveTypes(null);
 	}
 	public void resolveTypes(Integer currentTypeInferenceId) throws CompilerException {
+		
+		System.out.println("Resolving types in scope "+type);
+		
 		for (Expression e : exprs)
 			e.resolveTypes(getTypeInferenceId(currentTypeInferenceId));
-		//for (Type t : types)
-		//	t.resolveTypes
+		for (Type t : types)
+			t.resolve(getTypeInferenceId(currentTypeInferenceId));
 		for (Scope s : childs)
 			s.resolveTypes();
 		type.resolve(getTypeInferenceId(currentTypeInferenceId));
+		
+		/*
+		type.resolve(getTypeInferenceId(currentTypeInferenceId));
+		for (Scope s : childs)
+			s.resolveTypes();
+		for (Expression e : exprs)
+			e.resolveTypes(getTypeInferenceId(currentTypeInferenceId));
+		*/
 	}
 
 	public void addChild(Scope s) {

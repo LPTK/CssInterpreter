@@ -35,6 +35,9 @@ public abstract class TypeReference {
 		System.out.println("Resolving tref "+this);
 		myTypeInferenceId = currentTypeInferenceId;
 		return resolveDelegate(currentTypeInferenceId);
+		/*Type ret = resolveDelegate(currentTypeInferenceId);;
+		ret.resolve(currentTypeInferenceId);
+		return ret;*/
 	}
 	
 	public abstract Type resolveDelegate(int currentTypeInferenceId) throws CompilerException;

@@ -20,12 +20,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import cssInterpreter.compiler.Interpreter;
 import cssInterpreter.lexer.CssLexer;
 import cssInterpreter.lexer.LexerException;
 import cssInterpreter.node.Start;
 import cssInterpreter.parser.Parser;
 import cssInterpreter.parser.ParserException;
-import cssInterpreter.test.DumbInterpreter;
 
 class CssExecChecker {
 	
@@ -60,7 +60,8 @@ class CssExecChecker {
 		boolean finished = false;
 		
 		try {
-			ast.apply(new DumbInterpreter(text, prnt));
+			//ast.apply(new DumbInterpreter(text, prnt));
+			ast.apply(new Interpreter(text, prnt));
 			finished = true;
 		} catch (Exception e) {
 			e.printStackTrace(prnt);
