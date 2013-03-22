@@ -1,0 +1,7 @@
+
+x := 42;
+
+def foo := {
+  print x;
+}
+

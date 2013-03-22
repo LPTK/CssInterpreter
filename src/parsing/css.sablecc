@@ -6,7 +6,11 @@ Helpers
     except_slash = [all - '/'];
 
     letter       = [['A' .. 'Z'] + ['a' .. 'z']];
+
     digit  	 = ['0' .. '9'];
+    non_zero_digit = [digit - '0'];
+    digits = digit+;
+
     alphanum     = letter | digit;
     id_comp      = '_' | '$';
     identifier   = (letter | id_comp) (alphanum | id_comp)*;
@@ -48,33 +52,49 @@ Tokens
     {normal} blank        = (' ' | cr | lf)+;
     
     {normal} key_class    = 'class';
+    {normal} key_trait    = 'trait';
+    {normal} key_def    = 'def';
     {normal} key_import   = 'import';
     {normal} key_package  = 'package';
     {normal} key_parent   = 'parent';
     {normal} key_this     = 'this';
-
-    /* Type keywords 
-    {normal} key_bool	  = 'bool';
-    {normal} key_char	  = 'char';
-    {normal} key_int	  = 'int';*/
+    
+    {normal} key_if     = 'if';
+    {normal} key_else = 'else';
+    {normal} key_while     = 'while';
+    
+    {normal} key_true     = 'true';
+    {normal} key_false     = 'false';
+    {normal} equalequal     = '==';
+    {normal} inferiority     = 'lt';
+    {normal} not     = '!';
+    {normal} key_or = 'or';
 
     /* Type annotation keywords */
     {normal} key_val	  = 'val';
     {normal} key_rval	  = 'rval';
     {normal} key_ref    = 'ref';
-    {normal} key_def    = 'def';
 
 /*
     {normal} key_	  = '';
 */
 
     /* Nested comment management, as proposed in sablecc documentation */
+    // TODO: doesn' work
     {normal->comment, comment} 
     comment_begin          = '/*';
 
     {comment} comment_end  = '*/'; 
     {comment} comment_body = 
     (except_star*   star   except_slash)*   star?;
+    
+    // // ??
+    // {comment->normal} comment_end  = '*/';
+    // (except_star*   star   except_slash)*   ;//star?;
+    
+    
+    
+    
 
 
     {normal->string, string->normal} 
@@ -82,6 +102,15 @@ Tokens
     {string} string_content = character*; 
 
     {normal} ident          = identifier;
+
+    integer_number = '0' | non_zero_digit digits?;
+
+    
+    at_sign = '@';
+    {normal} key_into = 'into';
+    {normal} key_to = 'to';
+    {normal} key_as = 'as';
+    {normal} key_any = 'any';
 
 Ignored Tokens
     blank,
@@ -96,71 +125,36 @@ Ignored Tokens
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 Productions
 
-
-
 /*
-compilation_unit {-> compilation_unit} =
-    statement*
-      {-> New compilation_unit ([statement.statement])};
-*/
-
 compilation_unit {-> closure} =
     statement*
       {-> New closure ([statement.statement])}
   ;
-
-/*
-full_type {-> full_type} =
-    {type_name} [type]:type_name 
-      {-> New full_type.type_name (type.ident)}
 */
-/*    {primitive} [type]:primitive_type 
-      {-> New full_type.primitive (type.primitive_type)}*/
-/*
-  | {type_expr} type_expr
-  | {full_composed} full_composed_type
-*/
-
-/*
-primitive_type =
-    {bool} key_bool {-> New primitive_type.bool ()}
-  | {char} key_char {-> New primitive_type.char ()}
-  | {int}  key_int  {-> New primitive_type.int 	()}
+compilation_unit {-> closure} =
+    statement_list
+      {-> New closure ([statement_list.statement])}
   ;
-*/
+
 
 attr_type {-> attr_type} =
     {val}  key_val  {-> New attr_type.val	()}
   | {rval} key_rval {-> New attr_type.rval ()}
   | {ref}  key_ref  {-> New attr_type.ref  ()}
-//  | {def}  key_def  {-> New field_type.def  ()}
   ;
 
-
+/*
 closure {-> closure} =
     l_brace   statement*   r_brace 
       {-> New closure([statement.statement])};
+*/
+closure {-> closure} =
+    l_brace   statement_list   r_brace 
+      {-> New closure([statement_list.statement])};
 
-/*
-field_declaration {-> field?} =
-    {method_declaration} method_declaration 
-      {-> New field_declaration.method_declaration (method_declaration.method_declaration)}
-  | {empty} semicolon {-> Null}
-  ;*/
+
 /* TODO :
  / constructor_declaration 
  / destructor_declaration 
@@ -173,84 +167,80 @@ field_declaration {-> field?} =
  /  ";"  . 
 */
 
-/*
-method_declaration {-> method_declaration} =
-    key_class?   key_def   [name]:ident
-    [type]:type_annotation?
-    [body]:block_or_empty
-      {-> New method_declaration (name, type, [body.statement])}
-  ;*/
-/* TODO : full syntax */
-
-
-/* FIXME : method_type_annotation rather ? 
-type_annotation {-> type_annotation} =
-    colon   [attribute]:attribute_type   [type]:full_type
-      {-> New type_annotation (attribute, type.full_type)};
-*/
-
-/*
-block_or_empty {-> statement*} =
-    {empty} semicolon {-> []}
-  | {block} statement_block {-> [statement_block.statement]}
+statement_list {-> statement*} =
+    first_statement?
+    following_statement*
+      {-> [first_statement.statement, following_statement.statement]}
+    //  {-> [first_statement.statement]}
   ;
 
-statement_block {-> statement*} =
-    l_brace   statement*   r_brace {-> [statement.statement]};
+first_statement {-> statement} =
+    statement {-> statement.statement}
+  ;
+
+following_statement {-> statement?} =
+    semicolon statement? {-> statement.statement}
+  ;
+
+/*
+    statement_list_elt*
+      {-> [statement_list_elt.statement]};
+statement_list_elt {-> statement} =
+  | {single}
+    statement {-> statement?}
+  ;
 */
-
-
-
+/*
 statement {-> statement?} =
     {empty} semicolon {-> Null}
   | {expr} expression semicolon {-> New statement.expr (expression.expr)}
   | {attribute_decl} attribute_decl {-> New statement.attr_decl (attribute_decl.attr_decl)}
   | {function_decl} function_decl {-> New statement.def_decl (function_decl.def_decl)}
   ;
-
-
-/*
-attribute_decl {-> decl} =
-    
-    // {named_decl} [decl_type]:field_type? [name]:ident [params]:param_list? [type_init]:type_init? [clos]:decl_end
-    // //  {-> New decl (decl_type, name, params.closure, type_init.type, type_init.value)}
-    //   {-> New decl (decl_type, name, params.closure, type_init.typed_value, clos.closure)}
-    
-    
-    {named_decl} [decl_type]:field_type? [name]:ident [type_init]:type_init [clos]:decl_end
-    //  {-> New decl (decl_type, name, params.closure, type_init.type, type_init.value)}
-      {-> New decl (decl_type, name, Null, type_init.typed_value, clos.closure)}
-    
-  | {typed_decl} [decl_type]:field_type [params]:param_list? [type_init]:type_init [clos]:decl_end
-      {-> New decl (decl_type, Null, params.closure, type_init.typed_value, clos.closure)}
-    
-  ;
 */
-  
-// declaration {-> decl} =
-    
-//     {named_decl} [decl_type]:field_type [name]:ident [type_init]:type_init [clos]:decl_end
-//       {-> New decl (decl_type, name, Null, type_init.typed_value, clos.closure)}
-    
-//   ;
+statement {-> statement} =
+    {expr} expression {-> New statement.expr (expression.expr)}
+  | {attribute_decl} attribute_decl {-> attribute_decl.statement}
+  | {function_decl} function_decl {-> function_decl.statement}
+  | {class_decl} class_decl {-> class_decl.statement}
+  | {conditional} conditional_stmt {-> conditional_stmt.statement}
+  ;
 
-function_decl {-> def_decl} =
+
+conditional_key {-> cond_type} =
+    {if} key_if {-> New cond_type.if()}
+  | {while} key_while {-> New cond_type.while()}
+  ;
+
+conditional_stmt {-> statement} =
+    [cond_key]:conditional_key l_paren [cond_expr]:expression r_paren [stmt_expr]:expression
+      {-> New statement.conditional (cond_key.cond_type, cond_expr.expr, stmt_expr.expr)}
+  ;
+
+
+
+class_decl {-> statement} =
     
-    key_def [name]:ident? [params]:param_list? [type_init]:type_init semicolon
-      {-> New def_decl (name, params.closure, type_init.typed_value)}
+    key_class [name]:ident [type_init]:type_init
+      {-> New statement.class_decl (name, type_init.typed_value)}
     
   ;
 
 
-attribute_decl {-> attr_decl} =
+function_decl {-> statement} =
     
-    [attr_type]:attr_type? [name]:ident [type_init]:type_init semicolon
-    //  {-> New decl (decl_type, name, params.closure, type_init.type, type_init.value)}
-      {-> New attr_decl (attr_type, name, type_init.typed_value)}
+    key_def [name]:ident? [params]:param_list? [type_init]:type_init //semicolon
+      {-> New statement.def_decl (name, params.closure, type_init.typed_value)}
     
   ;
 
 
+attribute_decl {-> statement} =
+    
+    [attr_type]:attr_type? [name]:ident [type_init]:type_init //semicolon
+      {-> New statement.attr_decl (attr_type, name, type_init.typed_value)}
+    
+  ;
 
 
 type_init {-> typed_value} =
@@ -259,43 +249,6 @@ type_init {-> typed_value} =
   | {inferred} colon [assign]:assignment
       {-> New typed_value (Null, assign.expr)}
   ;
-/*
-type_init {-> type, expr} =
-    {explicit} colon [type]:type [assign]:assignment?
-      {-> type, assign.expr}
-  | {inferred} colon [assign]:assignment
-      {-> Null, assign.expr}
-  ;
-*/
-
-
-
-
-
-
-
-
-
-
-/*
-decl_end {-> closure} =
-    semicolon
-    {-> Null}
-  | [closure]:closure
-    {-> New closure(closure.closure)}
-  ;
-*/
-decl_end {-> closure?} =
-    //l_brack /////// semicolon
-    semicolon
-    {-> Null}
-  ;
-
-
-
-
-
-
 
 
 assignment {-> expr} =
@@ -303,87 +256,52 @@ assignment {-> expr} =
       {-> expression.expr}
   ;
 
+/*
 param_list {-> closure} =
     l_paren [statements]:statement* r_paren
+      {-> New closure([statements.statement])}
+  ;*/
+param_list {-> closure} =
+    l_paren [statements]:statement_list r_paren
       {-> New closure([statements.statement])}
   ;
 
 
-/*
-type_spec {-> type} =
-    colon [type]:type
-      {-> type.type}
-   ;
-*/
-
 type {-> type} =
-    [base]:naked_type_expr [args]:template_arg_list?
-      {-> New type (base.naked_type, args.expr)}
+    [base]:naked_type_expr [targs]:template_arg_list?
+      {-> New type (base.naked_type, targs.expr)}
   ;
 
 naked_type_expr {-> naked_type} =
     {ident} [name]:ident
       {-> New naked_type.ident (name)}
   | {access} [expr]:field_access
-      //{-> New naked_type.access (expr.prefix_expr, expr.ident)}
       {-> New naked_type.access (expr.field_access)}
   ;
-  
-  
-/*
-template_arg_list {-> arg_list} =
-    lt arg_list gt
-    {-> arg_list.arg_list}
-  ;
-*/
+
+
 template_arg_list {-> expr} =
     lt expression gt
     {-> expression.expr}
   ;
 
-
-
-
-
-
-
-// expression {-> expr} =
-//     {identifier} general_identifier 
-//       {-> New expr.id (general_identifier.general_id)}
-//   | {invocation} invocation
-//       {-> New expr.invocation (invocation)}
-//   /* Ident on the right, do we keep it ? */
-//   /*| {field_access} [prefix_expr]:expression   dot   [suffix]:ident
-//       {-> New expr.field_access (prefix_expr.expr, suffix)}*/
-//   | {field_access} field_access
-//       {-> New expr.field_access (field_access.field_access)}
-//   | {string_expr} string_content 
-//       {-> New expr.string (string_content)}
-//   /*| {paren_expr} l_paren   [embedded_expr]:expression   r_paren 
-//       {-> New expr (embedded_expr.expr)}*/
-//     | {paren_expr} l_paren   [embedded_expr]:expression   r_paren 
-//       {-> embedded_expr.expr}
-//   | {closure} [closure]:closure
-//       {-> New expr.closure (closure)}
-//   ;
-
-
-
-
+/*
 expression {-> expr} = 
     {single} [argxpr]:arg_expression
       {-> New expr.single (argxpr.arg_expr)}
-  | {invocation} [restxpr]:restricted_expression [xpr]:expression //arg_list
-  //| {invocation} [restxpr]:restricted_expression [a]:star [b]:star [xpr]:expression //arg_list
-      {-> New expr.invocation (restxpr.restr_expr, xpr.expr)}
+  | {invocation} [argxpr]:arg_expression [targs]:template_arg_list? [xpr]:expression
+      {-> New expr.invocation (argxpr.arg_expr, targs.expr, xpr.expr)}
+  | {empty_invocation} [argxpr]:arg_expression [targs]:template_arg_list
+      {-> New expr.invocation (argxpr.arg_expr, targs.expr, Null)}
   ;
-
 
 arg_expression {-> arg_expr} =
     {single} [restxpr]:restricted_expression
       {-> New arg_expr.single (restxpr.restr_expr)}
   | {list} [restxpr]:restricted_expression comma [argxpr]:arg_expression
       {-> New arg_expr.list (restxpr.restr_expr, argxpr.arg_expr)}
+  | {assign} [restxpr]:restricted_expression equal [argxpr]:arg_expression
+      {-> New arg_expr.assign (restxpr.restr_expr, argxpr.arg_expr)}
   ;
 
 restricted_expression {-> restr_expr} =
@@ -391,110 +309,170 @@ restricted_expression {-> restr_expr} =
     {identifier} general_identifier 
       {-> New restr_expr.id (general_identifier.general_id)}
       
+  | {number} integer_number
+      {-> New restr_expr.number (integer_number)}
+
   | {field_access} field_access
       {-> New restr_expr.field_access (field_access.field_access)}
       
   | {string_expr} string_content 
       {-> New restr_expr.string (string_content)}
-      
-      
-  /*| {invocation} invocation
-      {-> New expr.invocation (invocation)} */
-  /*| {paren_expr} l_paren   [embedded_expr]:expression   r_paren
-      {-> embedded_expr.restr_expr}*/
-      
+
   | {paren_expr} l_paren   [embedded_expr]:expression   r_paren
       {-> New restr_expr.embedded(embedded_expr.expr)}
   
   | {closure} [closure]:closure
       {-> New restr_expr.closure (closure)}
   
+  ;
+*/
+
+
+
+expression {-> expr} = 
+    expression_list
+      {-> New expr.list ([expression_list.expr])}
+  ;
+
+
+expression_list {-> expr*} = 
+    {single} [argxpr]:arg_expression
+      {-> [argxpr.expr]}
+  | {invocation} [argxpr]:arg_expression [targs]:template_arg_list? [xpr]:expression
+      {-> [New expr.invocation ([argxpr.expr], targs.expr, xpr.expr)]}
+  | {empty_invocation} [argxpr]:arg_expression [targs]:template_arg_list
+      {-> [New expr.invocation ([argxpr.expr], targs.expr, Null)]}
+  ;
+/*
+arg_expression {-> expr} =
+    {single} [restxpr]:restricted_expression
+      {-> restxpr.expr}
+  | {list} [restxpr]:restricted_expression comma [argxpr]:arg_expression
+      {-> New arg_expr.list ([restxpr.restr_expr, argxpr.arg_expr])}
+  | {assign} [restxpr]:restricted_expression equal [argxpr]:arg_expression
+      {-> New arg_expr.assign (restxpr.restr_expr, argxpr.arg_expr)}
+  ;
+
+expr_list {-> expr*} =
+    [restxpr]:restricted_expression comma [argxpr]:arg_expression
+      {-> [restxpr.expr, argxpr.expr]}
+;
+*/
+
+arg_expression {-> expr*} =
+    {single} [restxpr]:assign_expression
+      {-> [restxpr.expr]}
+  | {list} [restxpr]:assign_expression comma [argxpr]:arg_expression
+      {-> [restxpr.expr, argxpr.expr]}
+      
   /*
-  | {list} [arg_list]:arg_list
-      {-> New restr_expr.arg_list (arg_list)}
-      */
+  | {assign} [restxpr]:restricted_expression equal [argxpr]:arg_expression
+  //    {-> [New expr.assign (restxpr.expr, [argxpr.expr])]}
+      { -> [New expr.assign (restxpr.expr, New expr.list([argxpr.expr]) )] }
+  *//*
+  | {assign} [restxpr]:restricted_expression equal [restxpr2]:restricted_expression
+      { -> [New expr.assign (restxpr.expr, restxpr2.expr)] }
+  */
+      
+  ;
+
+
+assign_expression {-> expr} =
+    {single} [restxpr]:boolean_expression
+      {-> restxpr.expr}
+  | {assign} [restxpr]:restricted_expression equal [restxpr2]:boolean_expression
+      { -> New expr.assign (restxpr.expr, restxpr2.expr) }
+  
+  /*
+  | {boolean} boolean_expression
+      {-> New expr.boolean (boolean_expression.boolean)}
+  */
+  
+  ;
+
+boolean_expression {-> expr} =
+    {single} [restxpr]:restricted_expression
+      {-> restxpr.expr}
+  | {true} key_true
+      {-> New expr.true ()}
+  | {false} key_false
+      {-> New expr.false ()}
+  | {not} not restricted_expression
+      {-> New expr.not (restricted_expression.expr)}
+  | {comparison} [expr1]:restricted_expression comp_operator [expr2]:restricted_expression
+      {-> New expr.comparison (expr1.expr, comp_operator.comp_op, expr2.expr)}
+  ;
+
+
+
+/*******************/ // TODO // /*******************/
+
+// use '<' for "less than" by only allowing template args in function calls after field accesses...
+// or more generally identifiers.
+// eg: "something.field<args>" and not "42<args>"
+// hmm... looks like it's still ambiguous for LR1...
+
+/*******************/ //------// /*******************/
+
+
+restricted_expression {-> expr} =
+
+    {identifier} general_identifier 
+      {-> New expr.id (general_identifier.general_id)}
+      
+  | {number} integer_number
+      {-> New expr.number (integer_number)}
+
+  | {field_access} field_access
+      {-> New expr.field_access (field_access.field_access)}
+      
+  | {string_expr} string_content 
+      {-> New expr.string (string_content)}
+
+  | {paren_expr} l_paren   [embedded_expr]:expression   r_paren
+      {-> New expr.list([embedded_expr.expr])}
+  
+  | {closure} [closure]:closure
+      {-> New expr.closure (closure)}
+  
+  /*
+  | {boolean} boolean_expression
+      {-> New expr.boolean (boolean_expression.boolean)}
+  */
+  
+  /*
+  | {assign} [restxpr]:restricted_expression equal [restxpr2]:restricted_expression
+      { -> New expr.assign (restxpr.expr, restxpr2.expr) }
+  */
   
   ;
 
 
-
-
-
-
-
-
-
 /*
-field_access {-> field_access} =
-    [prefix_expr]:expression   dot   [suffix]:ident
-      {-> New field_access (prefix_expr.expr, suffix)}
+boolean_expression {-> boolean} =
+    {single} [restxpr]:restricted_expression
+   {true} key_true
+      {-> New boolean.true ()}
+  | {false} key_false
+      {-> New boolean.false ()}
+  | {not} not restricted_expression
+      {-> New boolean.not (restricted_expression.expr)}
+  | {comparison} [expr1]:restricted_expression comp_operator [expr2]:restricted_expression
+      {-> New boolean.comparison (expr1.expr, comp_operator.comp_op, expr2.expr)}
   ;
 */
+comp_operator {-> comp_op} =
+    {equal} equalequal {-> New comp_op.equality ()}
+  | {inferior} inferiority {-> New comp_op.inferiority ()}
+  ;
+
+
+
+
 field_access {-> field_access} =
     [prefix_expr]:restricted_expression   dot   [suffix]:ident
-      {-> New field_access (prefix_expr.restr_expr, suffix)}
+      {-> New field_access (prefix_expr.expr, suffix)}
   ;
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
-/*
-invocation {-> invocation} =
-    expression   l_brack  arg_list  r_brack
-      {-> New invocation (expression.expr, arg_list.arg_list)}
-  ;
-*/
-
-
-/*        Method call and arguments        */
-// arg_list {-> arg_list} =
-//     arg   [tail]:arg_list_tail* 
-//       {-> New arg_list ([arg, tail.arg])};
-// /*    {empty} {-> New arg_list ([])}
-//   | {not_empty} arg   [tail]:arg_list_tail* 
-//       {-> New arg_list ([arg, tail.arg])};*/
-
-// arg_list_tail {-> arg } =
-//     comma arg  {-> arg};
-
-// arg =
-//     /* TODO : ident, sure ? */
-//     {assign} ident   equal   expression 
-//       {-> New arg.assign (ident, expression.expr)}
-//   | {expression} expression {-> New arg.expr (expression.expr)}
-//   ;
-
-
-// arg_list {-> arg_list} =
-//     arg   [tail]:arg_list_tail+ ////////////////// gère pas le sinlge arg 
-//       {-> New arg_list ([arg, tail.arg])};
-// /*    {empty} {-> New arg_list ([])}
-//   | {not_empty} arg   [tail]:arg_list_tail* 
-//       {-> New arg_list ([arg, tail.arg])};*/
-
-// arg_list_tail {-> arg } =
-//     comma arg  {-> arg};
-
-// arg =
-//     /* TODO : ident, sure ? */
-//     {assign} ident   equal   arg_list_expression 
-//       {-> New arg.assign (ident, arg_list_expression.restr_expr)}
-//   | {expression} restricted_expression {-> New arg.expr (restricted_expression.restr_expr)}
-//   ;
-
-
-
-
-
-
-
-
 
 
 general_identifier {-> general_id} =
@@ -505,18 +483,23 @@ general_identifier {-> general_id} =
 
 
 
+method_annot_id = ident;
 
 
+generic_location = key_any type;
+
+data_path /*{-> data_path}*/ =
+    generic_location; /* TODO */
+
+data_name = ident;
+data_name_conj_second = key_or data_name;
+data_name_conj = l_paren data_name data_name_conj_second? r_paren;
 
 
-
-
-
-
-
-
-
-
+method_annot /*{-> method_annotation}*/ =
+    at_sign method_annot_id
+/*      {-> New method_annotation ()} */
+  ;
 
 
 
@@ -526,103 +509,16 @@ general_identifier {-> general_id} =
 /********   AST specification   ********/
 Abstract Syntax Tree
 
-/*
-compilation_unit =
-    [statements]:statement*;
-*/
-
 closure =
     [statements]:statement*;
-
-/*
-field =
-    {instruction} instruction
-  | {declaration}
-;
-
-instruction =
-    {call_statement} [called_expr]:ident
-
-expression =
-
-
-
-full_type =
-    {type_name} ident
-//    {primitive} primitive_type
-// TODO 
-  ;
-*/
-
-/*
-primitive_type =
-    {bool}
-  | {char}
-  | {int}
-  ;
-*/
 
 attr_type = 
     {val}
   | {rval}
   | {ref}
- // | {def}
   ;
 
 /*
-type_declaration = 
-    {class_declaration} class_declaration;
-
-
-class_declaration =
-    [class_name]:ident   [block]:field_declaration*;
-
-
-field_declaration =
-    {method_declaration} method_declaration
-  ;
-
-method_declaration =
-    [name]:ident   [type]:type_annotation?   [block]:statement*
-  ;
-*/
-/*
-type_annotation =
-    attribute_type?   full_type
-  ;
-*/
-  
-statement = 
-    {expr} expr
-  | {attr_decl} attr_decl
-  | {def_decl} def_decl
-  ;
-
-expr =
-    {single} arg_expr
-  | {invocation} restr_expr expr
-  ;
-
-arg_expr =
-    {single} restr_expr
-  | {list} restr_expr arg_expr
-  ;
-
-restr_expr =
-    {id} general_id
-  //| {invocation} invocation
-  //| {field_access} [prefix_expr]:expr   [suffix]:ident
-  | {field_access} field_access
-  | {string} string_content
-  | {closure} closure
-  | {arg_list} arg_list
-  | {embedded} expr
-  ;
-/*
-decl =
-    [field_type]:field_type? [name]:ident? [params]:closure? type? [value]:expr?
-  ;
-*/
 attr_decl =
     [attr_type]:attr_type? [name]:ident? typed_value?
   ;
@@ -630,65 +526,95 @@ attr_decl =
 def_decl =
     [name]:ident? [params]:closure? typed_value?
   ;
+*/
+
+cond_type =
+    {if}
+  | {while}
+  ;
+
+statement = 
+    {expr} expr
+  | {attr_decl} [attr_type]:attr_type? [name]:ident? typed_value?
+  | {def_decl} [name]:ident? [params]:closure? typed_value?
+  | {class_decl} [name]:ident typed_value?
+  | {conditional} [condition_type]:cond_type [condition_expr]:expr [statement_expr]:expr
+  ;
+
+/*
+expr =
+    {single} arg_expr
+  | {invocation} [callee]:arg_expr [targs]:expr? [args]:expr?
+  ;
+
+arg_expr =
+    {single} restr_expr
+  | {list} restr_expr arg_expr
+  | {assign} restr_expr arg_expr
+  ;
+
+restr_expr =
+    {id} general_id
+  | {number} integer_number
+  | {field_access} field_access
+  | {string} string_content
+  | {closure} closure
+  | {embedded} expr
+  ;
+*/
+
+/*
+exprs =
+    expr*
+  ;
+*/
+expr =
+  | {number} integer_number
+  | {string} string_content
+  | {id} general_id
+  | {closure} closure
+  | {list} expr*
+//  | {assign} [assigned]:expr [value]:expr*
+  | {assign} [assigned]:expr [value]:expr
+  | {invocation} [callee]:expr* [targs]:expr? [args]:expr?
+  | {field_access} field_access
+//  | {boolean} boolean
+  | {true}
+  | {false}
+  | {not} expr
+  | {comparison} [expr1]:expr comp_op [expr2]:expr
+  ;
+
+/*
+boolean =
+    {true}
+  | {false}
+  | {not} expr
+  | {comparison} [expr1]:expr comp_op [expr2]:expr
+  ;
+*/
+comp_op =
+    {equality}
+  | {inferiority}
+  ;
+
+field_access =
+    [prefix_expr]:expr ident
+  ;
 
 
 typed_value =
     type? [value]:expr?
   ;
 
-/*
 type =
-    [base]:naked_type [args]:arg_list?
-  ;*/
-type =
-    [base]:naked_type [args]:expr?
+    [base]:naked_type [targs]:expr?
   ;
 
 naked_type =
     {ident} [name]:ident
-  //| {access} [expr]:expr [name]:ident
-    | {access} field_access
+  | {access} field_access
   ;
-
-
-
-
-/*
-field_access =
-    [prefix_expr]:expr ident
-  ;
-*/
-field_access =
-    [prefix_expr]:restr_expr ident
-  ;
-
-
-
-
-
-/* FIXME : maybe having a rule here is useless
-   (can be directly in the expr "invocation" rule...) */
-invocation =
-    expr   arg_list
-  ;
-
-arg_list =
-    arg*
-  ;
-
-/*
-arg =
-    {assign} ident   expr ///// TODO : ident, sure ?
-  | {expr} expr
-  ;
-*/
-arg =
-    {assign} ident   restr_expr /* TODO : ident, sure ? */
-  | {expr} restr_expr
-  ;
-
-
-
 
 
 general_id =
@@ -696,3 +622,4 @@ general_id =
   | {this} 
   | {ident} ident
   ;
+

@@ -13,7 +13,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class AutoChecker {
+public class GrammarChecker {
    private String inputString;
    private Boolean expectedResult;
    private CssChecker cssChecker;
@@ -26,7 +26,7 @@ public class AutoChecker {
    // Each parameter should be placed as an argument here
    // Every time runner triggers, it will pass the arguments
    // from parameters we defined in primeNumbers() method
-   public AutoChecker(String inputString, 
+   public GrammarChecker(String inputString, 
       Boolean expectedResult) {
       this.inputString = inputString;
       this.expectedResult = expectedResult;
@@ -44,7 +44,7 @@ public class AutoChecker {
    }
 
    @Parameterized.Parameters
-   public static Collection primeNumbers() {
+   public static Collection<Object[]> utFiles() {
 	   /*return Arrays.asList(new Object[][] {
 		         { "lol", true },
 		         { "test", false }
@@ -71,7 +71,7 @@ public class AutoChecker {
 		   ret.add(new Object[] {f, false});
 	   return ret;
    }
-
+   
    // This test will run 4 times since we have 5 parameters defined
    @Test
    public void testCssChecker() {

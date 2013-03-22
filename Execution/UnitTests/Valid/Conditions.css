@@ -1,0 +1,10 @@
+
+a := true;
+
+if (a) {
+  print "ok";
+  print "lol";
+};
+if (!a) {
+  print "lolno";
+}

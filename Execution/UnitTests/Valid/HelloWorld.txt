@@ -1,0 +1,10 @@
+
+n := 42;
+
+def main := {
+  print "Hello world!";
+  def subProc := {print n};
+  subProc;
+};
+
+main;

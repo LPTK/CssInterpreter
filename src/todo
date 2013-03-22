@@ -1,5 +1,40 @@
+
+AV:
+
 - Faire un script pour effacer tous les fichiers générés par sableCC
   (apparemment, cela peut causer des soucis, parfois)
   Attention aux approches trop simples : p.e., on ne peut supprimer
   le dossier lexer en entier si on écrit un lexer personnalisé
   (qui hérite du lexer généré)
+
+
+  
+LP:
+
+	todo
+- handle recursive type references
+- valeurs par défaut pour les paramètres (et les champs de classe)
+- implémenter ref/rval
+- datapaths
+- make a utest for ambiguous call & wrong overloading
+
+
+	done
+- inférer le type du retour des fonctions
+
+
+
+CODE TO MAKE WORK
+
+def lol := {
+  n = 42, print "ok";
+};
+lol;
+
+
+
+
+
+
+
+

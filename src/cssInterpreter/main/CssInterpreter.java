@@ -5,10 +5,11 @@ import java.io.FileReader;
 import java.io.PushbackReader;
 import java.io.StringReader;
 
+import cssInterpreter.compiler.CompilerException;
+import cssInterpreter.compiler.Interpreter;
 import cssInterpreter.lexer.CssLexer;
 import cssInterpreter.node.Start;
 import cssInterpreter.parser.Parser;
-import cssInterpreter.test.ASTPrinter;
 
 public class CssInterpreter {
 
@@ -18,7 +19,7 @@ public class CssInterpreter {
 	public static void main(String[] args) {
 		CssLexer lexer;
 		Parser parser;
-		Start ast;
+		Start ast = null;
 		
 		String text = new String();
 		//String filename = "/tmp/test.css"; // TODO
@@ -52,13 +53,37 @@ public class CssInterpreter {
 			//ast.getPCompilationUnit().apply(new Switch(){});
 
 			// Print the ast. Should be removed later
-			ast.apply(new ASTPrinter());
+			//ast.apply(new ASTPrinter());
+			
 
 		} catch (Exception e) {
 			System.out.println(e);
 			e.printStackTrace();
 		}
+	
+		//ast.apply(new DumbInterpreter());
+		
+		final boolean debug = true;
+		
+		if (debug)
+			ast.apply(new Interpreter());			
+		else try {
+			ast.apply(new Interpreter());
+		} catch (Exception e) {
+			if (e.getCause() instanceof CompilerException)
+				System.err.println(e);
+			else
+				throw e;
+		}
 
 	}
 
 }
+
+
+
+
+
+
+
+

@@ -4,6 +4,8 @@ import cssInterpreter.analysis.DepthFirstAdapter;
 import cssInterpreter.node.AAttrDeclStatement;
 import cssInterpreter.node.AClosure;
 import cssInterpreter.node.AExprStatement;
+import cssInterpreter.node.ANumberExpr;
+
 
 public class ASTPrinter extends DepthFirstAdapter {
 	
@@ -20,10 +22,28 @@ public class ASTPrinter extends DepthFirstAdapter {
     }
 	
 	@Override
+	public void inANumberExpr(ANumberExpr node)
+    {
+        //System.out.println("In a number: "+node.getIntegerNumber().toString());
+        System.out.println("In a number: "+node.getIntegerNumber().getText());
+    }
+	
+	
     public void inAAttrDeclStatement(AAttrDeclStatement node)
     {
 		System.out.println("Decl statement: "+node.toString());
+		/*
+		//System.out.println((Object)(((AAttrDecl)node.getAttrDecl()).getAttrType()));
+		System.out.println((((AAttrDecl)node.getAttrDecl()).getAttrType()));
+		
+		//FIXME ?? //
+		System.out.println((((AAttrDecl)node.getAttrDecl()).getAttrType()) instanceof AValAttrType);
+		
+		System.out.println((((AAttrDecl)node.getAttrDecl()).getAttrType()) instanceof ARefAttrType);
+		System.out.println(((AAttrDecl)node.getAttrDecl()).getName());
+		*/
     }
+
 }
 
 //public class ASTPrinter extends DepthFirstAdapter {
