@@ -489,11 +489,13 @@ method_annot_id = ident;
 generic_location = key_any type;
 
 data_path /*{-> data_path}*/ =
-    generic_location; /* TODO */
+    {generic} generic_location
+  | {generic_and_path} l_paren generic_location r_paren path_element*
+  | {data_and_path} data_name path_element*;
 
 path_element =
     {single} dot data_name
-      | {kleene} l_paren dot data_name r_paren;
+  | {kleene} l_paren dot data_name r_paren;
 
 data_name =
     {single} ident
