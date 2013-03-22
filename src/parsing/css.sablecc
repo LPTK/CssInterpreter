@@ -491,11 +491,19 @@ method_annot_id = ident;
 generic_location = key_any type;
 
 data_path /*{-> data_path}*/ =
-    generic_location; /* TODO */
+    {generic} generic_location
+  | {generic_and_path} l_paren generic_location r_paren path_element*
+  | {data_and_path} data_name path_element*;
 
-data_name = ident;
+path_element =
+    {single} dot data_name
+  | {kleene} l_paren dot data_name r_paren;
+
+data_name =
+    {single} ident
+  | {conjunction} l_paren data_name data_name_conj_second* r_paren;
+
 data_name_conj_second = key_or data_name;
-data_name_conj = l_paren data_name data_name_conj_second? r_paren;
 
 
 method_annot /*{-> method_annotation}*/ =
