@@ -480,7 +480,7 @@ field_access {-> field_access} =
 general_identifier {-> general_id} =
     {parent} key_parent {-> New general_id.parent ()}
   | {this} key_this {-> New general_id.this ()}
-  | ident {-> New general_id.ident (ident)}
+  | {ident} ident {-> New general_id.ident (ident)}
   ;
 
 
@@ -500,7 +500,7 @@ path_element =
   | {kleene} l_paren dot data_name r_paren;
 
 data_name =
-    {single} ident
+    {single} general_identifier
   | {conjunction} l_paren data_name data_name_conj_second* r_paren;
 
 data_name_conj_second = key_or data_name;
