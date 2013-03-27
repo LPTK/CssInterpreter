@@ -150,11 +150,15 @@ class RuntimeObject  {
 		return parent;
 	}
 	
+	public void setParent(RuntimeObject parent) {
+		this.parent = parent;
+	}
+	
 	// should only be used to set the type of TypeType
 	public void setType(PrimitiveType<Type> typeType) {
 		type = typeType;
 	}
-
+	
 	/*
 	public RuntimeObject getAssociatedArgs() {
 		return associatedArgs;

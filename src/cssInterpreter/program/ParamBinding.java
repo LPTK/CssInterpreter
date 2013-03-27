@@ -59,6 +59,8 @@ public class ParamBinding {
 		//args = recurseBack(args);
 		thisReference = recurseBack(thisReference);
 		
+		args.setParent(recurseBack(args.getParent()));
+		
 		/**
 		assert false: "not done yet";
 		//mutate(args);
@@ -71,6 +73,8 @@ public class ParamBinding {
 		assert isSuccessful();
 		//args = recurseBack(args);
 		thisReference = recurseBack(thisReference);
+		
+		args.setParent(recurseBack(args.getParent()));
 		
 		/***
 		/////mutate(args);

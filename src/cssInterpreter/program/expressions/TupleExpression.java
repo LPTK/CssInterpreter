@@ -139,7 +139,7 @@ public class TupleExpression extends Expression {
 	}
 	
 	@Override
-	public RuntimeObject evaluate() throws CompilerException {
+	public RuntimeObject evaluate(RuntimeObject parentOfThis) throws CompilerException {
 		//throw new NotSupportedCompExc();
 		//if (type.isEmpty())
 		//return Execution.voidObj;
@@ -152,14 +152,15 @@ public class TupleExpression extends Expression {
 //		else {
 			
 			
-			RuntimeObject ret = new RuntimeObject(type, exec.getThis()/*FIXME?*/, false);
+			//RuntimeObject ret = new RuntimeObject(type, exec.getThis()/*FIXME?*/, false);
+			RuntimeObject ret = new RuntimeObject(type, parentOfThis, false);
 			//evals = new RUnt;
 			/*for (int i = 0; i < exprs.length; i++) {
 				ret.write(i, exprs[i].evaluate());
 			}*/
 			int i;
 			for (i = 0; i < ordinalArgs.size(); i++)
-				ret.write(i, ordinalArgs.get(i).evaluate());
+				ret.write(i, ordinalArgs.get(i).evaluate(parentOfThis));
 			/*
 			Iterator<Expression> ite = namedParams.values().iterator(); // FIXME: in right order?
 			while(ite.hasNext())
@@ -168,7 +169,7 @@ public class TupleExpression extends Expression {
 			Iterator<Pair<Integer,Expression>> ite = namedArgs.values().iterator(); // FIXEDME: in right order?
 			while(ite.hasNext()) {
 				Pair<Integer,Expression> p = ite.next();
-				ret.write(p.getFirst(), p.getSecond().evaluate());
+				ret.write(p.getFirst(), p.getSecond().evaluate(parentOfThis));
 				i++;
 			}
 			

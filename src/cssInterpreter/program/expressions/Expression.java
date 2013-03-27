@@ -37,8 +37,8 @@ public abstract class Expression {
 	
 	
 	
-	
-	public abstract RuntimeObject evaluate() throws CompilerException;
+	/** parentOfThis should corresponds to the current this object or to the root in a call from another function */
+	public abstract RuntimeObject evaluate(RuntimeObject parentOfThis) throws CompilerException; // TODO: parentOfThis is now actually useless!!! The root is determined by the parambinding!
 	
 	public boolean isAssignable() { return false; }
 	public final RuntimeObject assign(RuntimeObject value) {

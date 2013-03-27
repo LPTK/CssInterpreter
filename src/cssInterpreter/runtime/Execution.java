@@ -128,7 +128,7 @@ public class Execution {
 		thisObject = new RuntimeObject(scope.getType(), args, false);
 		
 		for (Expression expr : scope.getExprs()) {
-			RuntimeObject res = expr.evaluate();
+			RuntimeObject res = expr.evaluate(thisObject);
 			out("Expression  \""+expr+"\"  produced value: "+res);
 		}
 		RuntimeObject retObj;

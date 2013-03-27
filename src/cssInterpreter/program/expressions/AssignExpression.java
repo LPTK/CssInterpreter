@@ -34,11 +34,11 @@ public class AssignExpression extends Expression {
 	}
 
 	@Override
-	public RuntimeObject evaluate() throws CompilerException {
+	public RuntimeObject evaluate(RuntimeObject parentOfThis) throws CompilerException {
 		//RuntimeObject assignedRO = assigned.evaluate();
 		/*if (!assignedRO.isAssignable())
 			throw new ExecutionException("Expression "+assignedRO+" is not assignable");*/
-		RuntimeObject valueRO = getValue().evaluate();
+		RuntimeObject valueRO = getValue().evaluate(parentOfThis);
 		//assignedRO.assign(valueRO);
 		getAssigned().assign(valueRO);
 		return valueRO;

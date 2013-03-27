@@ -36,12 +36,12 @@ public class ListExpression extends Expression {
 	}
 	
 	@Override
-	public RuntimeObject evaluate() throws CompilerException {
+	public RuntimeObject evaluate(RuntimeObject parentOfThis) throws CompilerException {
 	
 		RuntimeObject ret = new RuntimeObject(type, Execution.getInstance().getThis(), false);
 		
 		for (int i = 0; i < exprs.length; i++)
-			ret.write(i, exprs[i].evaluate());
+			ret.write(i, exprs[i].evaluate(parentOfThis));
 		
 		return ret;
 		

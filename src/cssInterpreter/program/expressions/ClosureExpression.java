@@ -21,10 +21,10 @@ public class ClosureExpression extends Expression {
 	}
 
 	@Override
-	public RuntimeObject evaluate() throws CompilerException {
+	public RuntimeObject evaluate(RuntimeObject parentOfThis) throws CompilerException {
 		/**return scope.getType().getObjectRepresentation();*/
 		//return Execution.getInstance().execute(null, scope);
-		return Execution.getInstance().execute(Execution.getInstance().getThis(), null, scope);
+		return Execution.getInstance().execute(parentOfThis, null, scope);
 	}
 	
 	@Override

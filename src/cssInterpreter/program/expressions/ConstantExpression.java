@@ -17,7 +17,7 @@ public class ConstantExpression extends Expression {
 	}
 	
 	@Override
-	public RuntimeObject evaluate() {
+	public RuntimeObject evaluate(RuntimeObject parentOfThis) {
 		//System.out.println("CCCCCCCCC "+value);
 		return value;
 	}

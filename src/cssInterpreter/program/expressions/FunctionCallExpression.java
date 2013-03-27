@@ -115,7 +115,7 @@ public class FunctionCallExpression extends Expression {
 		return thisType;
 	}
 	private RuntimeObject getThis() throws CompilerException {
-		return thisExpression == null ? exec.getThis() : thisExpression.evaluate();
+		return thisExpression == null ? exec.getThis() : thisExpression.evaluate(exec.getThis());
 	}
 	
 //	@Override
@@ -179,7 +179,7 @@ public class FunctionCallExpression extends Expression {
 //	}
 	
 	@Override
-	public RuntimeObject evaluate() {
+	public RuntimeObject evaluate(RuntimeObject parentOfThis) {
 		try {
 			//System.out.println(">>> "+thisExpression.getType().getFunction(new CallSignature(fieldName, args)));
 			//System.out.println(">>> "+thisExpression+" "+(thisExpression == null ? "" : thisExpression.evaluate()));
@@ -194,7 +194,7 @@ public class FunctionCallExpression extends Expression {
 			/*
 			Pair<ParamBinding, RuntimeObject> pb_obj = getFunctionAndThisOrExecArgs();
 			return pb_obj.getFirst().evaluate(pb_obj.getSecond(), args.evaluate());*/
-			return getFunction(new CandidateList(getThisType())).evaluate(getThis(), args.evaluate());
+			return getFunction(new CandidateList(getThisType())).evaluate(getThis(), args.evaluate(exec.getThis()));
 			
 		} catch (CompilerException e) {
 			throw new ExecutionException(e);
@@ -213,7 +213,7 @@ public class FunctionCallExpression extends Expression {
 			Pair<ParamBinding, RuntimeObject> pb_obj = getFunctionAndThisOrExecArgs();
 			pb_obj.getFirst().set(pb_obj.getSecond(), args.evaluate(), value);
 			return value;*/
-			getFunction(new CandidateList(getThisType())).set(getThis(), args.evaluate(), value); // FIXME -1 ?
+			getFunction(new CandidateList(getThisType())).set(getThis(), args.evaluate(exec.getThis()), value);
 			return value;
 			
 		} catch (CompilerException e) {

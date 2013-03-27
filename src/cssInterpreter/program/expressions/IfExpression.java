@@ -22,13 +22,13 @@ public class IfExpression extends Expression {
 	}
 
 	@Override
-	public RuntimeObject evaluate() throws CompilerException {
-		RuntimeObject res = condition.evaluate();
+	public RuntimeObject evaluate(RuntimeObject parentOfThis) throws CompilerException {
+		RuntimeObject res = condition.evaluate(parentOfThis);
 		if (!res.getRuntimeType().conformsTo(exec.BoolType)) // TODO: really use "conformsTo"? (for classes, it's a mere equality)
 			throw new CompilerException("Condition in expression "+this+" did not return a boolean-like");
 		assert res.isValue() && res.getValue() instanceof Boolean;
 		if (((Boolean)res.getValue()) == true)
-			result.evaluate();
+			result.evaluate(parentOfThis);
 		return exec.getVoidobj();
 	}
 	

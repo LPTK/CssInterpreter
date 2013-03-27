@@ -26,8 +26,8 @@ public class NotExpression extends Expression {
 	}
 	
 	@Override
-	public RuntimeObject evaluate() throws CompilerException {
-		RuntimeObject res = expr.evaluate();
+	public RuntimeObject evaluate(RuntimeObject parentOfThis) throws CompilerException {
+		RuntimeObject res = expr.evaluate(parentOfThis);
 		assert res.isValue() && res.getValue() instanceof Boolean; // TODO: check this properly
 		//return !((Boolean)res.getValue());
 		return new PrimitiveRuntimeObject<Boolean>(Execution.getInstance().BoolType, !((Boolean)res.getValue()), res.getParent(), false);
