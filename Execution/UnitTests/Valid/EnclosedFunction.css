@@ -1,0 +1,8 @@
+
+def foo := {
+  print "ok";
+  n := 42;
+  def bar := { print n };
+  bar;
+};
+foo;

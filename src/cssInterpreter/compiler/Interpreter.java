@@ -259,7 +259,7 @@ public class Interpreter extends DepthFirstAdapter {
 	@Override
     public void outAFieldAccess(AFieldAccess fa)
     {
-		System.out.println("Field Access "+fa);
+		//System.out.println("Field Access "+fa);
 		//AFieldAccess fa = ((AFieldAccess)((AAccessNakedType) t).getFieldAccess());
 		Expression expr = exprs.get(fa.getPrefixExpr());
 		//otherExprs.put(fa, new FieldAccessExpression(expr, fa.getIdent().getText(), new EmptyExpr()));

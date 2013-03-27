@@ -1,0 +1,14 @@
+
+class A := {
+  val n: Long;
+};
+
+a := A 42;
+b := A 666;
+
+b.n = b.n;
+print b.n;
+
+b.n = a.n;
+print b.n;
+

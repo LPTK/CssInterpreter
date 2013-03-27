@@ -1,0 +1,12 @@
+
+def foo (a: Str) := {
+  print a;
+};
+
+def foo (n: Long; str: Str) := {
+  print n;
+  print str;
+};
+
+foo n=42;
+

@@ -1,0 +1,9 @@
+
+n := 42;
+
+def bar := { print n; n = 666 };
+ 
+def foo := { bar; print n; };
+
+foo;
+
