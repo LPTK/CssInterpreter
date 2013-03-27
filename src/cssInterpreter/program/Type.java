@@ -365,7 +365,11 @@ public class Type extends TypeReference {
 
 	@Override
 	public Type resolveDelegate(int currentTypeInferenceId) throws CompilerException {
-		System.out.println("Resolving type "+this);
+		
+		//System.out.println("Resolving type "+this);
+		///Interpreter.getInstance().out("Resolving type "+this);
+		///Interpreter.getInstance().indent();
+		
 		for (TypeReference t : attributeTypes)
 			t.resolve(currentTypeInferenceId);
 		for (List<Function> fls : fcts.values())
@@ -374,6 +378,8 @@ public class Type extends TypeReference {
 		/*for (Function f: getConstructors()) // really necessary? should have been resolved by resolving the type that contains it...
 			f.resolve(currentTypeInferenceId);*/
 		resolved = true;
+		
+		///Interpreter.getInstance().deindent();
 		return this;
 	}
 	

@@ -54,44 +54,83 @@ public class Execution {
 		//instance = this;
 	}
 	
-	public RuntimeObject execute(RuntimeObject args, Scope scope) throws CompilerException
+//	public RuntimeObject execute(RuntimeObject args, Scope scope) throws CompilerException
+//	{
+//		////System.out.println(">> Executing:  "+scope.getType()+"  with params  "+args);
+//		
+//		assert scope.getParent() == null || args == null || args.type.conformsTo(scope.getParent().getType());
+//		
+//		started = true;
+//		indentation++;
+//		//System.out.println(scope);
+//		
+//		//out("Executing scope with "+scope.getExprs().size()+" expression statements");
+//		out("Executing "+scope.getType()+" with args "+args+", containing "+scope.getExprs().size()+" expression statements");
+//		//out("containing "+scope.getExprs().size()+" expression statements");
+//
+//		thisStack.push(thisObject);
+//		//thisObject = new RuntimeObjectBase(scope.type, thisObject, false) {};
+//		
+//		//System.out.println(">> Adding:  "+params+": "+params.getRuntimeType()+" as parent to "+scope.getType());
+//		////System.out.println(">> Creating 'this' for "+scope.getType()+" using parent "+params);
+//		
+//		//argStack.push(currentArgObject);
+//		//currentArgObject = args; // TODO: remove arg's parents
+//		
+//		if (args == null)
+//			args = thisObject;
+//		
+//		thisObject = new RuntimeObject(scope.getType(), args, false);
+//		
+//		//indentation++;
+//		for (Expression expr : scope.getExprs()) {
+//			//out("Expression "+expr+" produced: "+expr.evaluate());
+//			RuntimeObject res = expr.evaluate();
+//			/*out("Expression "+expr);
+//			out("\tproduced: "+res);*/
+//			out("Expression  \""+expr+"\"  produced value: "+res);
+//		}
+//		//indentation--;
+//		
+//		RuntimeObject retObj;
+//		
+//		if (scope.hasReturnStatement()) {
+//			thisObject.destruct();
+//			retObj = null; // TODO
+//		} else {
+//			retObj = thisObject;
+//		}
+//		
+//		thisObject = thisStack.pop();
+//		indentation--;
+//		
+//		//return getVoidobj(); // FIXME
+//		return retObj;
+//	}
+	
+	public RuntimeObject execute(RuntimeObject thisReference, RuntimeObject args, Scope scope) throws CompilerException
 	{
-		////System.out.println(">> Executing:  "+scope.getType()+"  with params  "+args);
 		
 		assert scope.getParent() == null || args == null || args.type.conformsTo(scope.getParent().getType());
 		
 		started = true;
-		indentation++;
-		//System.out.println(scope);
 		
-		//out("Executing scope with "+scope.getExprs().size()+" expression statements");
 		out("Executing "+scope.getType()+" with args "+args+", containing "+scope.getExprs().size()+" expression statements");
-		//out("containing "+scope.getExprs().size()+" expression statements");
-
-		thisStack.push(thisObject);
-		//thisObject = new RuntimeObjectBase(scope.type, thisObject, false) {};
 		
-		//System.out.println(">> Adding:  "+params+": "+params.getRuntimeType()+" as parent to "+scope.getType());
-		////System.out.println(">> Creating 'this' for "+scope.getType()+" using parent "+params);
+		indentation++;
 		
-		//argStack.push(currentArgObject);
-		//currentArgObject = args; // TODO: remove arg's parents
+		//thisStack.push(thisObject);
+		RuntimeObject oldThis = thisObject;
 		
-		if (args == null)
+		if (args == null) // FIXME is it really ever null?
 			args = thisObject;
 		
 		thisObject = new RuntimeObject(scope.getType(), args, false);
 		
-		//indentation++;
 		for (Expression expr : scope.getExprs()) {
-			//out("Expression "+expr+" produced: "+expr.evaluate());
 			RuntimeObject res = expr.evaluate();
-			/*out("Expression "+expr);
-			out("\tproduced: "+res);*/
 			out("Expression  \""+expr+"\"  produced value: "+res);
 		}
-		//indentation--;
-		
 		RuntimeObject retObj;
 		
 		if (scope.hasReturnStatement()) {
@@ -101,12 +140,18 @@ public class Execution {
 			retObj = thisObject;
 		}
 		
-		thisObject = thisStack.pop();
+		//thisObject = thisStack.pop();
+		thisObject = oldThis;
 		indentation--;
 		
-		//return getVoidobj(); // FIXME
 		return retObj;
 	}
+	
+	
+	
+	
+	
+	
 	
 	public boolean hasStarted() {
 		return started;
@@ -134,7 +179,8 @@ public class Execution {
 	}
 	
 	void out(String string) {
-		out.print(indentation+":");
+		if (indentation >= 0)
+			out.print(indentation+":");
 		if (indentation == 0)
 			out.print(" ");
 		for (int i = 0; i < indentation; i++)

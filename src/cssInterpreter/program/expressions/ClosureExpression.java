@@ -23,11 +23,13 @@ public class ClosureExpression extends Expression {
 	@Override
 	public RuntimeObject evaluate() throws CompilerException {
 		/**return scope.getType().getObjectRepresentation();*/
-		return Execution.getInstance().execute(null, scope);
+		//return Execution.getInstance().execute(null, scope);
+		return Execution.getInstance().execute(Execution.getInstance().getThis(), null, scope);
 	}
 	
 	@Override
 	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
+		super.resolveTypes(currentTypeInferenceId);
 		//scope.resolveTypes(); // FIXME: not propagating id?
 		scope.resolveTypes(currentTypeInferenceId);
 	}

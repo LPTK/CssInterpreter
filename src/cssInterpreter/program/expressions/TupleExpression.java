@@ -63,6 +63,7 @@ public class TupleExpression extends Expression {
 			
 			if (e instanceof AssignExpression) {
 				AssignExpression ae = ((AssignExpression) e);
+				ae.setResolveAssignedExpression(false);
 				namedParamsBegan = true;
 				FunctionCallExpression fa = (FunctionCallExpression) ae.getAssigned();
 				
@@ -213,7 +214,8 @@ public class TupleExpression extends Expression {
 
 	@Override
 	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
-		
+
+		super.resolveTypes(currentTypeInferenceId);
 		
 		//type.resolve(currentTypeInferenceId);
 		//type.getAttributeTypes()[0].resolve(currentTypeInferenceId);

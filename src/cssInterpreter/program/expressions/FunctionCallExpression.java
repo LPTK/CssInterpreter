@@ -145,8 +145,10 @@ public class FunctionCallExpression extends Expression {
 	
 	@Override
 	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
-		if (thisExpression != null)
+		if (thisExpression != null) {
+			thisExpression.resolveTypes(currentTypeInferenceId);
 			thisExpression.getTypeRef().resolve(currentTypeInferenceId);
+		}
 		args.resolveTypes(currentTypeInferenceId);
 		outputType = getFunction(new CandidateList(getThisType())).fct.getOutputType().resolve(currentTypeInferenceId);
 	}

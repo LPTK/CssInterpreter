@@ -17,7 +17,7 @@ LP:
 - implémenter ref/rval
 - datapaths
 - make a utest for ambiguous call & wrong overloading
-
+- change grammar so that an expression like "{ bla } 42" or "42 42" becomes illegal (this also solves the "001" problem, being a "0 0 1")
 
 	done
 - inférer le type du retour des fonctions

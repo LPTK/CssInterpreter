@@ -3,6 +3,7 @@ package cssInterpreter.program;
 import cssInterpreter.compiler.CircularTypeReferenceException;
 import cssInterpreter.compiler.CompilerError;
 import cssInterpreter.compiler.CompilerException;
+import cssInterpreter.compiler.Interpreter;
 
 public abstract class TypeReference {
 	//Type getType(int currentTypeInferenceId) throws CompilerException;
@@ -32,12 +33,20 @@ public abstract class TypeReference {
 			return getType();
 		if (myTypeInferenceId == currentTypeInferenceId)
 			throw new CircularTypeReferenceException(this);
-		System.out.println("Resolving tref "+this);
+		
+		//System.out.println("Resolving tref "+this);
+		Interpreter.getInstance().out("Resolving tref "+this);
+		Interpreter.getInstance().indent();
+		
 		myTypeInferenceId = currentTypeInferenceId;
-		return resolveDelegate(currentTypeInferenceId);
-		/*Type ret = resolveDelegate(currentTypeInferenceId);;
-		ret.resolve(currentTypeInferenceId);
-		return ret;*/
+		
+		//return resolveDelegate(currentTypeInferenceId);
+		
+		Type ret = resolveDelegate(currentTypeInferenceId);
+		//ret.resolve(currentTypeInferenceId);
+		Interpreter.getInstance().deindent();
+		return ret;
+		
 	}
 	
 	public abstract Type resolveDelegate(int currentTypeInferenceId) throws CompilerException;

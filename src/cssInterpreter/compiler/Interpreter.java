@@ -99,6 +99,12 @@ public class Interpreter extends DepthFirstAdapter {
 		}
 	}*/
 	
+
+	public static Interpreter getInstance() {
+		return Execution.getInstance().getInterpreter();
+	}
+	
+	
 	int indentation = 0;
 	Scope currentScope;
 	Execution exec;
@@ -125,11 +131,13 @@ public class Interpreter extends DepthFirstAdapter {
 		out(source);
 	}
 	
-	private void out(String string) {
+	public void out(String string) {
 		for (int i = 0; i < indentation; i++)
 			exec.getOut().print("\t");
 		exec.getOut().println(string);
 	}
+	public void indent() { indentation++; }
+	public void deindent() { indentation--; }
 	
 
 	/*** DECLARATION ***/
@@ -170,7 +178,8 @@ public class Interpreter extends DepthFirstAdapter {
 			System.out.println("Expression "+expr+" produced: "+expr.evaluate());
 		}*/
 		try {
-			exec.execute(exec.standardScopeRO, currentScope);
+			//exec.execute(exec.standardScopeRO, currentScope);
+			exec.execute(exec.standardScopeRO, exec.standardScopeRO, currentScope);
 		} catch (CompilerException e) {
 			throw new ExecutionException(e);
 		}
@@ -886,7 +895,8 @@ public class Interpreter extends DepthFirstAdapter {
 					*/
 					
 					
-					return exec.execute(args, scopes.get(myClosure));
+					//return exec.execute(args, scopes.get(myClosure));
+					return exec.execute(thisReference, args, scopes.get(myClosure));
 					
 					
 				}
@@ -930,6 +940,8 @@ public class Interpreter extends DepthFirstAdapter {
 		if (expr instanceof TupleExpression) {
 			for (Expression ex : ((TupleExpression) expr).getRawExprs()) {
 				currentScope.addExpr(ex);
+				if (ex instanceof AssignExpression)
+					((AssignExpression) ex).setResolveAssignedExpression(true); // sale...
 			}
 		}
 		else currentScope.addExpr(expr);

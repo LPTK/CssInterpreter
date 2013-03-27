@@ -26,6 +26,7 @@ public class ConstantExpression extends Expression {
 	
 	@Override
 	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
+		//super.resolveTypes(currentTypeInferenceId);
 		// Nothing to do here, type is already resolved
 	}
 	

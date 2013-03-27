@@ -1,6 +1,7 @@
 package cssInterpreter.program.expressions;
 
 import cssInterpreter.compiler.CompilerException;
+import cssInterpreter.compiler.NotSupportedException;
 import cssInterpreter.program.TypeReference;
 import cssInterpreter.runtime.RuntimeObject;
 
@@ -8,6 +9,7 @@ public class AssignExpression extends Expression {
 
 	private Expression assigned;
 	private Expression value;
+	private boolean resolveAssigned = true;
 	
 	public AssignExpression(Expression assigned, Expression value) {
 		this.assigned = assigned;
@@ -55,11 +57,28 @@ public class AssignExpression extends Expression {
 
 	@Override
 	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
+		super.resolveTypes(currentTypeInferenceId);
 		//System.out.println("Resolving "+this);
-		assigned.resolveTypes(currentTypeInferenceId);
+		if (resolveAssigned)
+			assigned.resolveTypes(currentTypeInferenceId);
+		//System.out.println("RESASS!!!");
 		value.resolveTypes(currentTypeInferenceId);
+	}
+
+	public void setResolveAssignedExpression(boolean resolve) {
+		if (!(assigned instanceof FunctionCallExpression && ((FunctionCallExpression)assigned).args.rawEprs.length == 0))
+			throw new NotSupportedException("Assigning non-idents??");
+		resolveAssigned = resolve;
 	}
 	
 }
+
+
+
+
+
+
+
+
 
 

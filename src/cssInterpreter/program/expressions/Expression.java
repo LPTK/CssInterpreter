@@ -1,6 +1,7 @@
 package cssInterpreter.program.expressions;
 
 import cssInterpreter.compiler.CompilerException;
+import cssInterpreter.compiler.Interpreter;
 import cssInterpreter.program.TypeReference;
 import cssInterpreter.runtime.ExecutionException;
 import cssInterpreter.runtime.RuntimeObject;
@@ -25,8 +26,12 @@ public abstract class Expression {
 	
 	public abstract TypeReference getTypeRef();
 	
-	public abstract void resolveTypes(int currentTypeInferenceId) throws CompilerException;
-	
+	//public abstract void resolveTypes(int currentTypeInferenceId) throws CompilerException;
+	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
+		//System.out.println("RezExpr "+this);
+		Interpreter.getInstance().out("Resolving expression "+this);
+		
+	}
 	
 	
 	

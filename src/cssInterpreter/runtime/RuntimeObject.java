@@ -70,6 +70,8 @@ class RuntimeObject  {
 	}
 	
 	public final void write(int index, RuntimeObject obj) throws CompilerException { // TODONE: check types?
+		if (index >= attributes.length)
+			throw new AccessViolationException("Cannot access location "+index+" in object "+this);
 		if (constant)
 			throw new AccessViolationException("Cannot write to a constant object");
 		if (destructed)
@@ -83,10 +85,13 @@ class RuntimeObject  {
 	}
 
 	public final RuntimeObject read(int index) { // TODO: check types?
+		if (index >= attributes.length)
+			//throw new AccessViolationException("Cannot access a location out of the object: "+index);
+			throw new AccessViolationException("Cannot access location "+index+" in object "+this);
 		if (attributes[index] == null)
 			throw new AccessViolationException("Value "+type.getAttributeNames()[index]+" (at index "+index+") in "+this+" was not initialized when read");
 		if (destructed)
-			throw new AccessViolationException("Cannot write to a destructed object");
+			throw new AccessViolationException("Cannot read crom a destructed object");
 		return readDelegate(index);
 	}
 	

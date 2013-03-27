@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import cssInterpreter.compiler.CompilerException;
+import cssInterpreter.compiler.Interpreter;
 import cssInterpreter.program.expressions.Expression;
 import cssInterpreter.runtime.Execution;
 import cssInterpreter.runtime.RuntimeObject;
@@ -180,14 +181,16 @@ public class Scope {
 	}
 	public void resolveTypes(Integer currentTypeInferenceId) throws CompilerException {
 		
-		System.out.println("Resolving types in scope "+type);
+		//System.out.println("Resolving types in scope "+type);
+		Interpreter.getInstance().out("Resolving types in scope "+type);
+		Interpreter.getInstance().indent();
 		
-		for (Expression e : exprs)
-			e.resolveTypes(getTypeInferenceId(currentTypeInferenceId));
 		for (Type t : types)
 			t.resolve(getTypeInferenceId(currentTypeInferenceId));
 		for (Scope s : childs)
 			s.resolveTypes();
+		for (Expression e : exprs)
+			e.resolveTypes(getTypeInferenceId(currentTypeInferenceId));
 		type.resolve(getTypeInferenceId(currentTypeInferenceId));
 		
 		/*
@@ -197,6 +200,7 @@ public class Scope {
 		for (Expression e : exprs)
 			e.resolveTypes(getTypeInferenceId(currentTypeInferenceId));
 		*/
+		Interpreter.getInstance().deindent();
 	}
 
 	public void addChild(Scope s) {

@@ -49,6 +49,7 @@ public class ListExpression extends Expression {
 	
 	@Override
 	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
+		super.resolveTypes(currentTypeInferenceId);
 		
 		for (TypeReference tr : type.getAttributeTypes())
 			tr.resolve(currentTypeInferenceId); // FIXME: really ok?!

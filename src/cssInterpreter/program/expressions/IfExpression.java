@@ -39,6 +39,7 @@ public class IfExpression extends Expression {
 	
 	@Override
 	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
+		super.resolveTypes(currentTypeInferenceId);
 		condition.resolveTypes(currentTypeInferenceId);
 		result.resolveTypes(currentTypeInferenceId);
 	}
