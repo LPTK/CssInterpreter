@@ -200,6 +200,9 @@ public class Interpreter extends DepthFirstAdapter {
 		
     	scopes.put(node, currentScope);
 		nbClos++;
+		
+		//System.out.println("In clos "+currentScope.hashCode());
+		//out("In clos "+currentScope.hashCode());
     }
 
 	@Override
@@ -211,25 +214,30 @@ public class Interpreter extends DepthFirstAdapter {
 		//exprs.put(node, new ClosureExpression(currentScope));
 		///otherExprs.put(node, new ClosureExpression(currentScope));
 		
-		/**
+		
 		currentScope.getParent().addChild(currentScope);
 		
 		if (currentScope.getParent() != exec.standardScope)
 			currentScope = currentScope.getParent();
-		*/
+		
     }
 	
 	@Override
     public void outAClosureExpr(AClosureExpr node)
     {
-		exprs.put(node, new ClosureExpression(currentScope));
+		//out("Out clos "+currentScope.hashCode()+" "+currentScope);
+		
+		///exprs.put(node, new ClosureExpression(currentScope));
+		exprs.put(node, new ClosureExpression(scopes.get(node.getClosure())));
 		
 		
+		//System.out.println("Out of "+currentScope);
+		/*
 		currentScope.getParent().addChild(currentScope);
 		
 		if (currentScope.getParent() != exec.standardScope)
 			currentScope = currentScope.getParent();
-		
+		*/
     }
 	
 	/*

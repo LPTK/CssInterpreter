@@ -1,0 +1,5 @@
+
+a := "ok"; // comment test c := "john";
+b := "test";
+
+print b;
