@@ -46,7 +46,7 @@ public class Execution {
 	public final Scope standardScope = new Scope("[Std]", this);
 	public final RuntimeObject standardScopeRO = new RuntimeObject(standardScope.getType(), null, false) {};
 	
-	final RuntimeObject voidObj = new PrimitiveRuntimeObject<Void>(VoidType, new Void(), standardScopeRO, true);
+	final PrimitiveRuntimeObject<Void> voidObj = new PrimitiveRuntimeObject<>(VoidType, new Void(), standardScopeRO, true);
 	
 	public Execution(Interpreter interp, PrintStream out) {
 		this.interp = interp;
@@ -130,6 +130,7 @@ public class Execution {
 		for (Expression expr : scope.getExprs()) {
 			RuntimeObject res = expr.evaluate(thisObject);
 			out("Expression  \""+expr+"\"  produced value: "+res);
+			res.destruct();
 		}
 		RuntimeObject retObj;
 		
@@ -140,6 +141,8 @@ public class Execution {
 			retObj = thisObject;
 		}
 		
+		args.destruct(); // TODO: really here the place to do it?
+		
 		//thisObject = thisStack.pop();
 		thisObject = oldThis;
 		indentation--;
@@ -148,8 +151,13 @@ public class Execution {
 	}
 	
 	
-	
-	
+	public void destroyStaticConstants() {
+		for (@SuppressWarnings("rawtypes") PrimitiveType pt: PrimitiveType.allPrimitiveTypes)
+			pt.destroy();
+		standardScopeRO.destruct();
+		standardScope.destroy();
+		voidObj.destruct();
+	}
 	
 	
 	
@@ -200,7 +208,7 @@ public class Execution {
 		return output;
 	}
 
-	public RuntimeObject getVoidobj() {
+	public PrimitiveRuntimeObject<Void> getVoidobj() {
 		return voidObj;
 	}
 	

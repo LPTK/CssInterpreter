@@ -15,6 +15,7 @@ public abstract class TypeReference {
 	
 	//Integer currentTypeInferenceId;
 	int myTypeInferenceId = 0;
+	private TypeReference pointerTypeRef;// = new PointerTypeReference(this);
 	
 
 	public final Type getType() {
@@ -40,16 +41,25 @@ public abstract class TypeReference {
 		
 		myTypeInferenceId = currentTypeInferenceId;
 		
+		if (pointerTypeRef != null)
+			pointerTypeRef.resolve(currentTypeInferenceId);
+		
 		//return resolveDelegate(currentTypeInferenceId);
 		
 		Type ret = resolveDelegate(currentTypeInferenceId);
 		//ret.resolve(currentTypeInferenceId);
-		Interpreter.getInstance().deindent();
+		Interpreter.getInstance().unindent();
 		return ret;
 		
 	}
 	
 	public abstract Type resolveDelegate(int currentTypeInferenceId) throws CompilerException;
+	
+	public TypeReference getPointerTypeRef() {
+		if (pointerTypeRef == null)
+			pointerTypeRef = new PointerTypeReference(this);
+		return pointerTypeRef;
+	}
 	
 	
 	

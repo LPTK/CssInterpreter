@@ -15,9 +15,10 @@ public class Scope {
 	TupleType type;
 	List<Expression> exprs = new ArrayList<>();
 	List<Type> types = new ArrayList<>();
-	List<Scope> childs = new ArrayList<>();
+	List<Scope> children = new ArrayList<>();
 	//String name;
 	TypeIdentifier typeId;
+	public List<RuntimeObject> constants = new ArrayList<>();
 	
 	public Scope(String name, final Execution exec) { // TODO: replace with a StandardLibraryScope class
 		type = new TupleType(new TypeIdentifier(name, null), null);
@@ -187,7 +188,7 @@ public class Scope {
 		
 		for (Type t : types)
 			t.resolve(getTypeInferenceId(currentTypeInferenceId));
-		for (Scope s : childs)
+		for (Scope s : children)
 			s.resolveTypes();
 		for (Expression e : exprs)
 			e.resolveTypes(getTypeInferenceId(currentTypeInferenceId));
@@ -200,11 +201,22 @@ public class Scope {
 		for (Expression e : exprs)
 			e.resolveTypes(getTypeInferenceId(currentTypeInferenceId));
 		*/
-		Interpreter.getInstance().deindent();
+		Interpreter.getInstance().unindent();
 	}
+	
+	/** Destroys the types and scopes contained in this scope, but of course NOT the objects allocated on the stack and on the heap */
+	public void destroy() {
+		for (RuntimeObject obj: constants)
+			obj.destruct();
+		for (Scope s : children)
+			s.destroy();
+		for (Type t : types)
+			t.destroy();
+	}
+	
 
 	public void addChild(Scope s) {
-		childs.add(s);
+		children.add(s);
 	}
 	
 	@Override

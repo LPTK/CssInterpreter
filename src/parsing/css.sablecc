@@ -206,6 +206,7 @@ statement {-> statement} =
   | {function_decl} function_decl {-> function_decl.statement}
   | {class_decl} class_decl {-> class_decl.statement}
   | {conditional} conditional_stmt {-> conditional_stmt.statement}
+  | {datapath} at_sign data_path {-> New statement.datapath ()}
   ;
 
 
@@ -549,6 +550,7 @@ statement =
   | {def_decl} [name]:ident? [params]:closure? typed_value?
   | {class_decl} [name]:ident typed_value?
   | {conditional} [condition_type]:cond_type [condition_expr]:expr [statement_expr]:expr
+  | {datapath} // for test only; TODO REMOVE
   ;
 
 /*

@@ -1,9 +1,9 @@
-this.my_object.field_1;
+@this.my_object.field_1;
 
-(any MyClass).some_object;
+@(any MyClass).some_object;
 
-some_object.parent.parent.some_other_object;
+@some_object.parent.parent.some_other_object;
 
-a.(b or c).d or e;
+@a.(b or c).d or e;
 
-root(.branch)*;
+@root(.branch)*;

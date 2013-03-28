@@ -137,7 +137,7 @@ public class Interpreter extends DepthFirstAdapter {
 		exec.getOut().println(string);
 	}
 	public void indent() { indentation++; }
-	public void deindent() { indentation--; }
+	public void unindent() { indentation--; }
 	
 
 	/*** DECLARATION ***/
@@ -177,19 +177,37 @@ public class Interpreter extends DepthFirstAdapter {
 		/*for (Expression expr : currentScope.exprs) {
 			System.out.println("Expression "+expr+" produced: "+expr.evaluate());
 		}*/
+		
+		RuntimeObject ret = null;
 		try {
 			//exec.execute(exec.standardScopeRO, currentScope);
-			exec.execute(exec.standardScopeRO, exec.standardScopeRO, currentScope);
+			ret = exec.execute(exec.standardScopeRO, exec.standardScopeRO, currentScope);
 		} catch (CompilerException e) {
 			throw new ExecutionException(e);
 		}
+		
+		ret.destruct();
+		//currentScope.destroy();
+		exec.destroyStaticConstants();
+		
+		checkForLeaks();
+		
 		out("\n############# PROGRAM OUTPUT #############");
 		for (String str : exec.getOutput())
 			exec.getOut().println(str);
     }
 	
+	public void checkForLeaks() {
+		if (RuntimeObject.allObjects.size() > 0) {
+			StringBuffer sb = new StringBuffer();
+			for (RuntimeObject obj: RuntimeObject.allObjects)
+				sb.append("\n\t"+obj.toDetailedString());
+			throw new ExecutionException("Memory leaks detected ("+RuntimeObject.allObjects.size()+")! Following objects were not destructed:"+sb.toString());
+		}
+	}
 	
-	public boolean hasFinishedReading() {
+	
+	public boolean hasFinishedReading() { // TODO rm?
 		return finishedReading;
 	}
 	
@@ -547,8 +565,11 @@ public class Interpreter extends DepthFirstAdapter {
 	{
 		out("Number: "+node.getIntegerNumber().getText());
 		//exprs.put(node, new Constant(new ConstantRuntimeObject<Long>(Long.parseLong(node.getIntegerNumber().getText()))));
-		exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<Long>(exec.LongType, (Long)Long.parseLong(node.getIntegerNumber().getText()), exec.standardScopeRO, true)));
+		//exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<Long>(exec.LongType, (Long)Long.parseLong(node.getIntegerNumber().getText()), exec.standardScopeRO, true)));
 		//out("Number: "+node.hashCode());
+		PrimitiveRuntimeObject<Long> val = new PrimitiveRuntimeObject<Long>(exec.LongType, (Long)Long.parseLong(node.getIntegerNumber().getText()), exec.standardScopeRO, true);
+		currentScope.constants.add(val);
+		exprs.put(node, new ConstantExpression(val));
 	}
 
 	@Override

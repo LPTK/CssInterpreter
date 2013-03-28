@@ -10,9 +10,9 @@ public class RuntimeObjectRVal extends RuntimeObjectRef {
 	}
 	
 	@Override
-	public void destruct() {
+	public void destructDelegate() {
 		referenced.destruct();
-		super.destruct();
+		//super.destruct();
 	}
 	
 }

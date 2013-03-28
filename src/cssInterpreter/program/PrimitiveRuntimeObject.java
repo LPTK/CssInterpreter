@@ -27,4 +27,9 @@ public class PrimitiveRuntimeObject<T> extends RuntimeObject {
 	public String toOutput() {
 		return val.toString();
 	}
+	
+	@SuppressWarnings("unchecked")
+	public PrimitiveRuntimeObject<T> copy() {
+		return new PrimitiveRuntimeObject<T>((PrimitiveType<T>)type, val, parent, constant);
+	}
 }

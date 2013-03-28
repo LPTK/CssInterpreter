@@ -1,5 +1,6 @@
 package cssInterpreter.program;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -7,6 +8,10 @@ import cssInterpreter.runtime.Execution;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class PrimitiveType<T> extends Type {
+	
+	@SuppressWarnings("rawtypes")
+	public static List<PrimitiveType> allPrimitiveTypes = new ArrayList<PrimitiveType>();
+	
 	Function constructor;
 	
 	public PrimitiveType(TypeIdentifier id, final Execution exec) {
@@ -23,6 +28,7 @@ public class PrimitiveType<T> extends Type {
 				return new PrimitiveRuntimeObject<T>(that, (T) params.getValue(), exec.standardScopeRO, false); // FIXME: perform checks..?
 			}
 		};
+		allPrimitiveTypes.add(this);
 	}
 	/*@Override
 	public Type[] getAttributeTypes() {

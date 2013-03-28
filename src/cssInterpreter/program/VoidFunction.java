@@ -28,7 +28,7 @@ public abstract class VoidFunction extends Function {
 	public final RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject params) {
 		execute(thisReference, params);
 		//return Execution.getVoidobj();
-		return exec.getVoidobj();
+		return exec.getVoidobj().copy();
 	}
 
 }

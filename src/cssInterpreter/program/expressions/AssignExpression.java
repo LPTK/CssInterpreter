@@ -2,6 +2,7 @@ package cssInterpreter.program.expressions;
 
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.NotSupportedException;
+import cssInterpreter.program.Pointer;
 import cssInterpreter.program.TypeReference;
 import cssInterpreter.runtime.RuntimeObject;
 
@@ -10,6 +11,7 @@ public class AssignExpression extends Expression {
 	private Expression assigned;
 	private Expression value;
 	private boolean resolveAssigned = true;
+	private TypeReference outputType;
 	
 	public AssignExpression(Expression assigned, Expression value) {
 		this.assigned = assigned;
@@ -30,7 +32,9 @@ public class AssignExpression extends Expression {
 	@Override
 	public TypeReference getTypeRef() {
 		//System.out.println("____"+value.getType());
-		return getValue().getTypeRef();
+		//return getValue().getTypeRef();
+		//return getValue().getTypeRef().getPointerTypeRef();
+		return outputType;
 	}
 
 	@Override
@@ -41,7 +45,9 @@ public class AssignExpression extends Expression {
 		RuntimeObject valueRO = getValue().evaluate(parentOfThis);
 		//assignedRO.assign(valueRO);
 		getAssigned().assign(valueRO);
-		return valueRO;
+		//return valueRO;
+		//return new Reference(valueRO);
+		return new Pointer(valueRO);
 	}
 	
 	@Override
@@ -63,6 +69,8 @@ public class AssignExpression extends Expression {
 			assigned.resolveTypes(currentTypeInferenceId);
 		//System.out.println("RESASS!!!");
 		value.resolveTypes(currentTypeInferenceId);
+		outputType = getValue().getTypeRef().getPointerTypeRef();
+		outputType.resolve(currentTypeInferenceId);
 	}
 
 	public void setResolveAssignedExpression(boolean resolve) {

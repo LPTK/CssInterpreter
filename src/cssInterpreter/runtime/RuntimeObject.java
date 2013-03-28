@@ -1,7 +1,9 @@
 package cssInterpreter.runtime;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.program.PrimitiveType;
@@ -10,11 +12,13 @@ import cssInterpreter.program.Type;
 public 
 class RuntimeObject  {
 	
+	public static final List<RuntimeObject> allObjects = new ArrayList<>();
+	
 	protected Type type;
-	boolean constant;
+	protected boolean constant;
 	protected RuntimeObject[] attributes;
-	RuntimeObject parent;
-	boolean destructed;
+	protected RuntimeObject parent;
+	private boolean destructed;
 	
 	//RuntimeObject associatedArgs;
 	
@@ -35,6 +39,7 @@ class RuntimeObject  {
 			//assert ?
 			attributes = new RuntimeObject[type.getAttributeTypes().length];
 		}
+		allObjects.add(this);
 	}
 	/*
 	
@@ -91,7 +96,7 @@ class RuntimeObject  {
 		if (attributes[index] == null)
 			throw new AccessViolationException("Value "+type.getAttributeNames()[index]+" (at index "+index+") in "+this+" was not initialized when read");
 		if (destructed)
-			throw new AccessViolationException("Cannot read crom a destructed object");
+			throw new AccessViolationException("Cannot read from a destructed object");
 		return readDelegate(index);
 	}
 	
@@ -112,19 +117,35 @@ class RuntimeObject  {
 	
 	@Override
 	public String toString() {
+		return toString(true);
+	}
+	
+	public String toString(boolean showFunctions) {
+		
+		String destructedMark = destructed? "#": "";
+		
+		if (attributes == null)
+			return destructedMark+"{Empty obj of type "+type+"}";
+		
 		StringBuffer sb = new StringBuffer();
-		sb.append("{");
+		sb.append(destructedMark+"{");
+		
+		int elts = 0;
 		
 		for (int i = 0; i < attributes.length; i++) {
 			String fname = type.getAttributeNames()[i];
 			sb.append((fname==null?"":fname)+":"+type.getAttributeTypes()[i]+"="+attributes[i]+"; ");
+			elts++;
 		}
 		
+		if (showFunctions)
 		for (String fname : type.getFcts().keySet()) {
 			sb.append(fname+"(); "); // type.getFcts()
+			elts++;
 		}
-		
-		if (attributes.length > 0 || type.getFcts().size() > 0)
+
+		//if (attributes.length > 0 || type.getFcts().size() > 0)
+		if (elts > 0)
 			sb.delete(sb.length()-2, sb.length());
 		
 		sb.append("}");
@@ -140,11 +161,18 @@ class RuntimeObject  {
 		type.setAttributeName(index, name);
 	}
 	
-	public void destruct() {
+	public final void destruct() {
+		//if (destructed && this!=Execution.getInstance().voidObj)
+		if (destructed)
+			throw new AccessViolationException("Unable to destruct an object that was already destructed");
+		destructDelegate();
+		if (attributes != null) // TODO: legit?
 		for (RuntimeObject obj : attributes)
 			obj.destruct();
 		destructed = true;
+		allObjects.remove(this);
 	}
+	protected void destructDelegate() { }
 
 	public RuntimeObject getParent() {
 		return parent;
@@ -158,6 +186,16 @@ class RuntimeObject  {
 	public void setType(PrimitiveType<Type> typeType) {
 		type = typeType;
 	}
+
+	public String toDetailedString() {
+		//return (parent == null? "": parent.toDetailedString()+"->")+toString();
+		//return (parent == null? "": parent.toDetailedString()+" -> ")+toString(false)+": "+type;
+		return (parent == null? "": parent.type+":: ")+toString(false)+": "+type;
+	}
+	/*
+	public RuntimeObject copy() {
+		return new RuntimeObject(this);
+	}*/
 	
 	/*
 	public RuntimeObject getAssociatedArgs() {

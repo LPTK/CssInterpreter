@@ -7,6 +7,7 @@ import java.util.Map;
 
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.UnknownFunctionException;
+import cssInterpreter.node.ARefAttrType;
 import cssInterpreter.node.PAttrType;
 import cssInterpreter.node.TIdent;
 import cssInterpreter.runtime.Execution;
@@ -122,10 +123,63 @@ public class Type extends TypeReference {
 	}
 	public void addAttribute(PAttrType attrType, String name, TypeReference type) {
 		// TODO: use attrType to generate a Function.FieldType
+		
 		//addFct(new RuntimeField(name, type, attributeTypes.size()));
 		attributeNames.add(name);
 		//setAttributeName(attributeNames.size()-1, name);
+		
+		
+		
+		if (attrType instanceof ARefAttrType) // TODO: refine? // TODO handle rvals
+			type = type.getPointerTypeRef();
+		
+		
+		
+		// FIXME
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		attributeTypes.add(type);
+		
+		
+		
+		
 		setAttributeFunction(attributeNames.size()-1);
 	}
 	
@@ -381,6 +435,10 @@ public class Type extends TypeReference {
 		
 		///Interpreter.getInstance().deindent();
 		return this;
+	}
+	
+	public void destroy() {
+		objectRepr.destruct();
 	}
 	
 }
