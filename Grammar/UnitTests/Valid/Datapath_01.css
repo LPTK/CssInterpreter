@@ -2,6 +2,8 @@
 
 @(any MyClass).some_object;
 
+@any MyClass;
+
 @some_object.parent.parent.some_other_object;
 
 @a.(b or c).d or e;
