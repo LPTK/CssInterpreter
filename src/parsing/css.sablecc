@@ -72,6 +72,12 @@ Tokens
     {normal} not     = '!';
     {normal} key_or = 'or';
 
+    {normal} at_sign = '@';
+    {normal} key_into = 'into';
+    {normal} key_to = 'to';
+    {normal} key_as = 'as';
+    {normal} key_any = 'any';
+
     /* Type annotation keywords */
     {normal} key_val	  = 'val';
     {normal} key_rval	  = 'rval';
@@ -108,11 +114,6 @@ Tokens
     integer_number = '0' | non_zero_digit digits?;
 
     
-    at_sign = '@';
-    {normal} key_into = 'into';
-    {normal} key_to = 'to';
-    {normal} key_as = 'as';
-    {normal} key_any = 'any';
 
 Ignored Tokens
     blank,
@@ -494,11 +495,12 @@ generic_location = key_any type;
 data_path /*{-> data_path}*/ =
     {generic} generic_location
   | {generic_and_path} l_paren generic_location r_paren path_element*
-  | {data_and_path} data_name path_element*;
+  | {data_and_path} data_name path_element*
+  ;
 
 path_element =
     {single} dot data_name
-  | {kleene} l_paren dot data_name r_paren;
+  | {kleene} l_paren dot data_name r_paren star;
 
 data_name =
     {single} general_identifier
