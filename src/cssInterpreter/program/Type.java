@@ -24,7 +24,7 @@ public class Type extends TypeReference {
 	
 	List<String> attributeNames = new ArrayList<>();
 	List<TypeReference> attributeTypes = new ArrayList<>();
-	List<RefKind> attributeKinds = new ArrayList<>(); // ie: val, rval or ref
+	//List<RefKind> attributeKinds = new ArrayList<>(); // ie: val, rval or ref
 	
 	boolean isAClass = false; // TODO: use
 
@@ -135,12 +135,16 @@ public class Type extends TypeReference {
 			throw new UnknownFunctionException(callSign.getLine(), "Name '"+callSign.name+"' is unknown in type "+candidates.getInitialType()+" with parameters "+callSign.params+"\n\t  "+candidates.toString());
 		return ret;
 	}
-	
-	public void addAttribute(RefKind attrKind, TIdent name, TypeReference type) {
-		addAttribute(attrKind, name.getText(), type);
+
+//	public void addAttribute(RefKind attrKind, TIdent name, TypeReference type) {
+//		addAttribute(attrKind, name.getText(), type);
+//	}
+	public void addAttribute(TIdent name, TypeReference type) {
+		addAttribute(name.getText(), type);
 	}
 	//public void addAttribute(PAttrType attrType, String name, TypeReference type) {
-	public void addAttribute(RefKind attrKind, String name, TypeReference type) {
+	//public void addAttribute(RefKind attrKind, String name, TypeReference type) {
+	public void addAttribute(String name, TypeReference type) {
 		// TODO: use attrType to generate a Function.FieldType
 		
 		//addFct(new RuntimeField(name, type, attributeTypes.size()));
@@ -203,7 +207,8 @@ public class Type extends TypeReference {
 		attributeTypes.add(type);
 		
 		//attributeKinds.add(Reference.kindFromNode(attrType));
-		attributeKinds.add(attrKind);
+		
+		////attributeKinds.add(attrKind);
 		
 		
 		
@@ -222,10 +227,10 @@ public class Type extends TypeReference {
 		//new ArrayList<Type>().t
 		return attributeTypes.toArray(new TypeReference[attributeTypes.size()]);
 	}
-	
+	/*
 	public RefKind[] getAttributeKinds() {
 		return attributeKinds.toArray(new RefKind[attributeKinds.size()]);
-	}
+	}*/
 	
 	public boolean isTuple() {
 		//return tuple;
@@ -239,7 +244,7 @@ public class Type extends TypeReference {
 		
 		String pname = nt.name;
 		Type ptype = nt.type.getType();
-		RefKind pkind = nt.kind;
+		RefKind pkind = nt.type.getKind();
 		
 		if (!ptype.isSettableTo(attributeTypes.get(index).getType())) {
 			pb.setUnsuccessful(
@@ -252,23 +257,23 @@ public class Type extends TypeReference {
 				);
 			return false;
 		}
-		if (pkind == RefKind.VAL && attributeKinds.get(index) != RefKind.VAL) {
+		if (pkind == RefKind.VAL && attributeTypes.get(index).getKind() != RefKind.VAL) {
 			pb.setUnsuccessful(
 					"Was expecting a VAL for parameter "
 					+(pname==null? "": pname+" ")
 					+"of type "+attributeTypes.get(index).getType()
 					+", was given a "
-					+attributeKinds.get(index)
+					+attributeTypes.get(index).getKind()
 				);
 			return false;
 		}
-		if (pkind == RefKind.RVAL && attributeKinds.get(index) == RefKind.REF) {
+		if (pkind == RefKind.RVAL && attributeTypes.get(index).getKind() == RefKind.REF) {
 			pb.setUnsuccessful(
 					"Was expecting a RVAL for parameter "
 					+(pname==null? "": pname)
 					+"of type "+attributeTypes.get(index).getType()
 					+", was given a "
-					+attributeKinds.get(index)
+					+attributeTypes.get(index).getKind()
 				);
 			return false;
 		}
@@ -572,5 +577,14 @@ public class Type extends TypeReference {
 		return pointerType;
 	}
 	
+	@Override
+	protected RefKind getKindDelegate() {
+		//throw new NotSupportedException();
+		return null;
+	}
+	
 }
+
+
+
 

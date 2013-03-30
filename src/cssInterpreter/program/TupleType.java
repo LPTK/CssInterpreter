@@ -45,6 +45,7 @@ class TupleType extends Type {
 			@Override public Type getOutputType() {
 				return that;
 			}
+			
 			@Override public Reference evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) {
 				/*if (!params.getRuntimeType().conformsTo(signature))
 					throw new IllegalArgumentException();
@@ -67,6 +68,7 @@ class TupleType extends Type {
 				
 				//return new Reference(args, RefKind.VAL); // TODONE: is it really THIS simple? <- NOPE
 				
+				args.setIsAnArg(true);
 				return args.copy(true);
 				
 				

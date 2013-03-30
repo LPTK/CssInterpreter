@@ -5,7 +5,6 @@ import cssInterpreter.compiler.Interpreter;
 import cssInterpreter.program.TypeReference;
 import cssInterpreter.runtime.ExecutionException;
 import cssInterpreter.runtime.Reference;
-import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 public abstract class Expression {
@@ -28,7 +27,7 @@ public abstract class Expression {
 
 	public abstract TypeReference getTypeRef();
 
-	public abstract RefKind getRetKind();
+	//public abstract RefKind getRetKind();
 	
 	//public abstract void resolveTypes(int currentTypeInferenceId) throws CompilerException;
 	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {

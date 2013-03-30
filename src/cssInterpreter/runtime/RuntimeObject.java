@@ -119,7 +119,7 @@ class RuntimeObject  {
 	protected void writeDelegate(int index, RuntimeObject obj) {
 		//attributes[index] = obj;
 		if (attributes[index] == null)
-			attributes[index] = new Reference(obj, type.getAttributeKinds()[index]);
+			attributes[index] = new Reference(obj, type.getAttributeTypes()[index].getKind());
 		else attributes[index].reassign(obj);
 	}
 	/*
@@ -198,7 +198,7 @@ class RuntimeObject  {
 			return;
 		//if (destructed && this!=Execution.getInstance().voidObj)
 		if (destructed)
-			throw new AccessViolationException("Unable to destruct an object that was already destructed");
+			throw new AccessViolationException("Unable to destruct an object that was already destructed: "+this);
 		
 		
 		destructDelegate(); // even if !asAnArg?
@@ -261,7 +261,7 @@ class RuntimeObject  {
 		Reference ret = copyDelegate(shallow);
 		//for (Reference r: attributes) {
 		for (int i = 0; i < attributes.length; i++) {
-			if (shallow || type.getAttributeKinds()[i] == RefKind.REF)
+			if (shallow || type.getAttributeTypes()[i].getKind() == RefKind.REF)
 				 ret.access().write(i, read(i));
 			else ret.access().write(i, read(i).copy(shallow).access());
 		}

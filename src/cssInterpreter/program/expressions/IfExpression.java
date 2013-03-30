@@ -11,6 +11,7 @@ public class IfExpression extends Expression {
 	Execution exec;
 	Expression condition;
 	Expression result;
+	private TypeReference outputType;
 	
 	public IfExpression(Execution exec, Expression condition, Expression result) {
 		this.exec = exec;
@@ -20,13 +21,14 @@ public class IfExpression extends Expression {
 	
 	@Override
 	public TypeReference getTypeRef() { // TODO: make the if/else expr return a true type
-		return exec.VoidType;
+		//return exec.VoidType;
+		return outputType;
 	}
-
+	/*
 	@Override
 	public RefKind getRetKind() {
 		return RefKind.REF;
-	}
+	}*/
 	
 	@Override
 	public Reference evaluate(RuntimeObject parentOfThis) throws CompilerException {
@@ -42,7 +44,7 @@ public class IfExpression extends Expression {
 		if (((Boolean)res.getValue()) == true)
 			Execution.getInstance().stackLocal(result.evaluate(parentOfThis));
 		
-		return new Reference(exec.getVoidobj(), getRetKind());
+		return new Reference(exec.getVoidobj(), RefKind.REF);
 	}
 	
 	@Override
@@ -55,6 +57,8 @@ public class IfExpression extends Expression {
 		super.resolveTypes(currentTypeInferenceId);
 		condition.resolveTypes(currentTypeInferenceId);
 		result.resolveTypes(currentTypeInferenceId);
+		outputType = exec.VoidType.withKind(RefKind.REF);
+		outputType.resolve(currentTypeInferenceId);
 	}
 	
 }

@@ -28,7 +28,7 @@ class TypeIdentifier {
 			sb.append(ite.next());*/
 		for (int i = 0; i < type.attributeTypes.size(); i++) {
 			String fname = type.getAttributeNames()[i];
-			sb.append(type.getAttributeKinds()[i].name()+" "+(fname==null?"":fname)+":"+type.getAttributeTypes()[i]+"; ");
+			sb.append(type.getAttributeTypes()[i].getKind().name()+" "+(fname==null?"":fname)+":"+type.getAttributeTypes()[i]+"; ");
 		}
 		if (type.attributeTypes.size() > 0)
 			sb.delete(sb.length()-2, sb.length());

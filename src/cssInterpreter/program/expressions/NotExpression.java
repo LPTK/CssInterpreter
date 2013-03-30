@@ -11,6 +11,7 @@ import cssInterpreter.runtime.RuntimeObject;
 public class NotExpression extends Expression {
 	
 	Expression expr;
+	private TypeReference outputType;
 	
 	public NotExpression(Expression expr) {
 		this.expr = expr;
@@ -18,18 +19,20 @@ public class NotExpression extends Expression {
 
 	@Override
 	public TypeReference getTypeRef() {
-		return Execution.getInstance().BoolType;
+		return outputType;
 	}
-	
+	/*
 	@Override
 	public RefKind getRetKind() {
 		return RefKind.VAL;
-	}
+	}*/
 	
 	@Override
 	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
 		//super.resolveTypes(currentTypeInferenceId);
 		// Nothing to do here, type is already resolved
+		outputType = Execution.getInstance().BoolType.withKind(RefKind.VAL);
+		outputType.resolve(currentTypeInferenceId);
 	}
 	
 	@Override
@@ -37,7 +40,7 @@ public class NotExpression extends Expression {
 		RuntimeObject res = expr.evaluate(parentOfThis).access();
 		assert res.isValue() && res.getValue() instanceof Boolean; // TODO: check this properly
 		//return !((Boolean)res.getValue());
-		return new Reference(new PrimitiveRuntimeObject<Boolean>(Execution.getInstance().BoolType, !((Boolean)res.getValue()), res.getParent(), false), getRetKind());
+		return new Reference(new PrimitiveRuntimeObject<Boolean>(Execution.getInstance().BoolType, !((Boolean)res.getValue()), res.getParent(), false), RefKind.VAL);
 	}
 	
 	@Override
@@ -46,3 +49,4 @@ public class NotExpression extends Expression {
 	}
 	
 }
+

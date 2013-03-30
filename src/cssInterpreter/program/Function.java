@@ -20,7 +20,7 @@ public abstract class Function {
 	Signature signature;
 	private RefKind retKind;
 	
-	public Function(Signature signature, RefKind retKind) {
+	public Function(Signature signature, RefKind retKind) { // TODO handle unresolved retKinds when types are not yet resolved (cf: "return expr")
 		this.signature = signature;
 		this.retKind = retKind;
 	}
@@ -43,6 +43,8 @@ public abstract class Function {
 		if (!args.getRuntimeType().getBinding(this, 0).isSuccessful())
 		//if (!args.getRuntimeType().conformsTo(  type  )) // FIXME: functions MUST have an input type/trait rather than (just) "FormalParams"
 			throw new AccessViolationException("Type "+args.getRuntimeType()+" does not conform with "+this);
+		
+		//args.setIsAnArg(true);
 		
 		return evaluateDelegate(thisReference, args);
 	}

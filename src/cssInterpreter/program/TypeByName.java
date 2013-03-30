@@ -1,6 +1,8 @@
 package cssInterpreter.program;
 
 import cssInterpreter.compiler.CompilerException;
+import cssInterpreter.compiler.NotSupportedException;
+import cssInterpreter.runtime.Reference.RefKind;
 
 public class TypeByName extends TypeReference {
 	
@@ -64,6 +66,11 @@ public class TypeByName extends TypeReference {
 		if (type == null)
 			throw new CompilerException("Could not find type named '"+name+"' in scope of type "+fromScope.type);
 		return type;
+	}
+
+	@Override
+	protected RefKind getKindDelegate() {
+		throw new NotSupportedException();
 	}
 	
 	

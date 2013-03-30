@@ -14,6 +14,7 @@ import cssInterpreter.runtime.RuntimeObject;
 public class ListExpression extends Expression {
 	Type type;
 	Expression[] exprs;
+	private TypeReference outputType;
 	
 	public ListExpression(Execution exec, Expression[] exs, Type parentType, String name) throws CompilerException {
 		
@@ -27,21 +28,22 @@ public class ListExpression extends Expression {
 			Expression e = exs[i];
 			assert e != null;
 			
-			type.addAttribute(null, (String) null, new TypeOf(e, exec.getInterpreter())); // FIXME: notnull attrKind
+			//type.addAttribute(null, (String) null, new TypeOf(e, exec.getInterpreter())); // FIXME: notnull attrKind
+			type.addAttribute((String) null, new TypeOf(e, exec.getInterpreter()));
 			
 		}
 		
 	}
 	
 	@Override
-	public Type getTypeRef() {
-		return type;
+	public TypeReference getTypeRef() {
+		return outputType;
 	}
-
+	/*
 	@Override
 	public RefKind getRetKind() {
 		return RefKind.VAL;
-	}
+	}*/
 	
 	@Override
 	public Reference evaluate(RuntimeObject parentOfThis) throws CompilerException {
@@ -51,7 +53,7 @@ public class ListExpression extends Expression {
 		for (int i = 0; i < exprs.length; i++)
 			ret.write(i, exprs[i].evaluate(parentOfThis).access());
 		
-		return new Reference(ret, getRetKind());
+		return new Reference(ret, RefKind.VAL);
 		
 	}
 	
@@ -64,6 +66,9 @@ public class ListExpression extends Expression {
 		
 		for (Expression e : exprs)
 			e.resolveTypes(currentTypeInferenceId);
+		
+		outputType = type.withKind(RefKind.VAL);
+		outputType.resolve(currentTypeInferenceId);
 		
 	}
 	

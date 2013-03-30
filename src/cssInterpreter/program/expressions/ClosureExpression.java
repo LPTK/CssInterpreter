@@ -5,12 +5,12 @@ import cssInterpreter.program.Scope;
 import cssInterpreter.program.TypeReference;
 import cssInterpreter.runtime.Execution;
 import cssInterpreter.runtime.Reference;
-import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class ClosureExpression extends Expression {
 	
 	Scope scope;
+	private TypeReference outputType;
 	
 	public ClosureExpression(Scope scope) {
 		this.scope = scope;
@@ -19,13 +19,14 @@ public class ClosureExpression extends Expression {
 	@Override
 	public TypeReference getTypeRef() {
 		/**return scope.getType().getType();*/
-		return scope.getReturnType();
+		//return scope.getReturnType();
+		return outputType;
 	}
-
+	/*
 	@Override
 	public RefKind getRetKind() {
 		return scope.getReturnKind();
-	}
+	}*/
 	
 	@Override
 	public Reference evaluate(RuntimeObject parentOfThis) throws CompilerException {
@@ -39,6 +40,7 @@ public class ClosureExpression extends Expression {
 		super.resolveTypes(currentTypeInferenceId);
 		//scope.resolveTypes(); // FIXME: not propagating id?
 		scope.resolveTypes(currentTypeInferenceId);
+		outputType = scope.getReturnType().withKind(scope.getReturnKind());
 	}
 	
 	@Override

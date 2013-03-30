@@ -78,6 +78,10 @@ public abstract class TypeReference {
 		return pointerTypeRef;
 	}
 	
+	public TypeReference withKind(RefKind refk) {
+		return new DirectTypeRef(this, refk);
+	}
+	
 	
 	
 	//String getTypeName();

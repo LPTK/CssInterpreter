@@ -15,7 +15,8 @@ public class CallSignature {
 	}
 	
 	ParamBinding getBinding(Function f, int searchDepth) throws CompilerException {
-		return params.getTypeRef().getBinding(f, searchDepth);
+		//return params.getTypeRef().getBinding(f, searchDepth);
+		return params.getTypeRef().getType().getBinding(f, searchDepth);
 	}
 	
 	@Override

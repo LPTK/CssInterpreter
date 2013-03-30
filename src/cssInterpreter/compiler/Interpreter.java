@@ -425,7 +425,8 @@ public class Interpreter extends DepthFirstAdapter {
 		
 		try {
 			ATypedValue tv = (ATypedValue)node.getTypedValue();
-			currentScope.getType().addAttribute(Reference.kindFromNode(node.getAttrType()), node.getName(), determineType(tv));
+			//currentScope.getType().addAttribute(Reference.kindFromNode(node.getAttrType()), node.getName(), determineType(tv));
+			currentScope.getType().addAttribute(node.getName(), determineType(tv).withKind(Reference.kindFromNode(node.getAttrType())));
 			
 			// TODONE: add expr
 			
@@ -742,7 +743,8 @@ public class Interpreter extends DepthFirstAdapter {
 					if ((args instanceof TupleExpression)) {
 						 tupleArgs = (TupleExpression) args;
 						 //args.getTypeRef().getType(Expression.getNewTypeInferenceId()).setName("[CallArgs "+args+"]");
-						 tupleArgs.getTypeRef().setName("[CallArgs "+args+"]");
+						 //tupleArgs.getTypeRef().setName("[CallArgs "+args+"]");
+						 tupleArgs.getTypeRef().getType().setName("[CallArgs "+args+"]");
 						 
 					} else tupleArgs = new TupleExpression(exec, new Expression[]{args},currentScope.getType(),"[SingleCallArg "+args+"]");
 					

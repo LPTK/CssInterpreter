@@ -38,11 +38,11 @@ public class AssignExpression extends Expression {
 		//return getValue().getTypeRef().getPointerTypeRef();
 		return outputType;
 	}
-	
+	/*
 	@Override
 	public RefKind getRetKind() {
 		return RefKind.REF;
-	}
+	}*/
 	
 	@Override
 	public Reference evaluate(RuntimeObject parentOfThis) throws CompilerException {
@@ -84,7 +84,7 @@ public class AssignExpression extends Expression {
 		value.resolveTypes(currentTypeInferenceId);
 		//outputType = getValue().getTypeRef().getPointerTypeRef();
 		//outputType.resolve(currentTypeInferenceId);
-		outputType = getValue().getTypeRef();
+		outputType = getValue().getTypeRef().withKind(RefKind.REF);
 	}
 
 	public void setResolveAssignedExpression(boolean resolve) {

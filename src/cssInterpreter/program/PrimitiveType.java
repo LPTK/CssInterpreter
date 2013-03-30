@@ -21,7 +21,8 @@ public class PrimitiveType<T> extends Type {
 		super(id, null, true); // TODO: null or standardScope?
 		isAClass = true;
 		final PrimitiveType<T> that = this;
-		constructor = new Function(new Signature(id.name, new FormalParameters(new NamedType[]{new NamedType(RefKind.VAL,this,null,true)})), RefKind.VAL) {
+		//constructor = new Function(new Signature(id.name, new FormalParameters(new NamedType[]{new NamedType(RefKind.VAL,this,null,true)})), RefKind.VAL) {
+		constructor = new Function(new Signature(id.name, new FormalParameters(new NamedType[]{new NamedType(new DirectTypeRef(this,RefKind.VAL),null,true)})), RefKind.VAL) {
 			@Override public Type getOutputType() {
 				return that;
 			}

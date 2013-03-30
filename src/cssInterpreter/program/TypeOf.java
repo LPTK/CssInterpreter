@@ -3,6 +3,7 @@ package cssInterpreter.program;
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.Interpreter;
 import cssInterpreter.program.expressions.Expression;
+import cssInterpreter.runtime.Reference.RefKind;
 
 
 public class TypeOf extends TypeReference { // FIXME: useless?
@@ -10,6 +11,7 @@ public class TypeOf extends TypeReference { // FIXME: useless?
 	Interpreter interp;
 	Expression expr;
 	Type inferredType;
+	RefKind inferredKind;
 	
 	public TypeOf(Expression expr, Interpreter interp) {
 		this.interp = interp;
@@ -65,6 +67,12 @@ public class TypeOf extends TypeReference { // FIXME: useless?
 	protected Type getTypeDelegate() {
 		return inferredType;
 	}
+	
+	@Override
+	protected RefKind getKindDelegate() {
+		return inferredKind;
+	}
+	
 
 	@Override
 	public boolean isResolved() {
@@ -74,7 +82,10 @@ public class TypeOf extends TypeReference { // FIXME: useless?
 	@Override
 	public Type resolveDelegate(int currentTypeInferenceId) throws CompilerException {
 		expr.resolveTypes(currentTypeInferenceId);
-		return inferredType = expr.getTypeRef().resolve(currentTypeInferenceId);
+		//return inferredType = expr.getTypeRef().resolve(currentTypeInferenceId);
+		inferredType = expr.getTypeRef().resolve(currentTypeInferenceId);
+		inferredKind = expr.getTypeRef().getKind();
+		return inferredType;
 	}
 }
 

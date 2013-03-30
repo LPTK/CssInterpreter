@@ -11,7 +11,6 @@ import cssInterpreter.program.TypeReference;
 import cssInterpreter.runtime.Execution;
 import cssInterpreter.runtime.ExecutionException;
 import cssInterpreter.runtime.Reference;
-import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class FunctionCallExpression extends Expression {
@@ -22,8 +21,8 @@ public class FunctionCallExpression extends Expression {
 	Type thisType = null;
 	boolean searchRecursively;
 	Execution exec;
-	Type outputType;
-	RefKind outputKind;
+	TypeReference outputType;
+	//RefKind outputKind;
 	
 	/*
 	public FunctionCallExpression(Expression thisExpression, String fieldName, TupleExpression args) {
@@ -146,11 +145,11 @@ public class FunctionCallExpression extends Expression {
 		//return getFunction(new CandidateList(evalThisType())).fct.getOutputType(); // FIXME?! Type -> TypeRef
 		return outputType;
 	}
-
+	/*
 	@Override
 	public RefKind getRetKind() {
 		return outputKind;
-	}
+	}*/
 	
 	@Override
 	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
@@ -160,8 +159,11 @@ public class FunctionCallExpression extends Expression {
 		}
 		args.resolveTypes(currentTypeInferenceId);
 		Function fct = getFunction(new CandidateList(getThisType())).fct;
-		outputType = fct.getOutputType().resolve(currentTypeInferenceId);
-		outputKind = fct.getRetKind();
+		//outputType = fct.getOutputType().resolve(currentTypeInferenceId);
+		//outputKind = fct.getRetKind();
+		//outputType = fct.getOutputType();
+		outputType = fct.getOutputType().withKind(fct.getRetKind());
+		outputType.resolve(currentTypeInferenceId);
 	}
 	
 	

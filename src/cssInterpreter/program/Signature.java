@@ -33,7 +33,8 @@ public class Signature {
 		
 		for (NamedType nt : params.namedTypes)
 			//type.addAttribute(new ARefAttrType(), nt.name, nt.type);
-			type.addAttribute(nt.kind, nt.name, nt.type);
+			//type.addAttribute(nt.kind, nt.name, nt.type);
+			type.addAttribute(nt.name, nt.type);
 		
 		// FIXME: no fparams
 		
@@ -63,7 +64,8 @@ public class Signature {
 		
 		NamedType[] nts = new NamedType[type.attributeTypes.size()];
 		for (int i = 0; i < type.attributeTypes.size(); i++) {
-			nts[i] = new NamedType(type.attributeKinds.get(i), type.attributeTypes.get(i), type.attributeNames.get(i), false); // FIXME: use provided default values!
+			//nts[i] = new NamedType(type.attributeKinds.get(i), type.attributeTypes.get(i), type.attributeNames.get(i), false); // FIXME: use provided default values!
+			nts[i] = new NamedType(type.attributeTypes.get(i), type.attributeNames.get(i), false); // FIXME: use provided default values!
 		}
 		this.params = new FormalParameters(nts);
 		
