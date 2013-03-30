@@ -33,6 +33,10 @@ public abstract class Expression {
 		
 	}
 	
+	public void resolvePointer(int currentTypeInferenceId) throws CompilerException {
+		getTypeRef().resolve(currentTypeInferenceId).getPointerTypeRef().resolve(currentTypeInferenceId);
+	}
+	
 	
 	
 	
@@ -52,5 +56,5 @@ public abstract class Expression {
 	public void setLine(Integer line) { this.line = line; }
 	public Integer getLine() { return line; }
 	
-
+	
 }

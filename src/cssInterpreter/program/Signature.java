@@ -1,9 +1,15 @@
 package cssInterpreter.program;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import cssInterpreter.node.ARefAttrType;
 
 
 public class Signature {
+	
+	public static final List<Type> formalParamTypes = new ArrayList<>();
+	
 	private String name = null;
 	//Type[] types;
 	//NamedType[] namedTypes;
@@ -22,8 +28,12 @@ public class Signature {
 		this.params = params;
 		this.type = new TupleType(new TypeIdentifier("[FormalParam?!]", null), null);
 		
+		//Scope a = Execution.getInstance().standardScope;
+		//Execution.getInstance().standardScope.addType(type);
+		formalParamTypes.add(type);
+		
 		for (NamedType nt : params.namedTypes)
-		type.addAttribute(new ARefAttrType(), nt.name, nt.type);
+			type.addAttribute(new ARefAttrType(), nt.name, nt.type);
 		
 		
 		// FIXME: no fparams

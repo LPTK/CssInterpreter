@@ -1,7 +1,9 @@
 package cssInterpreter.program;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import util.Pair;
 import cssInterpreter.compiler.CompilerException;
@@ -19,6 +21,8 @@ public class ParamBinding {
 	//private Function fct;
 	public final Function fct;
 	private int searchDepth;
+
+	private Set<Integer> pointerDereferences = new HashSet<>();
 	
 	/*public ParamBinding(String bindingError) {
 		this.bindingError = bindingError;
@@ -49,7 +53,12 @@ public class ParamBinding {
 	private RuntimeObject getConformingArgs(RuntimeObject args) throws CompilerException {
 		RuntimeObject conformingArgs = new RuntimeObject(fct.getInputType(), args.getParent(), false);
 		for (Pair<Integer,Integer> p : bindings) {
-			conformingArgs.write(p.getSecond(), args.read(p.getFirst()));
+			
+			RuntimeObject arg = args.read(p.getFirst());
+			if (pointerDereferences.contains(p.getFirst()))
+				arg = ((Pointer)arg).access();
+			
+			conformingArgs.write(p.getSecond(), arg);
 		}
 		return conformingArgs;
 	}
@@ -119,9 +128,16 @@ public class ParamBinding {
 	/*public void addBinding(Integer index, String name) {
 		names.add(new Pair<>(index,name));
 	}*/
+	
 	public void addBinding(int argIndex, int paramIndex) {
 		bindings.add(new Pair<>(argIndex,paramIndex));
 	}
+
+	public void addBinding(int argIndex, int paramIndex, boolean pointerDereference) {
+		addBinding(argIndex, paramIndex);
+		pointerDereferences.add(argIndex);
+	}
+	
 	public void setSuccessful() {
 		this.bindingError = null;
 	}

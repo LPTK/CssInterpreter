@@ -26,6 +26,8 @@ public class Type extends TypeReference {
 	List<TypeReference> attributeTypes = new ArrayList<>();
 	
 	boolean isAClass = false; // TODO: use
+
+	private PointerType pointerType;
 	
 	
 	public Type(TypeIdentifier id, Type parent) {//, boolean tuple) {
@@ -35,6 +37,7 @@ public class Type extends TypeReference {
 		//this.tuple = tuple;
 		id.type = this; // sale
 		this.parent = parent;
+		//pointerType = new PointerType(this);
 	}
 	
 	public RuntimeObject getObjectRepresentation() {
@@ -130,7 +133,7 @@ public class Type extends TypeReference {
 		
 		
 		
-		if (attrType instanceof ARefAttrType) // TODO: refine? // TODO handle rvals
+		if (attrType == null || attrType instanceof ARefAttrType) // TODO: refine? // TODO handle rvals
 			type = type.getPointerTypeRef();
 		
 		
@@ -249,20 +252,26 @@ public class Type extends TypeReference {
 			*/
 			String pname = f.signature.params.namedTypes[k].name;
 			Type ptype = f.signature.params.namedTypes[k].type.getType();
-			if (!ptype.isSettableTo(attributeTypes.get(k).getType())) {
-				pb.setUnsuccessful(
-						"Cannot use argument "
-						+(n==null? "": n+" ")
-						+"of type "+attributeTypes.get(k).getType()
-						+" to initialize parameter "
-						+(pname==null? "": pname+" ")
-						+"of type "+ptype
-					);
-				break;
-			}
-			//pb.addBinding(k, f.signature.params.namedTypes[k].name);
-			pb.addBinding(k, k);
 			
+			//if (attributeTypes.get(k).getType().isPointer() && ptype.isSettableTo(attributeTypes.get(k).getType())) {
+			if (attributeTypes.get(k).getType() instanceof PointerType
+				&& ptype.isSettableTo(((PointerType)attributeTypes.get(k).getType()).getPointedType())) {
+				pb.addBinding(k, k, true);
+			} else {
+				if (!ptype.isSettableTo(attributeTypes.get(k).getType())) {
+					pb.setUnsuccessful(
+							"Cannot use argument "
+							+(n==null? "": n+" ")
+							+"of type "+attributeTypes.get(k).getType()
+							+" to initialize parameter "
+							+(pname==null? "": pname+" ")
+							+"of type "+ptype
+						);
+					break;
+				}
+				//pb.addBinding(k, f.signature.params.namedTypes[k].name);
+				pb.addBinding(k, k);
+			}
 			
 			k++;
 		}
@@ -437,8 +446,22 @@ public class Type extends TypeReference {
 		return this;
 	}
 	
+	private boolean destroyed = false;
+	public boolean isDestroyed() {
+		return destroyed;
+	}
+	
 	public void destroy() {
+//		if (id.name.equals("B"))
+//			System.out.println();
 		objectRepr.destruct();
+		destroyed = true;
+	}
+
+	public PointerType getPointerType() {
+		if (pointerType == null)
+			pointerType = new PointerType(this);
+		return pointerType;
 	}
 	
 }

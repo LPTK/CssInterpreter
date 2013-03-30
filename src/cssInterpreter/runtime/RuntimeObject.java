@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import cssInterpreter.compiler.CompilerException;
+import cssInterpreter.program.PointerType;
 import cssInterpreter.program.PrimitiveType;
 import cssInterpreter.program.Type;
 
@@ -31,6 +32,10 @@ class RuntimeObject  {
 	 */
 	//public RuntimeObject(Type type, RuntimeObject associatedArgs, boolean constant) {
 	public RuntimeObject(Type type, RuntimeObject parent, boolean constant) {
+		if (type == null && Execution.hasTypeType())
+			throw new AssertionError();
+//		if (type == null)
+//			throw new AssertionError();
 		this.type = type;
 		this.parent = parent;
 		//this.associatedArgs = associatedArgs;
@@ -116,19 +121,32 @@ class RuntimeObject  {
 	}*/
 	
 	@Override
-	public String toString() {
+	public final String toString() {
 		return toString(true);
 	}
 	
-	public String toString(boolean showFunctions) {
-		
+	public final String toString(boolean showFunctions) {
+
 		String destructedMark = destructed? "#": "";
 		
+		return destructedMark+toStringDelegate(showFunctions);
+		
+	}
+	public String toStringDelegate() { return null; }
+	
+	public String toStringDelegate(boolean showFunctions) {
+		
+		String str = toStringDelegate();
+		if (str != null)
+			return str;
+		
+		//String destructedMark = destructed? "#": "";
+		
 		if (attributes == null)
-			return destructedMark+"{Empty obj of type "+type+"}";
+			return "{Empty obj of type "+type+"}";
 		
 		StringBuffer sb = new StringBuffer();
-		sb.append(destructedMark+"{");
+		sb.append("{");
 		
 		int elts = 0;
 		
@@ -162,6 +180,8 @@ class RuntimeObject  {
 	}
 	
 	public final void destruct() {
+		if (isPointer()) /** Assume pointers are never destroyed */
+			return;
 		//if (destructed && this!=Execution.getInstance().voidObj)
 		if (destructed)
 			throw new AccessViolationException("Unable to destruct an object that was already destructed");
@@ -172,6 +192,11 @@ class RuntimeObject  {
 		destructed = true;
 		allObjects.remove(this);
 	}
+	
+	public boolean isPointer() {
+		return getRuntimeType() instanceof PointerType;
+	}
+
 	protected void destructDelegate() { }
 
 	public RuntimeObject getParent() {

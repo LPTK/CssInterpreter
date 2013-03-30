@@ -1,6 +1,7 @@
 package cssInterpreter.compiler;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -198,12 +199,20 @@ public class Interpreter extends DepthFirstAdapter {
     }
 	
 	public void checkForLeaks() {
-		if (RuntimeObject.allObjects.size() > 0) {
+		//Object objs = new ArrayList<>(RuntimeObject.allObjects); // DEBUG
+		List<RuntimeObject> allNonPointerObjects = new ArrayList<>();
+		for (RuntimeObject obj: RuntimeObject.allObjects)
+			//if (!(obj instanceof Pointer))
+			if (!obj.isPointer())
+				allNonPointerObjects.add(obj);
+		
+		if (allNonPointerObjects.size() > 0) {
 			StringBuffer sb = new StringBuffer();
-			for (RuntimeObject obj: RuntimeObject.allObjects)
+			for (RuntimeObject obj: allNonPointerObjects)
 				sb.append("\n\t"+obj.toDetailedString());
-			throw new ExecutionException("Memory leaks detected ("+RuntimeObject.allObjects.size()+")! Following objects were not destructed:"+sb.toString());
+			throw new ExecutionException("Memory leaks detected ("+allNonPointerObjects.size()+")! Following objects were not destructed:"+sb.toString());
 		}
+		
 	}
 	
 	

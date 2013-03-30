@@ -2,7 +2,7 @@ package cssInterpreter.runtime;
 
 import cssInterpreter.program.Type;
 
-public class RuntimeObjectRef extends RuntimeObject {
+public class RuntimeObjectRef extends RuntimeObject { // TODO rm?
 	
 	RuntimeObject referenced;
 	
@@ -28,7 +28,7 @@ public class RuntimeObjectRef extends RuntimeObject {
 	}
 	
 	@Override
-	public String toString() {
+	public String toStringDelegate() {
 		return "&"+super.toString();
 	}
 	

@@ -211,7 +211,9 @@ public class Scope {
 		for (Scope s : children)
 			s.destroy();
 		for (Type t : types)
-			t.destroy();
+			if (!t.isDestroyed()) // a type may have been destroyed through the destruction of its scope!...
+				t.destroy();
+		type.destroy();
 	}
 	
 

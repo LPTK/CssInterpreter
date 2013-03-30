@@ -10,7 +10,7 @@ import cssInterpreter.runtime.RuntimeObject;
 public class PrimitiveType<T> extends Type {
 	
 	@SuppressWarnings("rawtypes")
-	public static List<PrimitiveType> allPrimitiveTypes = new ArrayList<PrimitiveType>();
+	public static List<PrimitiveType> allPrimitiveTypes = new ArrayList<PrimitiveType>(); // TODO rm
 	
 	Function constructor;
 	

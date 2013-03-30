@@ -20,5 +20,9 @@ public class Pointer extends RuntimeObject {
 		// Nothing to be done, as we've just got a non-owning reference
 	}
 	
+	@Override
+	public String toStringDelegate() {
+		return "&"+pointee;
+	}
 }
 

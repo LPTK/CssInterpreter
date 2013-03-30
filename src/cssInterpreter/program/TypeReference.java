@@ -32,7 +32,7 @@ public abstract class TypeReference {
 	public final Type resolve(int currentTypeInferenceId) throws CompilerException {
 		if (isResolved())
 			return getType();
-		if (myTypeInferenceId == currentTypeInferenceId)
+		if (myTypeInferenceId == currentTypeInferenceId && !isPointer())
 			throw new CircularTypeReferenceException(this);
 		
 		//System.out.println("Resolving tref "+this);
@@ -41,18 +41,28 @@ public abstract class TypeReference {
 		
 		myTypeInferenceId = currentTypeInferenceId;
 		
+		/*
 		if (pointerTypeRef != null)
 			pointerTypeRef.resolve(currentTypeInferenceId);
+		*/
 		
 		//return resolveDelegate(currentTypeInferenceId);
 		
 		Type ret = resolveDelegate(currentTypeInferenceId);
 		//ret.resolve(currentTypeInferenceId);
+		
+		
+		if (pointerTypeRef != null)
+			pointerTypeRef.resolve(currentTypeInferenceId);
+		
+		
 		Interpreter.getInstance().unindent();
 		return ret;
 		
 	}
 	
+	protected boolean isPointer() { return false; } // FIXME replace with instanceof tests?
+
 	public abstract Type resolveDelegate(int currentTypeInferenceId) throws CompilerException;
 	
 	public TypeReference getPointerTypeRef() {

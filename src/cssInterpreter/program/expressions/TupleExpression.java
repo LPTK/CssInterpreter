@@ -8,6 +8,8 @@ import java.util.Map;
 
 import util.Pair;
 import cssInterpreter.compiler.CompilerException;
+import cssInterpreter.node.ARefAttrType;
+import cssInterpreter.program.Pointer;
 import cssInterpreter.program.TupleType;
 import cssInterpreter.program.Type;
 import cssInterpreter.program.TypeIdentifier;
@@ -83,14 +85,17 @@ public class TupleExpression extends Expression {
 				//namedParams.put(fa.fieldName, fa.args);
 				//namedParams.put(fa.fieldName, ae.value);
 				namedArgs.put(fa.fieldName, new Pair<>(i, ae.getValue()));
-				tt.addAttribute(null, fa.fieldName, new TypeOf(ae.getValue(), exec.getInterpreter()));
+				
+				//tt.addAttribute(null, fa.fieldName, new TypeOf(ae.getValue(), exec.getInterpreter()));
+				tt.addAttribute(new ARefAttrType(), fa.fieldName, new TypeOf(ae.getValue(), exec.getInterpreter())); // TODO: always a ref?
+				
 				
 			} else {
 				
 				if (namedParamsBegan)
 					throw new CompilerException("Invalid sequence of arguments: named arguments must follow ordinal arguments");
 				ordinalArgs.add(e);
-				tt.addAttribute(null, (String) null, new TypeOf(e, exec.getInterpreter()));
+				tt.addAttribute(new ARefAttrType(), (String) null, new TypeOf(e, exec.getInterpreter())); // TODO: always a ref?
 
 				///System.out.println(":o:"+e+" "+new TypeOf(e));
 				
@@ -160,7 +165,11 @@ public class TupleExpression extends Expression {
 			}*/
 			int i;
 			for (i = 0; i < ordinalArgs.size(); i++)
-				ret.write(i, ordinalArgs.get(i).evaluate(parentOfThis));
+				////ret.write(i, ordinalArgs.get(i).evaluate(parentOfThis));
+				ret.write(i, new Pointer(ordinalArgs.get(i).evaluate(parentOfThis)));
+			
+			
+			
 			/*
 			Iterator<Expression> ite = namedParams.values().iterator(); // FIXME: in right order?
 			while(ite.hasNext())
@@ -169,7 +178,12 @@ public class TupleExpression extends Expression {
 			Iterator<Pair<Integer,Expression>> ite = namedArgs.values().iterator(); // FIXEDME: in right order?
 			while(ite.hasNext()) {
 				Pair<Integer,Expression> p = ite.next();
-				ret.write(p.getFirst(), p.getSecond().evaluate(parentOfThis));
+				
+				
+				////ret.write(p.getFirst(), p.getSecond().evaluate(parentOfThis));
+				ret.write(p.getFirst(), new Pointer(p.getSecond().evaluate(parentOfThis)));
+				
+				
 				i++;
 			}
 			
@@ -178,6 +192,31 @@ public class TupleExpression extends Expression {
 			
 //		}
 	}
+	
+	@Override
+	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
+
+		super.resolveTypes(currentTypeInferenceId);
+		
+		//type.resolve(currentTypeInferenceId);
+		//type.getAttributeTypes()[0].resolve(currentTypeInferenceId);
+		for (TypeReference tr : type.getAttributeTypes()) {
+			
+			tr.resolve(currentTypeInferenceId); // FIXME: really ok?!
+			//tr.getPointerTypeRef().resolve(currentTypeInferenceId);
+			
+//			if (tr instanceof PointerTypeReference)
+//				System.out.println(tr);
+			
+		}
+		
+		for (Expression e : getRawExprs()) {
+			e.resolveTypes(currentTypeInferenceId);
+			e.resolvePointer(currentTypeInferenceId);
+		}
+		
+	}
+	
 	public String toString() {
 		//if (exprs.length == 0)
 		//try {
@@ -211,21 +250,6 @@ public class TupleExpression extends Expression {
 		/*} catch (CompilerException e) {
 			throw new ExecutionException(e);
 		}*/
-	}
-
-	@Override
-	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
-
-		super.resolveTypes(currentTypeInferenceId);
-		
-		//type.resolve(currentTypeInferenceId);
-		//type.getAttributeTypes()[0].resolve(currentTypeInferenceId);
-		for (TypeReference tr : type.getAttributeTypes())
-			tr.resolve(currentTypeInferenceId); // FIXME: really ok?!
-		
-		for (Expression e : getRawExprs())
-			e.resolveTypes(currentTypeInferenceId);
-		
 	}
 	
 }

@@ -7,9 +7,11 @@ import java.util.Stack;
 
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.Interpreter;
+import cssInterpreter.program.Pointer;
 import cssInterpreter.program.PrimitiveRuntimeObject;
 import cssInterpreter.program.PrimitiveType;
 import cssInterpreter.program.Scope;
+import cssInterpreter.program.Signature;
 import cssInterpreter.program.Type;
 import cssInterpreter.program.TypeIdentifier;
 import cssInterpreter.program.Void;
@@ -119,6 +121,8 @@ public class Execution {
 		
 		indentation++;
 		
+		Stack<Pointer> localStack = new Stack<>();
+		
 		//thisStack.push(thisObject);
 		RuntimeObject oldThis = thisObject;
 		
@@ -130,7 +134,9 @@ public class Execution {
 		for (Expression expr : scope.getExprs()) {
 			RuntimeObject res = expr.evaluate(thisObject);
 			out("Expression  \""+expr+"\"  produced value: "+res);
-			res.destruct();
+			//res.destruct(); // this only destructs the pointer!!!
+			//((Pointer)res).access().destruct();
+			localStack.push((Pointer)res);
 		}
 		RuntimeObject retObj;
 		
@@ -140,6 +146,9 @@ public class Execution {
 		} else {
 			retObj = thisObject;
 		}
+		
+		for (Pointer p: localStack)
+			p.access().destruct();
 		
 		args.destruct(); // TODO: really here the place to do it?
 		
@@ -152,9 +161,15 @@ public class Execution {
 	
 	
 	public void destroyStaticConstants() {
+		
+		/*
 		for (@SuppressWarnings("rawtypes") PrimitiveType pt: PrimitiveType.allPrimitiveTypes)
 			pt.destroy();
-		standardScopeRO.destruct();
+		*/
+		for (Type t: Signature.formalParamTypes)
+			t.destroy();
+		
+		//standardScopeRO.destruct(); // already destructed in call to execute as it is used as a this AND as an arg
 		standardScope.destroy();
 		voidObj.destruct();
 	}
@@ -228,10 +243,15 @@ public class Execution {
 		return currentArgObject;
 	}
 	*/
-
+	
+	public static boolean hasTypeType() {
+		return getInstance().TypeType != null;
+	}
+	
 	public static Execution getInstance() {
 		return instance;
 	}
+	
 }
 
 

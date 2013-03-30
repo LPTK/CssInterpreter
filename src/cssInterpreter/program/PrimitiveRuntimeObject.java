@@ -18,7 +18,7 @@ public class PrimitiveRuntimeObject<T> extends RuntimeObject {
 		return val;
 	}
 	@Override
-	public String toString() {
+	public String toStringDelegate() {
 		if (val instanceof String)
 			return "'"+val.toString()+"'";
 		return val.toString();
