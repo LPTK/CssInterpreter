@@ -4,6 +4,8 @@ import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.program.Scope;
 import cssInterpreter.program.TypeReference;
 import cssInterpreter.runtime.Execution;
+import cssInterpreter.runtime.Reference;
+import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class ClosureExpression extends Expression {
@@ -17,11 +19,16 @@ public class ClosureExpression extends Expression {
 	@Override
 	public TypeReference getTypeRef() {
 		/**return scope.getType().getType();*/
-		return scope.getType();
+		return scope.getReturnType();
 	}
 
 	@Override
-	public RuntimeObject evaluate(RuntimeObject parentOfThis) throws CompilerException {
+	public RefKind getRetKind() {
+		return scope.getReturnKind();
+	}
+	
+	@Override
+	public Reference evaluate(RuntimeObject parentOfThis) throws CompilerException {
 		/**return scope.getType().getObjectRepresentation();*/
 		//return Execution.getInstance().execute(null, scope);
 		return Execution.getInstance().execute(parentOfThis, null, scope);
@@ -38,6 +45,6 @@ public class ClosureExpression extends Expression {
 	public String toString() {
 		return scope.toString();
 	}
-
+	
 }
 

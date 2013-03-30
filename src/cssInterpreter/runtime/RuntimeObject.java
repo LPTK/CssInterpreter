@@ -5,10 +5,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.program.PointerType;
 import cssInterpreter.program.PrimitiveType;
 import cssInterpreter.program.Type;
+import cssInterpreter.runtime.Reference.RefKind;
 
 public 
 class RuntimeObject  {
@@ -17,9 +17,12 @@ class RuntimeObject  {
 	
 	protected Type type;
 	protected boolean constant;
-	protected RuntimeObject[] attributes;
+	//protected RuntimeObject[] attributes;
+	protected Reference[] attributes;
 	protected RuntimeObject parent;
 	private boolean destructed;
+
+	private boolean isAnArg = false;
 	
 	//RuntimeObject associatedArgs;
 	
@@ -42,7 +45,7 @@ class RuntimeObject  {
 		this.constant = constant;
 		if (type != null) { // normally only happens if this is the RuntimeObject associated with type TypeType
 			//assert ?
-			attributes = new RuntimeObject[type.getAttributeTypes().length];
+			attributes = new Reference[type.getAttributeTypes().length];
 		}
 		allObjects.add(this);
 	}
@@ -74,12 +77,12 @@ class RuntimeObject  {
 		throw new ExecutionException("Cannot get the value of a non-value object");
 	}
 	
-	public Iterator<RuntimeObject> values() {
+	public Iterator<Reference> values() {
 		//return new ArrayList<RuntimeObject>(attributes).iterator();
 		return Arrays.asList(attributes).iterator();
 	}
 	
-	public final void write(int index, RuntimeObject obj) throws CompilerException { // TODONE: check types?
+	public final void write(int index, RuntimeObject obj) { // TODONE: check types?
 		if (index >= attributes.length)
 			throw new AccessViolationException("Cannot access location "+index+" in object "+this);
 		if (constant)
@@ -106,14 +109,18 @@ class RuntimeObject  {
 	}
 	
 	protected RuntimeObject readDelegate(int index) {
-		return attributes[index];
+		//return attributes[index];
+		return attributes[index].access();
 	}
 	
 	public Type getRuntimeType() {
 		return type;
 	}
 	protected void writeDelegate(int index, RuntimeObject obj) {
-		attributes[index] = obj;
+		//attributes[index] = obj;
+		if (attributes[index] == null)
+			attributes[index] = new Reference(obj, type.getAttributeKinds()[index]);
+		else attributes[index].reassign(obj);
 	}
 	/*
 	public RuntimeObject getParent() {
@@ -178,17 +185,37 @@ class RuntimeObject  {
 		// TODO: check access
 		type.setAttributeName(index, name);
 	}
-	
+
 	public final void destruct() {
+		//destruct(false);
+		destruct(isAnArg);
+	}
+	/*public void destructAsAnArg() {
+		destruct(true);
+	}*/
+	private final void destruct(boolean asAnArg) {
 		if (isPointer()) /** Assume pointers are never destroyed */
 			return;
 		//if (destructed && this!=Execution.getInstance().voidObj)
 		if (destructed)
 			throw new AccessViolationException("Unable to destruct an object that was already destructed");
-		destructDelegate();
-		if (attributes != null) // TODO: legit?
-		for (RuntimeObject obj : attributes)
-			obj.destruct();
+		
+		
+		destructDelegate(); // even if !asAnArg?
+		
+		if (!asAnArg) {
+			
+			//destructDelegate();
+			
+			//if (attributes != null) // TODO: legit?
+			//for (RuntimeObject obj : attributes)
+			//	obj.destruct();
+			if (attributes != null) // TODO: legit?
+			for (Reference ref : attributes)
+				ref.destroy();
+			
+		}
+		
 		destructed = true;
 		allObjects.remove(this);
 	}
@@ -222,11 +249,42 @@ class RuntimeObject  {
 		return new RuntimeObject(this);
 	}*/
 	
+	public Reference getValRef() {
+		return new Reference(this, RefKind.VAL);
+	}
+	
+	public void setIsAnArg(boolean val) {
+		isAnArg = val;
+	}
+	
+	public final Reference copy(boolean shallow) { // WARNING: shallow copies are dangerous (mem leaks or double destr)
+		Reference ret = copyDelegate(shallow);
+		//for (Reference r: attributes) {
+		for (int i = 0; i < attributes.length; i++) {
+			if (shallow || type.getAttributeKinds()[i] == RefKind.REF)
+				 ret.access().write(i, read(i));
+			else ret.access().write(i, read(i).copy(shallow).access());
+		}
+		return ret;
+	}
+	protected Reference copyDelegate(boolean shallow) {
+		return new RuntimeObject(type, parent, constant).getValRef();
+	}
+	
 	/*
 	public RuntimeObject getAssociatedArgs() {
 		return associatedArgs;
 	}*/
 	
 }
+
+
+
+
+
+
+
+
+
 
 

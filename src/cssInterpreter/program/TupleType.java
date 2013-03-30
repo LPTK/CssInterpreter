@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import cssInterpreter.runtime.Execution;
+import cssInterpreter.runtime.Reference;
+import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 public 
@@ -15,10 +17,13 @@ class TupleType extends Type {
 	 * Invariant:
 	 * 0..p unnamed attributes, THEN 0..q named attributes
 	 */
-	
+
 	public TupleType(TypeIdentifier id, Type parent) {
+		super(id, parent, true);
+	}
+	public TupleType(TypeIdentifier id, Type parent, boolean hasCopyFunction) {
 		//super(id, false);
-		super(id, parent);
+		super(id, parent, hasCopyFunction);
 	}
 	
 	@Override public boolean isTuple() { return true; }
@@ -35,12 +40,12 @@ class TupleType extends Type {
 		
 		//constructor = new Function(new Signature(id.name, new FormalParameters(nts))) {
 		//constructor = new Function(new Signature(this, new FormalParameters(nts))) {
-		constructor = new Function(new Signature(null, this)) {
+		constructor = new Function(new Signature(null, this), RefKind.VAL) {
 			
 			@Override public Type getOutputType() {
 				return that;
 			}
-			@Override public RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) {
+			@Override public Reference evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) {
 				/*if (!params.getRuntimeType().conformsTo(signature))
 					throw new IllegalArgumentException();
 				return new RuntimeObject(that, params, DumbInterpreter.standardScopeRO, false);*/
@@ -60,7 +65,14 @@ class TupleType extends Type {
 				*/
 				
 				
-				return args; // TODO: is it really THIS simple?
+				//return new Reference(args, RefKind.VAL); // TODONE: is it really THIS simple? <- NOPE
+				
+				return args.copy(true);
+				
+				
+				
+				
+				
 				
 				
 				//throw new NotSupportedException();

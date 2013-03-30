@@ -7,6 +7,8 @@ import cssInterpreter.program.TypeIdentifier;
 import cssInterpreter.program.TypeOf;
 import cssInterpreter.program.TypeReference;
 import cssInterpreter.runtime.Execution;
+import cssInterpreter.runtime.Reference;
+import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class ListExpression extends Expression {
@@ -17,6 +19,7 @@ public class ListExpression extends Expression {
 		
 		this.exprs = exs;
 		
+		// FIXME: add this type to a scope!!!
 		type = new TupleType(new TypeIdentifier((name==null?"[AnonList]":name), parentType), parentType); //FIXME?
 		
 		for (int i = 0; i < exs.length; i++) {
@@ -24,7 +27,7 @@ public class ListExpression extends Expression {
 			Expression e = exs[i];
 			assert e != null;
 			
-			type.addAttribute(null, (String) null, new TypeOf(e, exec.getInterpreter()));
+			type.addAttribute(null, (String) null, new TypeOf(e, exec.getInterpreter())); // FIXME: notnull attrKind
 			
 		}
 		
@@ -34,16 +37,21 @@ public class ListExpression extends Expression {
 	public Type getTypeRef() {
 		return type;
 	}
+
+	@Override
+	public RefKind getRetKind() {
+		return RefKind.VAL;
+	}
 	
 	@Override
-	public RuntimeObject evaluate(RuntimeObject parentOfThis) throws CompilerException {
+	public Reference evaluate(RuntimeObject parentOfThis) throws CompilerException {
 	
-		RuntimeObject ret = new RuntimeObject(type, Execution.getInstance().getThis(), false);
+		RuntimeObject ret = new RuntimeObject(type, Execution.getInstance().getThis().access(), false);
 		
 		for (int i = 0; i < exprs.length; i++)
-			ret.write(i, exprs[i].evaluate(parentOfThis));
+			ret.write(i, exprs[i].evaluate(parentOfThis).access());
 		
-		return ret;
+		return new Reference(ret, getRetKind());
 		
 	}
 	

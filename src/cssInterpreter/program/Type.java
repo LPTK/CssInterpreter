@@ -7,10 +7,10 @@ import java.util.Map;
 
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.UnknownFunctionException;
-import cssInterpreter.node.ARefAttrType;
-import cssInterpreter.node.PAttrType;
 import cssInterpreter.node.TIdent;
 import cssInterpreter.runtime.Execution;
+import cssInterpreter.runtime.Reference;
+import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 //public class Type extends RuntimeObject implements TypeReference {
@@ -24,13 +24,14 @@ public class Type extends TypeReference {
 	
 	List<String> attributeNames = new ArrayList<>();
 	List<TypeReference> attributeTypes = new ArrayList<>();
+	List<RefKind> attributeKinds = new ArrayList<>(); // ie: val, rval or ref
 	
 	boolean isAClass = false; // TODO: use
 
 	private PointerType pointerType;
 	
 	
-	public Type(TypeIdentifier id, Type parent) {//, boolean tuple) {
+	public Type(TypeIdentifier id, Type parent, boolean hasCopyFunction) {//, boolean tuple) {
 		//super(Execution.getInstance().TypeType, parent, true);
 		objectRepr = new RuntimeObject(Execution.getInstance().TypeType, parent == null? null: parent.getObjectRepresentation(), true);
 		this.id = id;
@@ -38,6 +39,20 @@ public class Type extends TypeReference {
 		id.type = this; // sale
 		this.parent = parent;
 		//pointerType = new PointerType(this);
+		
+		if (hasCopyFunction) { // because it makes an infinite recursion if every type had copy
+			final Type that = this;
+			addFct(new Function(new Signature("copy", new FormalParameters()), RefKind.VAL) {
+				@Override
+				public TypeReference getOutputType() {
+					return that;
+				}
+				@Override
+				public Reference evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) {
+					return thisReference.copy(false);
+				}
+			});
+		}
 	}
 	
 	public RuntimeObject getObjectRepresentation() {
@@ -121,10 +136,11 @@ public class Type extends TypeReference {
 		return ret;
 	}
 	
-	public void addAttribute(PAttrType attrType, TIdent name, TypeReference type) {
-		addAttribute(attrType, name.getText(), type);
+	public void addAttribute(RefKind attrKind, TIdent name, TypeReference type) {
+		addAttribute(attrKind, name.getText(), type);
 	}
-	public void addAttribute(PAttrType attrType, String name, TypeReference type) {
+	//public void addAttribute(PAttrType attrType, String name, TypeReference type) {
+	public void addAttribute(RefKind attrKind, String name, TypeReference type) {
 		// TODO: use attrType to generate a Function.FieldType
 		
 		//addFct(new RuntimeField(name, type, attributeTypes.size()));
@@ -132,9 +148,21 @@ public class Type extends TypeReference {
 		//setAttributeName(attributeNames.size()-1, name);
 		
 		
-		
+		/*
 		if (attrType == null || attrType instanceof ARefAttrType) // TODO: refine? // TODO handle rvals
 			type = type.getPointerTypeRef();
+		*/
+		/*
+		RefKind rtype = null;
+		
+		if (attrType == null || attrType instanceof ARefAttrType)
+			rtype = RefKind.REF;
+		else if (attrType instanceof AValAttrType)
+			rtype = RefKind.VAL;
+		else if (attrType instanceof ARvalAttrType)
+			rtype = RefKind.VAL;
+		else assert false;
+		*/
 		
 		
 		
@@ -172,14 +200,10 @@ public class Type extends TypeReference {
 		
 		
 		
-		
-		
-		
-		
-		
-		
 		attributeTypes.add(type);
 		
+		//attributeKinds.add(Reference.kindFromNode(attrType));
+		attributeKinds.add(attrKind);
 		
 		
 		
@@ -199,11 +223,58 @@ public class Type extends TypeReference {
 		return attributeTypes.toArray(new TypeReference[attributeTypes.size()]);
 	}
 	
+	public RefKind[] getAttributeKinds() {
+		return attributeKinds.toArray(new RefKind[attributeKinds.size()]);
+	}
+	
 	public boolean isTuple() {
 		//return tuple;
 		return false;
 	}
 	
+	
+	private boolean isSettable(int index, NamedType nt, ParamBinding pb) {
+		
+		String n = attributeNames.get(index);
+		
+		String pname = nt.name;
+		Type ptype = nt.type.getType();
+		RefKind pkind = nt.kind;
+		
+		if (!ptype.isSettableTo(attributeTypes.get(index).getType())) {
+			pb.setUnsuccessful(
+					"Cannot use argument "
+					+(n==null? "": n+" ")
+					+"of type "+attributeTypes.get(index).getType()
+					+" to initialize parameter "
+					+(pname==null? "": pname+" ")
+					+"of type "+ptype
+				);
+			return false;
+		}
+		if (pkind == RefKind.VAL && attributeKinds.get(index) != RefKind.VAL) {
+			pb.setUnsuccessful(
+					"Was expecting a VAL for parameter "
+					+(pname==null? "": pname+" ")
+					+"of type "+attributeTypes.get(index).getType()
+					+", was given a "
+					+attributeKinds.get(index)
+				);
+			return false;
+		}
+		if (pkind == RefKind.RVAL && attributeKinds.get(index) == RefKind.REF) {
+			pb.setUnsuccessful(
+					"Was expecting a RVAL for parameter "
+					+(pname==null? "": pname)
+					+"of type "+attributeTypes.get(index).getType()
+					+", was given a "
+					+attributeKinds.get(index)
+				);
+			return false;
+		}
+		
+		return true;
+	}
 	
 	
 	public ParamBinding getBinding(Function f, int searchDepth) throws CompilerException { // TODO: also check for functions existence
@@ -250,14 +321,17 @@ public class Type extends TypeReference {
 				break;
 			}
 			*/
+			/*
 			String pname = f.signature.params.namedTypes[k].name;
 			Type ptype = f.signature.params.namedTypes[k].type.getType();
-			
+			RefKind pkind = f.signature.params.namedTypes[k].kind;
+			*/
 			//if (attributeTypes.get(k).getType().isPointer() && ptype.isSettableTo(attributeTypes.get(k).getType())) {
-			if (attributeTypes.get(k).getType() instanceof PointerType
-				&& ptype.isSettableTo(((PointerType)attributeTypes.get(k).getType()).getPointedType())) {
-				pb.addBinding(k, k, true);
-			} else {
+//			if (attributeTypes.get(k).getType() instanceof PointerType
+//				&& ptype.isSettableTo(((PointerType)attributeTypes.get(k).getType()).getPointedType())) { // TODO rm useless (no more used)
+//				pb.addBinding(k, k, true);
+//			} else {
+				/*
 				if (!ptype.isSettableTo(attributeTypes.get(k).getType())) {
 					pb.setUnsuccessful(
 							"Cannot use argument "
@@ -269,9 +343,38 @@ public class Type extends TypeReference {
 						);
 					break;
 				}
+				
+				if (pkind == RefKind.VAL && attributeKinds.get(k) != RefKind.VAL) {
+					pb.setUnsuccessful(
+							"Was expecting a VAL for parameter "
+							+(pname==null? "": pname)
+							+", was given a "
+							+attributeKinds.get(k)
+						);
+					break;
+				} else if (pkind == RefKind.RVAL && attributeKinds.get(k) == RefKind.REF) {
+					pb.setUnsuccessful(
+							"Was expecting a RVAL for parameter "
+							+(pname==null? "": pname)
+							+", was given a "
+							+attributeKinds.get(k)
+						);
+					break;
+				}
+				*/
+				
+				
+				
+				
+				
+				
 				//pb.addBinding(k, f.signature.params.namedTypes[k].name);
-				pb.addBinding(k, k);
-			}
+//				pb.addBinding(k, k);
+//			}
+			
+			if (isSettable(k, f.signature.params.namedTypes[k], pb))
+				 pb.addBinding(k, k);
+			else break;
 			
 			k++;
 		}
@@ -310,7 +413,11 @@ public class Type extends TypeReference {
 				
 				
 				//pb.addBinding(i, f.signature.params.namedTypes[j].name);
-				pb.addBinding(i, j);
+				//pb.addBinding(i, j);
+				
+				if (isSettable(i, f.signature.params.namedTypes[j], pb))
+					 pb.addBinding(i, j);
+				else break;
 				
 				
 			} else {
@@ -451,7 +558,8 @@ public class Type extends TypeReference {
 		return destroyed;
 	}
 	
-	public void destroy() {
+	//boolean deb=false;
+	public void destroy() { //deb = true;
 //		if (id.name.equals("B"))
 //			System.out.println();
 		objectRepr.destruct();

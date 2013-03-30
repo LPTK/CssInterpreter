@@ -7,6 +7,8 @@ import java.util.Set;
 
 import util.Pair;
 import cssInterpreter.compiler.CompilerException;
+import cssInterpreter.runtime.Execution;
+import cssInterpreter.runtime.Reference;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class ParamBinding {
@@ -50,7 +52,7 @@ public class ParamBinding {
 		return args;
 	}
 	
-	private RuntimeObject getConformingArgs(RuntimeObject args) throws CompilerException {
+	private RuntimeObject getConformingArgs(RuntimeObject args) {
 		RuntimeObject conformingArgs = new RuntimeObject(fct.getInputType(), args.getParent(), false);
 		for (Pair<Integer,Integer> p : bindings) {
 			
@@ -60,10 +62,11 @@ public class ParamBinding {
 			
 			conformingArgs.write(p.getSecond(), arg);
 		}
+		Execution.getInstance().stackLocal(conformingArgs.getValRef());
 		return conformingArgs;
 	}
 	
-	public void set(RuntimeObject thisReference, RuntimeObject args, RuntimeObject value) throws CompilerException {
+	public void set(RuntimeObject thisReference, RuntimeObject args, Reference valueRef) throws CompilerException {
 		assert isSuccessful();
 		//args = recurseBack(args);
 		thisReference = recurseBack(thisReference);
@@ -75,10 +78,10 @@ public class ParamBinding {
 		//mutate(args);
 		fct.set(thisReference, args, value);*/
 		
-		fct.set(thisReference, getConformingArgs(args), value);
+		fct.set(thisReference, getConformingArgs(args), valueRef);
 	}
 	
-	public RuntimeObject evaluate(RuntimeObject thisReference, RuntimeObject args) throws CompilerException {
+	public Reference evaluate(RuntimeObject thisReference, RuntimeObject args) throws CompilerException {
 		assert isSuccessful();
 		//args = recurseBack(args);
 		thisReference = recurseBack(thisReference);

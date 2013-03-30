@@ -28,12 +28,13 @@ class TypeIdentifier {
 			sb.append(ite.next());*/
 		for (int i = 0; i < type.attributeTypes.size(); i++) {
 			String fname = type.getAttributeNames()[i];
-			sb.append((fname==null?"":fname)+":"+type.getAttributeTypes()[i]+"; ");
+			sb.append(type.getAttributeKinds()[i].name()+" "+(fname==null?"":fname)+":"+type.getAttributeTypes()[i]+"; ");
 		}
 		if (type.attributeTypes.size() > 0)
 			sb.delete(sb.length()-2, sb.length());
 		sb.append("}");
-		return toString()+"  "+sb.toString();
+		//return toString()+"  "+sb.toString();
+		return sb.toString();
 	}
 	
 	public void setParent(TupleType par) {

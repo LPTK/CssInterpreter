@@ -247,10 +247,10 @@ attribute_decl {-> statement} =
 
 
 type_init {-> typed_value} =
-    {explicit} colon [type]:type [assign]:assignment?
-      {-> New typed_value (type, assign.expr)}
+    {explicit} colon [attr_type]:attr_type? [type]:type [assign]:assignment?
+      {-> New typed_value (attr_type, type, assign.expr)}
   | {inferred} colon [assign]:assignment
-      {-> New typed_value (Null, assign.expr)}
+      {-> New typed_value (Null, Null, assign.expr)}
   ;
 
 
@@ -616,7 +616,7 @@ field_access =
 
 
 typed_value =
-    type? [value]:expr?
+    attr_type? type? [value]:expr?
   ;
 
 type =

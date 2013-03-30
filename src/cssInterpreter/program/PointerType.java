@@ -9,7 +9,7 @@ public class PointerType extends Type {
 //	}
 	
 	public PointerType(Type t) { // FIXME: meaning of "parent" type here?
-		super(new TypeIdentifier(t.id.name+"*", null), null);
+		super(new TypeIdentifier(t.id.name+"*", null), null, true);
 		pointedType = t;
 	}
 

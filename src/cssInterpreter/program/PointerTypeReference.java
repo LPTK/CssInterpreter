@@ -1,6 +1,7 @@
 package cssInterpreter.program;
 
 import cssInterpreter.compiler.CompilerException;
+import cssInterpreter.runtime.Reference.RefKind;
 
 public class PointerTypeReference extends TypeReference {
 	
@@ -36,6 +37,12 @@ public class PointerTypeReference extends TypeReference {
 	public String toString() {
 		//return ref+"*(?)";
 		return ref+"*"+(isResolved()?"":"(?)");
+	}
+
+	@Override
+	protected RefKind getKindDelegate() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

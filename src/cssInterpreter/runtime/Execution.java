@@ -7,24 +7,24 @@ import java.util.Stack;
 
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.Interpreter;
-import cssInterpreter.program.Pointer;
 import cssInterpreter.program.PrimitiveRuntimeObject;
 import cssInterpreter.program.PrimitiveType;
 import cssInterpreter.program.Scope;
-import cssInterpreter.program.Signature;
 import cssInterpreter.program.Type;
 import cssInterpreter.program.TypeIdentifier;
 import cssInterpreter.program.Void;
 import cssInterpreter.program.expressions.Expression;
 import cssInterpreter.program.expressions.TupleExpression;
+import cssInterpreter.runtime.Reference.RefKind;
 
 public class Execution {
 	
 	private static Execution instance;
 	{instance = this;}
-	
-	private RuntimeObject thisObject = null; //DumbInterpreter.standardScopeRO;
-	Stack<RuntimeObject> thisStack = new Stack<>();
+
+	//private RuntimeObject thisObject = null; //DumbInterpreter.standardScopeRO;
+	private Reference currentThisRef = null;
+	//Stack<RuntimeObject> thisStack = new Stack<>();
 	
 	//private RuntimeObject currentArgObject = null;
 	//Stack<RuntimeObject> argStack = new Stack<>();
@@ -34,6 +34,10 @@ public class Execution {
 	PrintStream out;// = System.out;
 	boolean started;
 	Interpreter interp;
+	
+	Stack<Reference> currentLocalStack;
+	
+	public final List<Type> allAnonTypes = new ArrayList<>();
 	
 	// These must also be set in the standard scope in class Scope (to change because not convenient)
 	public final PrimitiveType<Type> TypeType = new PrimitiveType<>(new TypeIdentifier("Type", null), this);
@@ -110,8 +114,8 @@ public class Execution {
 //		return retObj;
 //	}
 	
-	public RuntimeObject execute(RuntimeObject thisReference, RuntimeObject args, Scope scope) throws CompilerException
-	{
+	//public RuntimeObject execute(RuntimeObject thisReference, RuntimeObject args, Scope scope) throws CompilerException
+	public Reference execute(RuntimeObject thisReference, RuntimeObject args, Scope scope) throws CompilerException {
 		
 		assert scope.getParent() == null || args == null || args.type.conformsTo(scope.getParent().getType());
 		
@@ -120,40 +124,51 @@ public class Execution {
 		out("Executing "+scope.getType()+" with args "+args+", containing "+scope.getExprs().size()+" expression statements");
 		
 		indentation++;
-		
-		Stack<Pointer> localStack = new Stack<>();
+
+		//Stack<Pointer> localStack = new Stack<>();
+		Stack<Reference> localStack = new Stack<>();
+		currentLocalStack = localStack;
 		
 		//thisStack.push(thisObject);
-		RuntimeObject oldThis = thisObject;
+		Reference oldThisRef = currentThisRef;
 		
 		if (args == null) // FIXME is it really ever null?
-			args = thisObject;
+			args = currentThisRef.access();
 		
-		thisObject = new RuntimeObject(scope.getType(), args, false);
+		currentThisRef = new Reference(new RuntimeObject(scope.getType(), args, false), RefKind.REF);
+		
 		
 		for (Expression expr : scope.getExprs()) {
-			RuntimeObject res = expr.evaluate(thisObject);
+			//RuntimeObject res = expr.evaluate(thisObject);
+			Reference res = expr.evaluate(currentThisRef.access());
+			currentLocalStack = localStack; // because it may have changed when expr evaluation calls a new function
 			out("Expression  \""+expr+"\"  produced value: "+res);
 			//res.destruct(); // this only destructs the pointer!!!
 			//((Pointer)res).access().destruct();
-			localStack.push((Pointer)res);
+			//localStack.push((Pointer)res);
+			localStack.push(res);
 		}
-		RuntimeObject retObj;
+		Reference retObj;
 		
 		if (scope.hasReturnStatement()) {
-			thisObject.destruct();
+			//thisObject.destruct();
+			currentThisRef.destroy();
 			retObj = null; // TODO
 		} else {
-			retObj = thisObject;
+			//retObj = new Reference(thisObject, RefType.VAL);
+			retObj = new Reference(currentThisRef.access(), RefKind.VAL);
 		}
 		
-		for (Pointer p: localStack)
-			p.access().destruct();
+//		for (Pointer p: localStack)
+//			p.access().destruct();
+		for (Reference ref: localStack)
+			ref.destroy();
 		
-		args.destruct(); // TODO: really here the place to do it?
+		//args.destruct(); // TODO: really here the place to do it?
+		//args.destructAsAnArg(); // cf: a "val" in an arg must not be destroyed! // TODO: really here the place to do it?
 		
 		//thisObject = thisStack.pop();
-		thisObject = oldThis;
+		currentThisRef = oldThisRef;
 		indentation--;
 		
 		return retObj;
@@ -166,10 +181,12 @@ public class Execution {
 		for (@SuppressWarnings("rawtypes") PrimitiveType pt: PrimitiveType.allPrimitiveTypes)
 			pt.destroy();
 		*/
-		for (Type t: Signature.formalParamTypes)
+		//for (Type t: Signature.formalParamTypes)
+		for (Type t: allAnonTypes)
 			t.destroy();
 		
-		//standardScopeRO.destruct(); // already destructed in call to execute as it is used as a this AND as an arg
+		//standardScopeRO.destruct(); // already destructed in call to execute as it is used as a this AND as an arg // <- NO MORE TRUE
+		standardScopeRO.destruct();
 		standardScope.destroy();
 		voidObj.destruct();
 	}
@@ -180,8 +197,9 @@ public class Execution {
 		return started;
 	}
 
-	public RuntimeObject getThis() {
-		return thisObject;
+	public Reference getThis() {
+		//return thisObject;
+		return currentThisRef;
 	}
 	
 	//static void message(String msg) {
@@ -250,6 +268,10 @@ public class Execution {
 	
 	public static Execution getInstance() {
 		return instance;
+	}
+
+	public void stackLocal(Reference ref) {
+		currentLocalStack.push(ref);
 	}
 	
 }

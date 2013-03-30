@@ -1,14 +1,11 @@
 package cssInterpreter.program;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import cssInterpreter.node.ARefAttrType;
+import cssInterpreter.runtime.Execution;
 
 
 public class Signature {
 	
-	public static final List<Type> formalParamTypes = new ArrayList<>();
+	//public static final List<Type> formalParamTypes = new ArrayList<>();
 	
 	private String name = null;
 	//Type[] types;
@@ -26,15 +23,17 @@ public class Signature {
 		if (params == null)
 			throw new IllegalArgumentException();
 		this.params = params;
-		this.type = new TupleType(new TypeIdentifier("[FormalParam?!]", null), null);
+		this.type = new TupleType(new TypeIdentifier("[FormalParam?!]", null), null, false);
+		//formalParamTypes.add(type);
+		Execution.getInstance().allAnonTypes.add(type);
+		//signatureTypes.add(type);
 		
 		//Scope a = Execution.getInstance().standardScope;
 		//Execution.getInstance().standardScope.addType(type);
-		formalParamTypes.add(type);
 		
 		for (NamedType nt : params.namedTypes)
-			type.addAttribute(new ARefAttrType(), nt.name, nt.type);
-		
+			//type.addAttribute(new ARefAttrType(), nt.name, nt.type);
+			type.addAttribute(nt.kind, nt.name, nt.type);
 		
 		// FIXME: no fparams
 		
@@ -44,7 +43,7 @@ public class Signature {
 	public Signature(Type type, FormalParameters params) {
 		this(null, type);
 	}*/
-	public Signature(TypeIdentifier id, FormalParameters params) {
+	public Signature(TypeIdentifier id, FormalParameters params) { // TODO rm notused
 		this((String)null, params);
 		this.id = id;
 	}
@@ -56,13 +55,15 @@ public class Signature {
 		if (name == null)
 			this.id = type.id;
 		this.type = type;
+		//formalParamTypes.add(type);
+		//signatureTypes.add(type);
 		
 		//assert type.getConstructors().size() == 1;
 		//this.params = type.getConstructors().get(0).signature.params; // TODO: dump 'params' and only use 'type'
 		
 		NamedType[] nts = new NamedType[type.attributeTypes.size()];
 		for (int i = 0; i < type.attributeTypes.size(); i++) {
-			nts[i] = new NamedType(type.attributeTypes.get(i), type.attributeNames.get(i), false); // FIXME: use provided default values!
+			nts[i] = new NamedType(type.attributeKinds.get(i), type.attributeTypes.get(i), type.attributeNames.get(i), false); // FIXME: use provided default values!
 		}
 		this.params = new FormalParameters(nts);
 		
@@ -91,18 +92,26 @@ public class Signature {
 			name.equals(sign.name)
 		);
 	}*/
-	@Override
-	public String toString() {
-		//return name+": {"+params+"}";
-		return (name==null?"":name)+": "+params;
-	}
-
+	
+	/*public void destroy() {
+		type.destroy();
+	}*/
+	
 	public Type getType() {
 		return type;
 	}
-
+	
 	public String getName() {
 		return name==null? id.name : name;
 	}
 	
+	@Override
+	public String toString() {
+		//return name+": {"+params+"}";
+		//return (name==null?"":name)+": "+params;
+		return (name==null?"":name)+": "+type.id.toDetailedString();
+	}
+	
 }
+
+

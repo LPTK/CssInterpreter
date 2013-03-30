@@ -4,11 +4,14 @@ import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.UnknownFunctionException;
 import cssInterpreter.program.CallSignature;
 import cssInterpreter.program.CandidateList;
+import cssInterpreter.program.Function;
 import cssInterpreter.program.ParamBinding;
 import cssInterpreter.program.Type;
 import cssInterpreter.program.TypeReference;
 import cssInterpreter.runtime.Execution;
 import cssInterpreter.runtime.ExecutionException;
+import cssInterpreter.runtime.Reference;
+import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class FunctionCallExpression extends Expression {
@@ -20,6 +23,7 @@ public class FunctionCallExpression extends Expression {
 	boolean searchRecursively;
 	Execution exec;
 	Type outputType;
+	RefKind outputKind;
 	
 	/*
 	public FunctionCallExpression(Expression thisExpression, String fieldName, TupleExpression args) {
@@ -114,8 +118,8 @@ public class FunctionCallExpression extends Expression {
 			thisType = thisExpression.getTypeRef().getType();
 		return thisType;
 	}
-	private RuntimeObject getThis() throws CompilerException {
-		return thisExpression == null ? exec.getThis() : thisExpression.evaluate(exec.getThis());
+	private Reference getThis() throws CompilerException {
+		return thisExpression == null ? exec.getThis() : thisExpression.evaluate(exec.getThis().access());
 	}
 	
 //	@Override
@@ -142,6 +146,11 @@ public class FunctionCallExpression extends Expression {
 		//return getFunction(new CandidateList(evalThisType())).fct.getOutputType(); // FIXME?! Type -> TypeRef
 		return outputType;
 	}
+
+	@Override
+	public RefKind getRetKind() {
+		return outputKind;
+	}
 	
 	@Override
 	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
@@ -150,7 +159,9 @@ public class FunctionCallExpression extends Expression {
 			thisExpression.getTypeRef().resolve(currentTypeInferenceId);
 		}
 		args.resolveTypes(currentTypeInferenceId);
-		outputType = getFunction(new CandidateList(getThisType())).fct.getOutputType().resolve(currentTypeInferenceId);
+		Function fct = getFunction(new CandidateList(getThisType())).fct;
+		outputType = fct.getOutputType().resolve(currentTypeInferenceId);
+		outputKind = fct.getRetKind();
 	}
 	
 	
@@ -179,7 +190,7 @@ public class FunctionCallExpression extends Expression {
 //	}
 	
 	@Override
-	public RuntimeObject evaluate(RuntimeObject parentOfThis) {
+	public Reference evaluate(RuntimeObject parentOfThis) {
 		try {
 			//System.out.println(">>> "+thisExpression.getType().getFunction(new CallSignature(fieldName, args)));
 			//System.out.println(">>> "+thisExpression+" "+(thisExpression == null ? "" : thisExpression.evaluate()));
@@ -194,7 +205,10 @@ public class FunctionCallExpression extends Expression {
 			/*
 			Pair<ParamBinding, RuntimeObject> pb_obj = getFunctionAndThisOrExecArgs();
 			return pb_obj.getFirst().evaluate(pb_obj.getSecond(), args.evaluate());*/
-			return getFunction(new CandidateList(getThisType())).evaluate(getThis(), args.evaluate(exec.getThis()));
+			Reference argsRef = args.evaluate(exec.getThis().access());
+			argsRef.access().setIsAnArg(true);
+			Execution.getInstance().stackLocal(argsRef);
+			return getFunction(new CandidateList(getThisType())).evaluate(getThis().access(), argsRef.access()); // TODO: cache fct resolution
 			
 		} catch (CompilerException e) {
 			throw new ExecutionException(e);
@@ -203,7 +217,7 @@ public class FunctionCallExpression extends Expression {
 
 	@Override public boolean isAssignable() { return true; }
 	@Override
-	public RuntimeObject assignDelegate(RuntimeObject value) {
+	public RuntimeObject assignDelegate(Reference valueRef) {
 		try {
 			//System.out.println("ASSIGN "+value);
 			//getFunction().set(evalThis(), args.evaluate(), value);
@@ -213,8 +227,11 @@ public class FunctionCallExpression extends Expression {
 			Pair<ParamBinding, RuntimeObject> pb_obj = getFunctionAndThisOrExecArgs();
 			pb_obj.getFirst().set(pb_obj.getSecond(), args.evaluate(), value);
 			return value;*/
-			getFunction(new CandidateList(getThisType())).set(getThis(), args.evaluate(exec.getThis()), value);
-			return value;
+			Reference argsRef = args.evaluate(exec.getThis().access());
+			argsRef.access().setIsAnArg(true);
+			Execution.getInstance().stackLocal(argsRef);
+			getFunction(new CandidateList(getThisType())).set(getThis().access(), argsRef.access(), valueRef);
+			return valueRef.access();
 			
 		} catch (CompilerException e) {
 			throw new ExecutionException(e);

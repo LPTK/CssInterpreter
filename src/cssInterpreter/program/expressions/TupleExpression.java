@@ -8,14 +8,14 @@ import java.util.Map;
 
 import util.Pair;
 import cssInterpreter.compiler.CompilerException;
-import cssInterpreter.node.ARefAttrType;
-import cssInterpreter.program.Pointer;
 import cssInterpreter.program.TupleType;
 import cssInterpreter.program.Type;
 import cssInterpreter.program.TypeIdentifier;
 import cssInterpreter.program.TypeOf;
 import cssInterpreter.program.TypeReference;
 import cssInterpreter.runtime.Execution;
+import cssInterpreter.runtime.Reference;
+import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class TupleExpression extends Expression {
@@ -51,6 +51,7 @@ public class TupleExpression extends Expression {
 		
 		//TupleType tt = new TupleType(new TypeIdentifier("[AnonTuple]", DumbInterpreter.standardScope.type)); //FIXME?
 		TupleType tt = new TupleType(new TypeIdentifier((name==null?"[AnonTuple]":name), parentType), parentType); //FIXME?
+		Execution.getInstance().allAnonTypes.add(tt);
 		
 		///System.out.println(">>>>>>>>>>>");
 		
@@ -60,6 +61,8 @@ public class TupleExpression extends Expression {
 			
 			Expression e = exs[i];
 			assert e != null;
+			
+			RefKind attrKind = e.getRetKind();
 			
 			///System.out.println(":t:"+e.getClass());
 			
@@ -87,7 +90,7 @@ public class TupleExpression extends Expression {
 				namedArgs.put(fa.fieldName, new Pair<>(i, ae.getValue()));
 				
 				//tt.addAttribute(null, fa.fieldName, new TypeOf(ae.getValue(), exec.getInterpreter()));
-				tt.addAttribute(new ARefAttrType(), fa.fieldName, new TypeOf(ae.getValue(), exec.getInterpreter())); // TODO: always a ref?
+				tt.addAttribute(attrKind, fa.fieldName, new TypeOf(ae.getValue(), exec.getInterpreter())); // TODO: always a ref?
 				
 				
 			} else {
@@ -95,7 +98,7 @@ public class TupleExpression extends Expression {
 				if (namedParamsBegan)
 					throw new CompilerException("Invalid sequence of arguments: named arguments must follow ordinal arguments");
 				ordinalArgs.add(e);
-				tt.addAttribute(new ARefAttrType(), (String) null, new TypeOf(e, exec.getInterpreter())); // TODO: always a ref?
+				tt.addAttribute(attrKind, (String) null, new TypeOf(e, exec.getInterpreter())); // TODO: always a ref?
 
 				///System.out.println(":o:"+e+" "+new TypeOf(e));
 				
@@ -144,7 +147,12 @@ public class TupleExpression extends Expression {
 	}
 	
 	@Override
-	public RuntimeObject evaluate(RuntimeObject parentOfThis) throws CompilerException {
+	public RefKind getRetKind() {
+		return RefKind.VAL;
+	}
+	
+	@Override
+	public Reference evaluate(RuntimeObject parentOfThis) throws CompilerException {
 		//throw new NotSupportedCompExc();
 		//if (type.isEmpty())
 		//return Execution.voidObj;
@@ -164,11 +172,13 @@ public class TupleExpression extends Expression {
 				ret.write(i, exprs[i].evaluate());
 			}*/
 			int i;
-			for (i = 0; i < ordinalArgs.size(); i++)
+			for (i = 0; i < ordinalArgs.size(); i++) {
 				////ret.write(i, ordinalArgs.get(i).evaluate(parentOfThis));
-				ret.write(i, new Pointer(ordinalArgs.get(i).evaluate(parentOfThis)));
-			
-			
+				//ret.write(i, new Pointer(ordinalArgs.get(i).evaluate(parentOfThis)));
+				Reference arg = ordinalArgs.get(i).evaluate(parentOfThis);
+				Execution.getInstance().stackLocal(arg);
+				ret.write(i, arg.access());
+			}
 			
 			/*
 			Iterator<Expression> ite = namedParams.values().iterator(); // FIXME: in right order?
@@ -181,13 +191,16 @@ public class TupleExpression extends Expression {
 				
 				
 				////ret.write(p.getFirst(), p.getSecond().evaluate(parentOfThis));
-				ret.write(p.getFirst(), new Pointer(p.getSecond().evaluate(parentOfThis)));
+				//ret.write(p.getFirst(), new Pointer(p.getSecond().evaluate(parentOfThis)));
+				Reference arg = p.getSecond().evaluate(parentOfThis);
+				Execution.getInstance().stackLocal(arg);
+				ret.write(p.getFirst(), arg.access());
 				
 				
 				i++;
 			}
 			
-			return ret;
+			return new Reference(ret, getRetKind());
 			
 			
 //		}

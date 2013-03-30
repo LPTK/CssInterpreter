@@ -2,6 +2,8 @@ package cssInterpreter.program.expressions;
 
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.program.Type;
+import cssInterpreter.runtime.Reference;
+import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class ConstantExpression extends Expression {
@@ -17,9 +19,15 @@ public class ConstantExpression extends Expression {
 	}
 	
 	@Override
-	public RuntimeObject evaluate(RuntimeObject parentOfThis) {
+	public RefKind getRetKind() {
+		return RefKind.REF;
+	}
+	
+	@Override
+	public Reference evaluate(RuntimeObject parentOfThis) {
 		//System.out.println("CCCCCCCCC "+value);
-		return value;
+		//return value.getValRef();
+		return new Reference(value, getRetKind());
 	}
 	public String toString() { return "const "+value.toString(); }
 	//public String toString() { return "(const "+value.toString()+")"; }

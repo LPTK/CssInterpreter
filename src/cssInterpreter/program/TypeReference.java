@@ -4,6 +4,7 @@ import cssInterpreter.compiler.CircularTypeReferenceException;
 import cssInterpreter.compiler.CompilerError;
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.Interpreter;
+import cssInterpreter.runtime.Reference.RefKind;
 
 public abstract class TypeReference {
 	//Type getType(int currentTypeInferenceId) throws CompilerException;
@@ -17,15 +18,21 @@ public abstract class TypeReference {
 	int myTypeInferenceId = 0;
 	private TypeReference pointerTypeRef;// = new PointerTypeReference(this);
 	
-
+	
 	public final Type getType() {
 		if (!isResolved())
 			throw new CompilerError("Type reference has not been resolved yet: "+this);
 		return getTypeDelegate();
 	}
+	public final RefKind getKind() {
+		if (!isResolved())
+			throw new CompilerError("Type kind has not been resolved yet: "+this);
+		return getKindDelegate();
+	}
 	
 	// should not throw when isResolved returns true
 	protected abstract Type getTypeDelegate();
+	protected abstract RefKind getKindDelegate();
 	
 	public abstract boolean isResolved();
 	

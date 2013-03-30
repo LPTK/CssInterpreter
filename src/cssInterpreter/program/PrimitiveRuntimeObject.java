@@ -1,6 +1,7 @@
 package cssInterpreter.program;
 
 import cssInterpreter.runtime.ExecutionException;
+import cssInterpreter.runtime.Reference;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class PrimitiveRuntimeObject<T> extends RuntimeObject {
@@ -27,9 +28,16 @@ public class PrimitiveRuntimeObject<T> extends RuntimeObject {
 	public String toOutput() {
 		return val.toString();
 	}
-	
+	/*
 	@SuppressWarnings("unchecked")
 	public PrimitiveRuntimeObject<T> copy() {
 		return new PrimitiveRuntimeObject<T>((PrimitiveType<T>)type, val, parent, constant);
+	}*/
+	@Override
+	protected Reference copyDelegate(boolean shallow) {
+		//newVal = shallow? val: val.;
+		return new PrimitiveRuntimeObject<T>((PrimitiveType<T>)type, val, parent, constant).getValRef();
 	}
+	
 }
+

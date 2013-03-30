@@ -34,6 +34,7 @@ import cssInterpreter.node.ATrueExpr;
 import cssInterpreter.node.AType;
 import cssInterpreter.node.ATypedValue;
 import cssInterpreter.node.Node;
+import cssInterpreter.node.PAttrType;
 import cssInterpreter.node.PClosure;
 import cssInterpreter.node.PExpr;
 import cssInterpreter.node.PNakedType;
@@ -57,6 +58,7 @@ import cssInterpreter.program.expressions.NotExpression;
 import cssInterpreter.program.expressions.TupleExpression;
 import cssInterpreter.runtime.Execution;
 import cssInterpreter.runtime.ExecutionException;
+import cssInterpreter.runtime.Reference;
 import cssInterpreter.runtime.RuntimeObject;
 
 /*
@@ -182,7 +184,7 @@ public class Interpreter extends DepthFirstAdapter {
 		RuntimeObject ret = null;
 		try {
 			//exec.execute(exec.standardScopeRO, currentScope);
-			ret = exec.execute(exec.standardScopeRO, exec.standardScopeRO, currentScope);
+			ret = exec.execute(exec.standardScopeRO, exec.standardScopeRO, currentScope).access();
 		} catch (CompilerException e) {
 			throw new ExecutionException(e);
 		}
@@ -251,7 +253,7 @@ public class Interpreter extends DepthFirstAdapter {
 		///otherExprs.put(node, new ClosureExpression(currentScope));
 		
 		
-		currentScope.getParent().addChild(currentScope);
+		//currentScope.getParent().addChild(currentScope);
 		
 		if (currentScope.getParent() != exec.standardScope)
 			currentScope = currentScope.getParent();
@@ -313,6 +315,10 @@ public class Interpreter extends DepthFirstAdapter {
 	
 	
 	TypeReference determineType(ATypedValue tval) throws CompilerException {
+		
+		if (tval.getAttrType() != null)
+			throw new CompilerException("Didn't expect a ref/val/rval modifier in attribute declaration type");
+		
 		//AType t;
 		if (tval.getType() == null) { // Determine type using expression
 			
@@ -419,7 +425,7 @@ public class Interpreter extends DepthFirstAdapter {
 		
 		try {
 			ATypedValue tv = (ATypedValue)node.getTypedValue();
-			currentScope.getType().addAttribute(node.getAttrType(), node.getName(), determineType(tv));
+			currentScope.getType().addAttribute(Reference.kindFromNode(node.getAttrType()), node.getName(), determineType(tv));
 			
 			// TODONE: add expr
 			
@@ -530,7 +536,8 @@ public class Interpreter extends DepthFirstAdapter {
 				exs[i] = exprs.get(ls.get(i));
 			try {
 				//System.out.println("-------->"+exs[0]);
-				exprs.put(node, new TupleExpression(exec, exs, currentScope.getType(), null/*TODO*/));
+				//exprs.put(node, new TupleExpression(exec, exs, currentScope.getType(), null/*TODO*/));
+				exprs.put(node, new TupleExpression(exec, exs, currentScope.getType(), "[AnonListExpr]"/*TODO*/));
 			} catch (CompilerException e) {
 				throw new ExecutionException(e);
 			}
@@ -837,6 +844,7 @@ public class Interpreter extends DepthFirstAdapter {
 	{
 		PExpr initVal = ((ATypedValue)node.getTypedValue()).getValue();
 		AClosure paramClosure = (AClosure)node.getParams();
+		PAttrType attrType = ((ATypedValue)node.getTypedValue()).getAttrType();
 		
 		//scopes.get(paramClosure);
 		
@@ -902,7 +910,7 @@ public class Interpreter extends DepthFirstAdapter {
 
 			//currentScope.getType().addFct(new Function(new Signature(fctName, fparams)) {
 			//currentScope.getType().addFct(new Function(new Signature(fctName, scopes.get(paramClosure).getType())) {
-			currentScope.getType().addFct(new Function(new Signature(fctName, paramScope.getType())) {
+			currentScope.getType().addFct(new Function(new Signature(fctName, paramScope.getType()), Reference.kindFromNode(attrType)) {
 				
 				//final Scope scope = currentScope;
 				//final PClosure myClosure = ((AClosureExpr)v).getClosure());
@@ -914,7 +922,7 @@ public class Interpreter extends DepthFirstAdapter {
 				}
 				
 				@Override
-				public RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) throws CompilerException {
+				public Reference evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) {
 					//System.out.println(scopes.get(myClosure));
 					
 					/**
@@ -926,7 +934,11 @@ public class Interpreter extends DepthFirstAdapter {
 					
 					
 					//return exec.execute(args, scopes.get(myClosure));
-					return exec.execute(thisReference, args, scopes.get(myClosure));
+					try {
+						return exec.execute(thisReference, args, scopes.get(myClosure));
+					} catch (CompilerException e) {
+						throw new ExecutionException(e);
+					}
 					
 					
 				}

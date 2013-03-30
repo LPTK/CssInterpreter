@@ -3,6 +3,8 @@ package cssInterpreter.program.expressions;
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.program.TypeReference;
 import cssInterpreter.runtime.Execution;
+import cssInterpreter.runtime.Reference;
+import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class IfExpression extends Expression {
@@ -22,14 +24,25 @@ public class IfExpression extends Expression {
 	}
 
 	@Override
-	public RuntimeObject evaluate(RuntimeObject parentOfThis) throws CompilerException {
-		RuntimeObject res = condition.evaluate(parentOfThis);
+	public RefKind getRetKind() {
+		return RefKind.REF;
+	}
+	
+	@Override
+	public Reference evaluate(RuntimeObject parentOfThis) throws CompilerException {
+		//RuntimeObject res = condition.evaluate(parentOfThis).access();
+		Reference resRef = condition.evaluate(parentOfThis);
+		Execution.getInstance().stackLocal(resRef);
+		RuntimeObject res = resRef.access();
+		
 		if (!res.getRuntimeType().conformsTo(exec.BoolType)) // TODO: really use "conformsTo"? (for classes, it's a mere equality)
 			throw new CompilerException("Condition in expression "+this+" did not return a boolean-like");
 		assert res.isValue() && res.getValue() instanceof Boolean;
+		
 		if (((Boolean)res.getValue()) == true)
-			result.evaluate(parentOfThis);
-		return exec.getVoidobj();
+			Execution.getInstance().stackLocal(result.evaluate(parentOfThis));
+		
+		return new Reference(exec.getVoidobj(), getRetKind());
 	}
 	
 	@Override

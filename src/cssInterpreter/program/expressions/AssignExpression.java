@@ -2,8 +2,10 @@ package cssInterpreter.program.expressions;
 
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.NotSupportedException;
-import cssInterpreter.program.Pointer;
 import cssInterpreter.program.TypeReference;
+import cssInterpreter.runtime.Execution;
+import cssInterpreter.runtime.Reference;
+import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class AssignExpression extends Expression {
@@ -36,18 +38,29 @@ public class AssignExpression extends Expression {
 		//return getValue().getTypeRef().getPointerTypeRef();
 		return outputType;
 	}
-
+	
 	@Override
-	public RuntimeObject evaluate(RuntimeObject parentOfThis) throws CompilerException {
+	public RefKind getRetKind() {
+		return RefKind.REF;
+	}
+	
+	@Override
+	public Reference evaluate(RuntimeObject parentOfThis) throws CompilerException {
 		//RuntimeObject assignedRO = assigned.evaluate();
 		/*if (!assignedRO.isAssignable())
 			throw new ExecutionException("Expression "+assignedRO+" is not assignable");*/
-		RuntimeObject valueRO = getValue().evaluate(parentOfThis);
+		//RuntimeObject valueRO = getValue().evaluate(parentOfThis).access();
+		Reference valueRef = getValue().evaluate(parentOfThis);
+		if (valueRef.getRefType() != RefKind.REF)
+			Execution.getInstance().stackLocal(valueRef);
+		
 		//assignedRO.assign(valueRO);
-		getAssigned().assign(valueRO);
+		//getAssigned().assign(valueRO);
+		getAssigned().assign(valueRef);
 		//return valueRO;
 		//return new Reference(valueRO);
-		return new Pointer(valueRO);
+		//return new Pointer(valueRO);
+		return new Reference(valueRef.access(), RefKind.REF);
 	}
 	
 	@Override
@@ -69,8 +82,9 @@ public class AssignExpression extends Expression {
 			assigned.resolveTypes(currentTypeInferenceId);
 		//System.out.println("RESASS!!!");
 		value.resolveTypes(currentTypeInferenceId);
-		outputType = getValue().getTypeRef().getPointerTypeRef();
-		outputType.resolve(currentTypeInferenceId);
+		//outputType = getValue().getTypeRef().getPointerTypeRef();
+		//outputType.resolve(currentTypeInferenceId);
+		outputType = getValue().getTypeRef();
 	}
 
 	public void setResolveAssignedExpression(boolean resolve) {

@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import cssInterpreter.runtime.Execution;
+import cssInterpreter.runtime.Reference;
+import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class PrimitiveType<T> extends Type {
@@ -16,16 +18,16 @@ public class PrimitiveType<T> extends Type {
 	
 	public PrimitiveType(TypeIdentifier id, final Execution exec) {
 		//super(id, false);
-		super(id, null); // TODO: null or standardScope?
+		super(id, null, true); // TODO: null or standardScope?
 		isAClass = true;
 		final PrimitiveType<T> that = this;
-		constructor = new Function(new Signature(id.name, new FormalParameters(new NamedType[]{new NamedType(this,null,true)}))) {
+		constructor = new Function(new Signature(id.name, new FormalParameters(new NamedType[]{new NamedType(RefKind.VAL,this,null,true)})), RefKind.VAL) {
 			@Override public Type getOutputType() {
 				return that;
 			}
-			@Override public RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject params) {
+			@Override public Reference evaluateDelegate(RuntimeObject thisReference, RuntimeObject params) {
 				//return new RuntimeObjectBase(that, DumbInterpreter.standardScopeRO, false);
-				return new PrimitiveRuntimeObject<T>(that, (T) params.getValue(), exec.standardScopeRO, false); // FIXME: perform checks..?
+				return Reference.VAL(new PrimitiveRuntimeObject<T>(that, (T) params.getValue(), exec.standardScopeRO, false)); // FIXME: perform checks..?
 			}
 		};
 		allPrimitiveTypes.add(this);

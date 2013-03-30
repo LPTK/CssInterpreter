@@ -8,6 +8,8 @@ import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.Interpreter;
 import cssInterpreter.program.expressions.Expression;
 import cssInterpreter.runtime.Execution;
+import cssInterpreter.runtime.Reference;
+import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class Scope {
@@ -23,7 +25,7 @@ public class Scope {
 	public Scope(String name, final Execution exec) { // TODO: replace with a StandardLibraryScope class
 		type = new TupleType(new TypeIdentifier(name, null), null);
 		
-		type.addFct(new VoidFunction("print", exec, new FormalParameters(new NamedType[]{new NamedType(exec.AnyType,null,false)})) {
+		type.addFct(new VoidFunction("print", exec, new FormalParameters(new NamedType[]{new NamedType(RefKind.REF,exec.AnyType,null,false)})) {
 			
 			@Override public void execute(RuntimeObject thisReference, RuntimeObject params) {
 				/*if (params.isValue())
@@ -35,7 +37,7 @@ public class Scope {
 			
 		});
 		
-		type.addFct(new Function(new Signature("read", new FormalParameters())) {
+		type.addFct(new Function(new Signature("read", new FormalParameters()), RefKind.VAL) {
 			
 			@Override
 			public TypeReference getOutputType() {
@@ -43,12 +45,12 @@ public class Scope {
 			}
 			
 			@Override
-			public RuntimeObject evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) throws CompilerException {
+			public Reference evaluateDelegate(RuntimeObject thisReference, RuntimeObject args) {
 				// TODO: use exec
 				Scanner sc = new Scanner(System.in);
 				String str = sc.nextLine();
 				sc.close();
-				return new PrimitiveRuntimeObject<String>(exec.StringType, str, null, true);
+				return new Reference(new PrimitiveRuntimeObject<String>(exec.StringType, str, null, true), RefKind.VAL);
 			}
 			
 		});
@@ -91,6 +93,8 @@ public class Scope {
 
 	public void setParent(Scope par, String name) {
 		parent = par;
+		par.addChild(this);
+		assert type==null;
 		type = new TupleType(typeId = new TypeIdentifier(name, (parent==null?null:parent.type)), parent.type);
 	}
 	
@@ -167,11 +171,6 @@ public class Scope {
 		}
 		return null;
 	}
-
-	public boolean hasReturnStatement() {
-		// TODO Auto-generated method stub
-		return false;
-	}
 	
 	private int getTypeInferenceId(Integer id) {
 		return id == null? TypeReference.getNewTypeInferenceId(): id;
@@ -220,6 +219,26 @@ public class Scope {
 	public void addChild(Scope s) {
 		children.add(s);
 	}
+	
+	
+	
+	public boolean hasReturnStatement() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+	public TypeReference getReturnType() {
+		if (hasReturnStatement()) ; // TODO
+		return getType();
+	}
+	
+	public RefKind getReturnKind() {
+		if (hasReturnStatement()) ; // TODO
+		return RefKind.VAL;
+	}
+	
+	
+	
 	
 	@Override
 	public String toString() {
