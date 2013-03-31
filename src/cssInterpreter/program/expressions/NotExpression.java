@@ -31,13 +31,16 @@ public class NotExpression extends Expression {
 	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
 		//super.resolveTypes(currentTypeInferenceId);
 		// Nothing to do here, type is already resolved
+		expr.resolveTypes(currentTypeInferenceId);
 		outputType = Execution.getInstance().BoolType.withKind(RefKind.VAL);
 		outputType.resolve(currentTypeInferenceId);
 	}
 	
 	@Override
 	public Reference evaluate(RuntimeObject parentOfThis) throws CompilerException {
-		RuntimeObject res = expr.evaluate(parentOfThis).access();
+		Reference resRef = expr.evaluate(parentOfThis);
+		Execution.getInstance().stackLocal(resRef);
+		RuntimeObject res = resRef.access(); //expr.evaluate(parentOfThis).access();
 		assert res.isValue() && res.getValue() instanceof Boolean; // TODO: check this properly
 		//return !((Boolean)res.getValue());
 		return new Reference(new PrimitiveRuntimeObject<Boolean>(Execution.getInstance().BoolType, !((Boolean)res.getValue()), res.getParent(), false), RefKind.VAL);

@@ -82,9 +82,21 @@ public abstract class TypeReference {
 		return new DirectTypeRef(this, refk);
 	}
 	
+	public String isNotSettableToBecause(TypeReference tr) {
+		if (getKind() == RefKind.VAL && tr.getKind() != RefKind.VAL)
+			return "Expected a VAL for assignation to a VAL field";
+		if (getKind() == RefKind.RVAL && tr.getKind() == RefKind.REF)
+			return "Expected a VAL or RVAL for assignation to a RVAL field";
+		return getType().isSettableTo(tr.getType())? null: "Incompatible types. Cannot set object of type "+tr.getType()+" to field of type "+getType();
+	}
+	
 	
 	
 	//String getTypeName();
 	//String toString();
 }
+
+
+
+
 

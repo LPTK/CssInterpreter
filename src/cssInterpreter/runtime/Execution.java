@@ -38,6 +38,7 @@ public class Execution {
 	Stack<Reference> currentLocalStack;
 	
 	public final List<Type> allAnonTypes = new ArrayList<>();
+	public final List<RuntimeObject> allObjects = new ArrayList<>();
 	
 	// These must also be set in the standard scope in class Scope (to change because not convenient)
 	public final PrimitiveType<Type> TypeType = new PrimitiveType<>(new TypeIdentifier("Type", null), this);
@@ -124,7 +125,8 @@ public class Execution {
 		out("Executing "+scope.getType()+" with args "+args+", containing "+scope.getExprs().size()+" expression statements");
 		
 		indentation++;
-
+		
+		Stack<Reference> oldStack = currentLocalStack;
 		//Stack<Pointer> localStack = new Stack<>();
 		Stack<Reference> localStack = new Stack<>();
 		currentLocalStack = localStack;
@@ -141,7 +143,7 @@ public class Execution {
 		for (Expression expr : scope.getExprs()) {
 			//RuntimeObject res = expr.evaluate(thisObject);
 			Reference res = expr.evaluate(currentThisRef.access());
-			currentLocalStack = localStack; // because it may have changed when expr evaluation calls a new function
+			//currentLocalStack = localStack; // because it may have changed when expr evaluation calls a new function
 			out("Expression  \""+expr+"\"  produced value: "+res);
 			//res.destruct(); // this only destructs the pointer!!!
 			//((Pointer)res).access().destruct();
@@ -170,6 +172,8 @@ public class Execution {
 		//thisObject = thisStack.pop();
 		currentThisRef = oldThisRef;
 		indentation--;
+		
+		currentLocalStack = oldStack;
 		
 		return retObj;
 	}

@@ -51,7 +51,7 @@ public class AssignExpression extends Expression {
 			throw new ExecutionException("Expression "+assignedRO+" is not assignable");*/
 		//RuntimeObject valueRO = getValue().evaluate(parentOfThis).access();
 		Reference valueRef = getValue().evaluate(parentOfThis);
-		if (valueRef.getRefType() != RefKind.REF)
+		if (valueRef.getRefType() != RefKind.REF && assigned.getSetTypeRef().getKind() == RefKind.REF)
 			Execution.getInstance().stackLocal(valueRef);
 		
 		//assignedRO.assign(valueRO);
@@ -78,12 +78,26 @@ public class AssignExpression extends Expression {
 	public void resolveTypes(int currentTypeInferenceId) throws CompilerException {
 		super.resolveTypes(currentTypeInferenceId);
 		//System.out.println("Resolving "+this);
-		if (resolveAssigned)
-			assigned.resolveTypes(currentTypeInferenceId);
+		
+//		if (resolveAssigned)
+//			assigned.resolveTypes(currentTypeInferenceId);
+		
 		//System.out.println("RESASS!!!");
 		value.resolveTypes(currentTypeInferenceId);
 		//outputType = getValue().getTypeRef().getPointerTypeRef();
 		//outputType.resolve(currentTypeInferenceId);
+		
+		if (resolveAssigned) {
+			assigned.resolveTypes(currentTypeInferenceId);
+			
+			//if (!assigned.getTypeRef().isNotSettableToBecause(value.getTypeRef()))
+			if (assigned.getSetTypeRef() == null)
+				throw new CompilerException("Expression "+assigned+" of type "+assigned.getSetTypeRef()+" is not settable");
+			String reason = assigned.getSetTypeRef().isNotSettableToBecause(value.getTypeRef());
+			if (reason != null)
+				throw new CompilerException(reason+" in assignation of "+assigned+" to "+value);
+		}
+		
 		outputType = getValue().getTypeRef().withKind(RefKind.REF);
 	}
 

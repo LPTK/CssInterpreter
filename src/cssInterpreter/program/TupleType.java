@@ -68,7 +68,7 @@ class TupleType extends Type {
 				
 				//return new Reference(args, RefKind.VAL); // TODONE: is it really THIS simple? <- NOPE
 				
-				args.setIsAnArg(true);
+				//args.setIsAnArg(true);
 				return args.copy(true);
 				
 				

@@ -9,6 +9,7 @@ import util.Pair;
 import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.runtime.Execution;
 import cssInterpreter.runtime.Reference;
+import cssInterpreter.runtime.Reference.RefKind;
 import cssInterpreter.runtime.RuntimeObject;
 
 public class ParamBinding {
@@ -53,12 +54,18 @@ public class ParamBinding {
 	}
 	
 	private RuntimeObject getConformingArgs(RuntimeObject args) {
-		RuntimeObject conformingArgs = new RuntimeObject(fct.getInputType(), args.getParent(), false);
+		Type argsType = fct.getInputType();
+		RuntimeObject conformingArgs = new RuntimeObject(argsType, args.getParent(), false);
 		for (Pair<Integer,Integer> p : bindings) {
 			
 			RuntimeObject arg = args.read(p.getFirst());
+			
 			if (pointerDereferences.contains(p.getFirst()))
 				arg = ((Pointer)arg).access();
+			
+			if (argsType.getAttributeTypes()[p.getSecond()].getKind() == RefKind.REF
+					&& args.getRuntimeType().getAttributeTypes()[p.getFirst()].getKind() != RefKind.REF)
+				Execution.getInstance().stackLocal(arg.getValRef());
 			
 			conformingArgs.write(p.getSecond(), arg);
 		}

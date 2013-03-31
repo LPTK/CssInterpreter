@@ -60,5 +60,10 @@ public abstract class Expression {
 	public void setLine(Integer line) { this.line = line; }
 	public Integer getLine() { return line; }
 	
+	public TypeReference getSetTypeRef() {
+		assert !isAssignable();
+		return null;
+	}
+	
 	
 }

@@ -3,12 +3,12 @@ class A := {
   val n: Long;
 };
 
-a := A 42;
-b := A 666;
+a := A 42.copy;
+b := A 666.copy;
 
-b.n = b.n;
+b.n = b.n.copy;
 print b.n;
 
-b.n = a.n;
+b.n = a.n.copy;
 print b.n;
 

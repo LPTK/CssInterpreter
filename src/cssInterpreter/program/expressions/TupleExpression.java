@@ -139,7 +139,10 @@ public class TupleExpression extends Expression {
 	public Expression[] getRawExprs() {
 		return rawEprs;
 	}
-	
+
+	public Type getType() {
+		return type;
+	}
 	
 	@Override
 	public TypeReference getTypeRef() {
@@ -181,8 +184,8 @@ public class TupleExpression extends Expression {
 				////ret.write(i, ordinalArgs.get(i).evaluate(parentOfThis));
 				//ret.write(i, new Pointer(ordinalArgs.get(i).evaluate(parentOfThis)));
 				Reference arg = ordinalArgs.get(i).evaluate(parentOfThis);
-				if (ret.getRuntimeType().getAttributeTypes()[i].getKind() == RefKind.REF)
-					Execution.getInstance().stackLocal(arg);
+//				if (ret.getRuntimeType().getAttributeTypes()[i].getKind() == RefKind.REF)
+//					Execution.getInstance().stackLocal(arg);
 				ret.write(i, arg.access());
 				/** WARNING: ALMOST THE SAME CODE BELOW; KEEP UPDATED **/
 			}
@@ -200,8 +203,8 @@ public class TupleExpression extends Expression {
 				////ret.write(p.getFirst(), p.getSecond().evaluate(parentOfThis));
 				//ret.write(p.getFirst(), new Pointer(p.getSecond().evaluate(parentOfThis)));
 				Reference arg = p.getSecond().evaluate(parentOfThis);
-				if (ret.getRuntimeType().getAttributeTypes()[i].getKind() == RefKind.REF)
-					Execution.getInstance().stackLocal(arg);
+//				if (ret.getRuntimeType().getAttributeTypes()[i].getKind() == RefKind.REF)
+//					Execution.getInstance().stackLocal(arg);
 				ret.write(p.getFirst(), arg.access());
 				
 				

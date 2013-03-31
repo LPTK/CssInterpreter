@@ -1,6 +1,6 @@
 
 val a: Long;
 
-a=42, print "ok";
+a=42.copy, print "ok";
 
 print a;

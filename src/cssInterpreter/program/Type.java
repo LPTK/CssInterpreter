@@ -405,7 +405,8 @@ public class Type extends TypeReference {
 			}*/
 			//System.out.println("searching for "+param.name);
 			int j;
-			for (j = k; j < attributeNames.size(); j++) {
+			//for (j = k; j < attributeNames.size(); j++) {
+			for (j = k; j < attributeNames.size() && j < f.signature.params.namedTypes.length; j++) {
 				String n = attributeNames.get(j);
 				assert n != null;
 				if (n != null && n.equals(param.name)) {
@@ -487,7 +488,7 @@ public class Type extends TypeReference {
 	public void setAttributeFunction(int index) {
 		assert attributeNames.get(index) == null || !attributeNames.get(index).equals("_"+index); // TODO: better check for this shit
 		String attrName = attributeNames.get(index) == null? "_"+index : attributeNames.get(index);
-		addFct(new FieldAccessFunction(attrName, attributeTypes.get(index), index));
+		addFct(new FieldAccessFunction(attrName, attributeTypes.get(index), index, attributeTypes.get(index)));
 	}
 	
 	public void setAttributeName(int index, String name) {
@@ -571,7 +572,7 @@ public class Type extends TypeReference {
 		destroyed = true;
 	}
 
-	public PointerType getPointerType() {
+	public PointerType getPointerType() { //assert false;
 		if (pointerType == null)
 			pointerType = new PointerType(this);
 		return pointerType;

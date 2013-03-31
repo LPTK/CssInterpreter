@@ -4,7 +4,6 @@ import cssInterpreter.compiler.CompilerException;
 import cssInterpreter.compiler.UnknownFunctionException;
 import cssInterpreter.program.CallSignature;
 import cssInterpreter.program.CandidateList;
-import cssInterpreter.program.Function;
 import cssInterpreter.program.ParamBinding;
 import cssInterpreter.program.Type;
 import cssInterpreter.program.TypeReference;
@@ -23,6 +22,7 @@ public class FunctionCallExpression extends Expression {
 	Execution exec;
 	TypeReference outputType;
 	//RefKind outputKind;
+	ParamBinding fctBinding;
 	
 	/*
 	public FunctionCallExpression(Expression thisExpression, String fieldName, TupleExpression args) {
@@ -158,11 +158,12 @@ public class FunctionCallExpression extends Expression {
 			thisExpression.getTypeRef().resolve(currentTypeInferenceId);
 		}
 		args.resolveTypes(currentTypeInferenceId);
-		Function fct = getFunction(new CandidateList(getThisType())).fct;
+		//Function fct = getFunction(new CandidateList(getThisType())).fct;
+		fctBinding = getFunction(new CandidateList(getThisType()));
 		//outputType = fct.getOutputType().resolve(currentTypeInferenceId);
 		//outputKind = fct.getRetKind();
 		//outputType = fct.getOutputType();
-		outputType = fct.getOutputType().withKind(fct.getRetKind());
+		outputType = fctBinding.fct.getOutputType().withKind(fctBinding.fct.getRetKind());
 		outputType.resolve(currentTypeInferenceId);
 	}
 	
@@ -210,7 +211,8 @@ public class FunctionCallExpression extends Expression {
 			Reference argsRef = args.evaluate(exec.getThis().access());
 			argsRef.access().setIsAnArg(true);
 			Execution.getInstance().stackLocal(argsRef);
-			return getFunction(new CandidateList(getThisType())).evaluate(getThis().access(), argsRef.access()); // TODO: cache fct resolution
+			//return getFunction(new CandidateList(getThisType())).evaluate(getThis().access(), argsRef.access()); // TODONE: cache fct resolution
+			return fctBinding.evaluate(getThis().access(), argsRef.access());
 			
 		} catch (CompilerException e) {
 			throw new ExecutionException(e);
@@ -232,13 +234,18 @@ public class FunctionCallExpression extends Expression {
 			Reference argsRef = args.evaluate(exec.getThis().access());
 			argsRef.access().setIsAnArg(true);
 			Execution.getInstance().stackLocal(argsRef);
-			getFunction(new CandidateList(getThisType())).set(getThis().access(), argsRef.access(), valueRef);
+			//getFunction(new CandidateList(getThisType())).set(getThis().access(), argsRef.access(), valueRef);
+			fctBinding.set(getThis().access(), argsRef.access(), valueRef);
 			return valueRef.access();
 			
 		} catch (CompilerException e) {
 			throw new ExecutionException(e);
 		}
 	}
+	public TypeReference getSetTypeRef() {
+		return fctBinding.fct.getOutputType().withKind(fctBinding.fct.getSetKind());
+	}
+	
 	
 	public String toString() {
 		/*if (thisExpression == null)

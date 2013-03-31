@@ -60,6 +60,7 @@ Tokens
     {normal} key_package  = 'package';
     {normal} key_parent   = 'parent';
     {normal} key_this     = 'this';
+    {normal} key_this     = 'return';
     
     {normal} key_if     = 'if';
     {normal} key_else = 'else';

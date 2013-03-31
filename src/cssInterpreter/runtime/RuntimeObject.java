@@ -1,9 +1,7 @@
 package cssInterpreter.runtime;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 
 import cssInterpreter.program.PointerType;
 import cssInterpreter.program.PrimitiveType;
@@ -13,7 +11,7 @@ import cssInterpreter.runtime.Reference.RefKind;
 public 
 class RuntimeObject  {
 	
-	public static final List<RuntimeObject> allObjects = new ArrayList<>();
+	//public static final List<RuntimeObject> allObjects = new ArrayList<>();
 	
 	protected Type type;
 	protected boolean constant;
@@ -47,7 +45,7 @@ class RuntimeObject  {
 			//assert ?
 			attributes = new Reference[type.getAttributeTypes().length];
 		}
-		allObjects.add(this);
+		Execution.getInstance().allObjects.add(this);
 	}
 	/*
 	
@@ -120,7 +118,11 @@ class RuntimeObject  {
 		//attributes[index] = obj;
 		if (attributes[index] == null)
 			attributes[index] = new Reference(obj, type.getAttributeTypes()[index].getKind());
-		else attributes[index].reassign(obj);
+		else {
+			//if (attributes[index].getRefType() != RefKind.REF)
+			attributes[index].destroy();
+			attributes[index].reassign(obj);
+		}
 	}
 	/*
 	public RuntimeObject getParent() {
@@ -217,7 +219,7 @@ class RuntimeObject  {
 		}
 		
 		destructed = true;
-		allObjects.remove(this);
+		Execution.getInstance().allObjects.remove(this);
 	}
 	
 	public boolean isPointer() {

@@ -19,10 +19,15 @@ public abstract class Function {
 	boolean meta = false;
 	Signature signature;
 	private RefKind retKind;
+	TypeReference setKind;
 	
-	public Function(Signature signature, RefKind retKind) { // TODO handle unresolved retKinds when types are not yet resolved (cf: "return expr")
+	public Function(Signature signature, RefKind retKind) {
+		this(signature, retKind, null);
+	}
+	public Function(Signature signature, RefKind retKind, TypeReference setKind) { // TODO handle unresolved retKinds when types are not yet resolved (cf: "return expr")
 		this.signature = signature;
 		this.retKind = retKind;
+		this.setKind = setKind;
 	}
 	public boolean isSettable() {
 		return false;
@@ -44,7 +49,7 @@ public abstract class Function {
 		//if (!args.getRuntimeType().conformsTo(  type  )) // FIXME: functions MUST have an input type/trait rather than (just) "FormalParams"
 			throw new AccessViolationException("Type "+args.getRuntimeType()+" does not conform with "+this);
 		
-		//args.setIsAnArg(true);
+		args.setIsAnArg(true);
 		
 		return evaluateDelegate(thisReference, args);
 	}
@@ -74,6 +79,9 @@ public abstract class Function {
 	}
 	public RefKind getRetKind() {
 		return retKind;
+	}
+	public RefKind getSetKind() {
+		return setKind.getKind();
 	}
 	
 	

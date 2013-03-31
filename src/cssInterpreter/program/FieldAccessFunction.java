@@ -15,8 +15,8 @@ public class FieldAccessFunction extends Function { // TODO: add checks for the 
 		this.thisReference = thisReference;
 		this.index = index;
 	}*/
-	public FieldAccessFunction(String name, TypeReference type, int index) {
-		super(new Signature(name, new FormalParameters()), RefKind.REF);
+	public FieldAccessFunction(String name, TypeReference type, int index, TypeReference setKindTR) {
+		super(new Signature(name, new FormalParameters()), RefKind.REF, setKindTR);
 		this.type = type;
 		this.index = index;
 	}

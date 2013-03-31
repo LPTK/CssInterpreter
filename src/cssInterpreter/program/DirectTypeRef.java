@@ -35,7 +35,8 @@ public class DirectTypeRef extends TypeReference {
 	
 	@Override
 	public String toString() {
-		return ">"+tref;
+		//return ">"+tref;
+		return tref.toString();
 	}
 
 }

@@ -20,7 +20,7 @@ public class ListExpression extends Expression {
 		
 		this.exprs = exs;
 		
-		// FIXME: add this type to a scope!!!
+		// FIXEDME: add this type to a scope!!!
 		type = new TupleType(new TypeIdentifier((name==null?"[AnonList]":name), parentType), parentType); //FIXME?
 		
 		for (int i = 0; i < exs.length; i++) {
@@ -32,6 +32,8 @@ public class ListExpression extends Expression {
 			type.addAttribute((String) null, new TypeOf(e, exec.getInterpreter()));
 			
 		}
+		
+		Execution.getInstance().allAnonTypes.add(type);
 		
 	}
 	

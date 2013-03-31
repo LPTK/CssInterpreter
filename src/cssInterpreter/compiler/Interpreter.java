@@ -203,7 +203,7 @@ public class Interpreter extends DepthFirstAdapter {
 	public void checkForLeaks() {
 		//Object objs = new ArrayList<>(RuntimeObject.allObjects); // DEBUG
 		List<RuntimeObject> allNonPointerObjects = new ArrayList<>();
-		for (RuntimeObject obj: RuntimeObject.allObjects)
+		for (RuntimeObject obj: Execution.getInstance().allObjects)
 			//if (!(obj instanceof Pointer))
 			if (!obj.isPointer())
 				allNonPointerObjects.add(obj);
@@ -563,13 +563,30 @@ public class Interpreter extends DepthFirstAdapter {
         }
     }
 	*/
+	
+	/*private addConst() {
+		
+	}*/
+	
+	/**
+	 * I was previously adding constants in the currentScope, but I think it doesn't actually make any difference
+	 */
 
 	@Override public void outATrueExpr(ATrueExpr node)
-    { exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<Boolean>(exec.BoolType, true, exec.standardScopeRO, true))); }
-
+    //{ exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<Boolean>(exec.BoolType, true, exec.standardScopeRO, true))); }
+	//{ addConst<Boolean>(node); }
+	{	PrimitiveRuntimeObject<Boolean> val = new PrimitiveRuntimeObject<Boolean>(exec.BoolType, true, exec.standardScopeRO, true);
+		Execution.getInstance().standardScope.constants.add(val);
+		exprs.put(node, new ConstantExpression(val));
+	}
+	
 	@Override public void outAFalseExpr(AFalseExpr node)
-    { exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<Boolean>(exec.BoolType, true, exec.standardScopeRO, true))); }
-
+    //{ exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<Boolean>(exec.BoolType, true, exec.standardScopeRO, true))); }
+	{	PrimitiveRuntimeObject<Boolean> val = new PrimitiveRuntimeObject<Boolean>(exec.BoolType, false, exec.standardScopeRO, true);
+	Execution.getInstance().standardScope.constants.add(val);
+		exprs.put(node, new ConstantExpression(val));
+	}
+	
 	@Override public void outANotExpr(ANotExpr node)
     { exprs.put(node, new NotExpression(exprs.get(node.getExpr()))); }
 
@@ -585,7 +602,7 @@ public class Interpreter extends DepthFirstAdapter {
 		//exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<Long>(exec.LongType, (Long)Long.parseLong(node.getIntegerNumber().getText()), exec.standardScopeRO, true)));
 		//out("Number: "+node.hashCode());
 		PrimitiveRuntimeObject<Long> val = new PrimitiveRuntimeObject<Long>(exec.LongType, (Long)Long.parseLong(node.getIntegerNumber().getText()), exec.standardScopeRO, true);
-		currentScope.constants.add(val);
+		Execution.getInstance().standardScope.constants.add(val);
 		exprs.put(node, new ConstantExpression(val));
 	}
 
@@ -593,7 +610,10 @@ public class Interpreter extends DepthFirstAdapter {
 	public void inAStringExpr(AStringExpr node)
 	{
 		out("String: "+node.getStringContent().getText());
-		exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<String>(exec.StringType, node.getStringContent().getText(), exec.standardScopeRO, true)));
+		//exprs.put(node, new ConstantExpression(new PrimitiveRuntimeObject<String>(exec.StringType, node.getStringContent().getText(), exec.standardScopeRO, true)));
+		PrimitiveRuntimeObject<String> val = new PrimitiveRuntimeObject<String>(exec.StringType, node.getStringContent().getText(), exec.standardScopeRO, true);
+		Execution.getInstance().standardScope.constants.add(val);
+		exprs.put(node, new ConstantExpression(val));
 	}
 	
 	@Override
@@ -744,7 +764,8 @@ public class Interpreter extends DepthFirstAdapter {
 						 tupleArgs = (TupleExpression) args;
 						 //args.getTypeRef().getType(Expression.getNewTypeInferenceId()).setName("[CallArgs "+args+"]");
 						 //tupleArgs.getTypeRef().setName("[CallArgs "+args+"]");
-						 tupleArgs.getTypeRef().getType().setName("[CallArgs "+args+"]");
+						 //tupleArgs.getTypeRef().getType().setName("[CallArgs "+args+"]");
+						 tupleArgs.getType().setName("[CallArgs "+args+"]");
 						 
 					} else tupleArgs = new TupleExpression(exec, new Expression[]{args},currentScope.getType(),"[SingleCallArg "+args+"]");
 					
@@ -807,6 +828,9 @@ public class Interpreter extends DepthFirstAdapter {
 			LinkedList<PExpr> ls = ((AListExpr) initVal).getExpr();
 			if (ls.size() != 1)
 				throw new ExecutionException(new CompilerException("Class was initialized with "+ls.size()+" expression(s) instead of 1"));
+			
+			//Expression e = exprs.get(initVal);
+			
 			initVal = ls.get(0);
 		}
 		
@@ -855,6 +879,9 @@ public class Interpreter extends DepthFirstAdapter {
 			LinkedList<PExpr> ls = ((AListExpr) initVal).getExpr();
 			if (ls.size() != 1)
 				throw new ExecutionException(new CompilerException("Function was initialized with "+ls.size()+" expression(s) instead of 1"));
+			
+			//Expression e = exprs.get(initVal);
+			
 			initVal = ls.get(0);
 		}
 		
