@@ -44,3 +44,38 @@ lol;
 
 
 
+
+
+
+.: Syntax 2.1 :.
+
+- use "new MyClass" for class instanciation
+- use ":" instead of "=" for param name binding
+- handle expressions like "a,b c,d" correctly *in sablecc*, not in the interpreter
+- add typedefs of the form "class A = mypackage.MyClass<...>"
+- if/else/while, as expressions
+
+
+.: Syntax 2.2 :.
+
+- implicit loops
+- scope access syntax: . .. etc
+- allow multiple assignment: "a,b = foo", "a,b = b,a"; note: "(a,b) = foo" won't work because (a,b) is an object. same with "a:42 = foo", for example
+
+make the AST produced by sablecc more like it should be (abstract)
+replace "field_access" by "invocation" with null args
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

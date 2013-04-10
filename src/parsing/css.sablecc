@@ -66,8 +66,8 @@ Tokens
     {normal} key_else = 'else';
     {normal} key_while     = 'while';
     
-    {normal} key_true     = 'true';
-    {normal} key_false     = 'false';
+    {normal} key_true     = 'True';
+    {normal} key_false     = 'False';
     {normal} equalequal     = '==';
     {normal} inferiority     = 'lt';
     {normal} not     = '!';
