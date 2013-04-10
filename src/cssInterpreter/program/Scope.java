@@ -26,7 +26,7 @@ public class Scope {
 		type = new TupleType(new TypeIdentifier(name, null), null);
 		
 		//type.addFct(new VoidFunction("print", exec, new FormalParameters(new NamedType[]{new NamedType(RefKind.REF,exec.AnyType,null,false)})) {
-		type.addFct(new VoidFunction("print", exec, new FormalParameters(new NamedType[]{new NamedType(new DirectTypeRef(exec.AnyType, RefKind.REF),null,false)})) {
+		type.addFct(new VoidFunction("print", exec, new FormalParameters(new NamedType[]{new NamedType(new DirectTypeRef(exec.AnyType, RefKind.REF),"p",false)})) {
 			
 			@Override public void execute(RuntimeObject thisReference, RuntimeObject params) {
 				/*if (params.isValue())

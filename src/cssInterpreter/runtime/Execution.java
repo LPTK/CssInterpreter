@@ -144,7 +144,7 @@ public class Execution {
 			//RuntimeObject res = expr.evaluate(thisObject);
 			Reference res = expr.evaluate(currentThisRef.access());
 			//currentLocalStack = localStack; // because it may have changed when expr evaluation calls a new function
-			out("Expression  \""+expr+"\"  produced value: "+res);
+			out("Expression  \""+expr+"\"  produced "+res.getRefType()+": "+res);
 			//res.destruct(); // this only destructs the pointer!!!
 			//((Pointer)res).access().destruct();
 			//localStack.push((Pointer)res);
@@ -275,6 +275,7 @@ public class Execution {
 	}
 
 	public void stackLocal(Reference ref) {
+		out("+Stacking local: "+ref);
 		currentLocalStack.push(ref);
 	}
 	

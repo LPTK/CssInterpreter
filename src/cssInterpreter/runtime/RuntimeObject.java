@@ -200,7 +200,7 @@ class RuntimeObject  {
 			return;
 		//if (destructed && this!=Execution.getInstance().voidObj)
 		if (destructed)
-			throw new AccessViolationException("Unable to destruct an object that was already destructed: "+this);
+			throw new AccessViolationException("Unable to destruct an object that was already destructed: "+this+": "+getRuntimeType());
 		
 		
 		destructDelegate(); // even if !asAnArg?

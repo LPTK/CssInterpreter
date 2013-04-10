@@ -193,11 +193,13 @@ public class Interpreter extends DepthFirstAdapter {
 		//currentScope.destroy();
 		exec.destroyStaticConstants();
 		
-		checkForLeaks();
-		
 		out("\n############# PROGRAM OUTPUT #############");
 		for (String str : exec.getOutput())
 			exec.getOut().println(str);
+		
+		//out("");
+		checkForLeaks();
+		
     }
 	
 	public void checkForLeaks() {

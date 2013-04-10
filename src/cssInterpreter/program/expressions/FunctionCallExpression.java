@@ -118,7 +118,12 @@ public class FunctionCallExpression extends Expression {
 		return thisType;
 	}
 	private Reference getThis() throws CompilerException {
-		return thisExpression == null ? exec.getThis() : thisExpression.evaluate(exec.getThis().access());
+		//return thisExpression == null ? exec.getThis() : thisExpression.evaluate(exec.getThis().access());
+		if (thisExpression == null)
+			return exec.getThis();
+		Reference ret = thisExpression.evaluate(exec.getThis().access());
+		Execution.getInstance().stackLocal(ret);
+		return ret;
 	}
 	
 //	@Override
@@ -210,7 +215,10 @@ public class FunctionCallExpression extends Expression {
 			return pb_obj.getFirst().evaluate(pb_obj.getSecond(), args.evaluate());*/
 			Reference argsRef = args.evaluate(exec.getThis().access());
 			argsRef.access().setIsAnArg(true);
+			
+			//System.out.println("Stack..");
 			Execution.getInstance().stackLocal(argsRef);
+			
 			//return getFunction(new CandidateList(getThisType())).evaluate(getThis().access(), argsRef.access()); // TODONE: cache fct resolution
 			return fctBinding.evaluate(getThis().access(), argsRef.access());
 			

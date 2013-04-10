@@ -1,5 +1,5 @@
 
-b := true;
+b := True;
 b = !b;
 
 if (b) print "ok";

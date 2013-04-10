@@ -85,6 +85,8 @@ public class ParamBinding {
 		//mutate(args);
 		fct.set(thisReference, args, value);*/
 		
+		//Execution.getInstance().stackLocal(args.getValRef());
+		
 		fct.set(thisReference, getConformingArgs(args), valueRef);
 	}
 	

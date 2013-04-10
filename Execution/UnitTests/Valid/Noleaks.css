@@ -1,0 +1,10 @@
+
+def foo := {
+  _:=42.copy
+};
+
+foo._;
+val a := foo._.copy;
+print foo;
+print p=foo;
+foo;

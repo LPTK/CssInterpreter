@@ -74,9 +74,11 @@ class CssExecChecker {
 	
 	public Boolean validate(final String filename) {
 		try {
+			//System.out.println(filename);
 			readFile(filename);
 		} catch (Exception e) {
 			System.out.println(e);
+			//throw new RuntimeException(e);
 			return false;
 		}
 		return true;

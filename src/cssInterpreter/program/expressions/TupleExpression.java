@@ -186,6 +186,10 @@ public class TupleExpression extends Expression {
 				Reference arg = ordinalArgs.get(i).evaluate(parentOfThis);
 //				if (ret.getRuntimeType().getAttributeTypes()[i].getKind() == RefKind.REF)
 //					Execution.getInstance().stackLocal(arg);
+				
+				if (type.getAttributeTypes()[i].getKind() == RefKind.REF)
+					Execution.getInstance().stackLocal(arg);
+				
 				ret.write(i, arg.access());
 				/** WARNING: ALMOST THE SAME CODE BELOW; KEEP UPDATED **/
 			}
@@ -205,6 +209,10 @@ public class TupleExpression extends Expression {
 				Reference arg = p.getSecond().evaluate(parentOfThis);
 //				if (ret.getRuntimeType().getAttributeTypes()[i].getKind() == RefKind.REF)
 //					Execution.getInstance().stackLocal(arg);
+
+				if (type.getAttributeTypes()[p.getFirst()].getKind() == RefKind.REF)
+					Execution.getInstance().stackLocal(arg);
+				
 				ret.write(p.getFirst(), arg.access());
 				
 				
